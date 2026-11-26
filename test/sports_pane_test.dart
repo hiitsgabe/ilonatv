@@ -75,6 +75,9 @@ void main() {
     for (final (_, name) in kSportsLeagues) {
       expect(_value(tester, name), 'Off', reason: name);
     }
+    for (final name in ['Copa do Brasil', 'Brazilian Campeonato Mineiro']) {
+      expect(find.text(name), findsOneWidget, reason: name);
+    }
     await _openNba(tester);
     expect(net.calls.single.path, '/apis/site/v2/sports/basketball/nba/teams');
     expect(_focused(tester, 'Follow'), isTrue);

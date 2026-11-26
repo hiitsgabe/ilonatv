@@ -42,6 +42,8 @@ const kSportsLeagues = [
   ('soccer/usa.1', 'MLS'),
   ('soccer/mex.1', 'Mexican Liga BBVA MX'),
   ('soccer/bra.1', 'Brazilian Serie A'),
+  ('soccer/bra.copa_do_brazil', 'Copa do Brasil'),
+  ('soccer/bra.camp.mineiro', 'Brazilian Campeonato Mineiro'),
   ('soccer/arg.1', 'Argentine Liga Profesional de Fútbol'),
   ('soccer/conmebol.libertadores', 'CONMEBOL Libertadores'),
   ('soccer/conmebol.sudamericana', 'CONMEBOL Sudamericana'),
