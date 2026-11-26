@@ -7,11 +7,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  var clock = DateTime(2026);
+  setUp(() {
+    clock = DateTime(2026);
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  Future<void> miss(Pairing p, [int n = 5]) async {
+    final bad = p.code == '000000' ? '000001' : '000000';
+    for (var i = 0; i < n; i++) {
+      await p.pair(PairRequest(code: bad, name: 'X'));
+    }
+  }
 
   Future<(Settings, Pairing)> make() async {
     final s = await Settings.load();
-    return (s, Pairing(s, random: Random(1)));
+    return (s, Pairing(s, random: Random(1), now: () => clock)..offerCode());
   }
 
   String wrong(Pairing p) => p.code == '000000' ? '000001' : '000000';
@@ -94,4 +105,62 @@ void main() {
       expect((await Settings.load()).companionSecret, p.secret);
     },
   );
+
+  test('a code does not pair unless offered', () async {
+    final (_, p) = await make();
+    p.withdrawCode();
+    expect(p.codeOffered, isFalse);
+    final code = p.code;
+    await miss(p, 10);
+    expect(await p.pair(PairRequest(code: code, name: 'A')), isNull);
+    p.offerCode();
+    expect(await p.pair(PairRequest(code: code, name: 'A')), isNotNull);
+  });
+
+  test('misses while not offered do not count', () async {
+    final (_, p) = await make();
+    final code = p.code;
+    p.withdrawCode();
+    await miss(p, 10);
+    p.offerCode();
+    expect(p.code, code);
+    await miss(p, 4);
+    expect(p.code, code);
+  });
+
+  test(
+    'after a replacement, codes are refused for 10 s, then accepted',
+    () async {
+      final (_, p) = await make();
+      await miss(p);
+      final fresh = p.code;
+      clock = clock.add(const Duration(seconds: 9));
+      expect(await p.pair(PairRequest(code: fresh, name: 'A')), isNull);
+      expect(p.code, fresh);
+      clock = clock.add(const Duration(seconds: 1));
+      expect(await p.pair(PairRequest(code: fresh, name: 'A')), isNotNull);
+    },
+  );
+
+  test('the wait doubles per replacement and stops at an hour', () async {
+    final (_, p) = await make();
+    var wait = 10;
+    for (var i = 0; i < 12; i++) {
+      await miss(p);
+      final expected = wait > 3600 ? 3600 : wait;
+      clock = clock.add(Duration(seconds: expected - 1));
+      final code = p.code;
+      await miss(p);
+      expect(p.code, code, reason: 'refused inside the wait, round $i');
+      clock = clock.add(const Duration(seconds: 1));
+      wait *= 2;
+    }
+  });
+
+  test('an empty secret never pairs', () async {
+    final (s, p) = await make();
+    s.companionSecret = '';
+    expect(await p.pair(PairRequest(secret: '', name: 'Mac')), isNull);
+    expect(s.companionDevices, isEmpty);
+  });
 }
