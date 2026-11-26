@@ -33,6 +33,26 @@ class Tv {
   };
 }
 
+Future<String> deviceName() async {
+  try {
+    return await Tvs._channel.invokeMethod<String>('deviceName') ?? 'Phone';
+  } on PlatformException {
+    return 'Phone';
+  } on MissingPluginException {
+    return 'Phone';
+  }
+}
+
+Future<bool> openUrl(String url) async {
+  try {
+    return await Tvs._channel.invokeMethod<bool>('openUrl', url) ?? false;
+  } on PlatformException {
+    return false;
+  } on MissingPluginException {
+    return false;
+  }
+}
+
 class Tvs extends ChangeNotifier {
   static const _key = 'tvs';
   static const _channel = MethodChannel('tv.ilona.companion/host');

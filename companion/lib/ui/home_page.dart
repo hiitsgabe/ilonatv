@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../adb.dart';
 import '../i18n.dart';
 import '../tvs.dart';
+import 'install/install_flow.dart';
 import 'pair_page.dart';
 import 'remote_page.dart';
 
@@ -47,6 +50,17 @@ class _HomePageState extends State<HomePage> {
     ),
   );
 
+  void _install() => Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => InstallFlow(
+        adb: Adb(),
+        tvs: widget.tvs,
+        assets: rootBundle,
+        clientFor: widget.clientFor,
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,11 +103,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
-                    onPressed:
-                        widget.onInstall ??
-                        () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(t('installSoon'))),
-                        ),
+                    onPressed: widget.onInstall ?? _install,
                     icon: const Icon(Icons.download_outlined),
                     label: Text(t('installOnTv')),
                     style: OutlinedButton.styleFrom(

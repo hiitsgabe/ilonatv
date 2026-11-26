@@ -76,18 +76,6 @@ class _PairPageState extends State<PairPage> {
     return Tv(host: host, port: port ?? kCompanionPort, name: host);
   }
 
-  Future<String> _deviceName() async {
-    try {
-      return await const MethodChannel('tv.ilona.companion/host')
-              .invokeMethod<String>('deviceName') ??
-          'Phone';
-    } on PlatformException {
-      return 'Phone';
-    } on MissingPluginException {
-      return 'Phone';
-    }
-  }
-
   Future<void> _pair(Tv tv, {String? code, String? secret}) async {
     setState(() {
       _busy = true;
@@ -97,7 +85,7 @@ class _PairPageState extends State<PairPage> {
     final r = await client.pair(
       code: code,
       secret: secret,
-      name: await _deviceName(),
+      name: await deviceName(),
     );
     if (!mounted) return;
     switch (r) {

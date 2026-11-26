@@ -52,4 +52,4 @@ app.*.map.json
 # Internal design notes, kept locally
 docs/superpowers/
 
-companion/assets/tv/
+companion/assets/tv/*.apk
