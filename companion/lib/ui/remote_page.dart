@@ -164,14 +164,16 @@ class _RemotePageState extends State<RemotePage> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   LayoutBuilder(
-                    builder: (context, c) => SingleChildScrollView(
-                      physics: setup
-                          ? const ClampingScrollPhysics()
-                          : const NeverScrollableScrollPhysics(),
-                      child: Column(
-                        children: [
-                          if (setup)
-                            Padding(
+                    builder: (context, c) => Column(
+                      children: [
+                        if (setup)
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: c.maxHeight > 250
+                                  ? c.maxHeight - 250
+                                  : 0,
+                            ),
+                            child: SingleChildScrollView(
                               padding: const EdgeInsets.all(16),
                               child: step == 'tmdb'
                                   ? _TmdbCard(
@@ -183,12 +185,9 @@ class _RemotePageState extends State<RemotePage> {
                                       onResult: _handle,
                                     ),
                             ),
-                          SizedBox(
-                            height: c.maxHeight < 420 ? 420 : c.maxHeight,
-                            child: _Pad(onKey: _press),
                           ),
-                        ],
-                      ),
+                        Expanded(child: _Pad(onKey: _press)),
+                      ],
                     ),
                   ),
                   SearchTab(client: widget.client, onResult: _handle),

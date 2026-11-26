@@ -214,6 +214,19 @@ void main() {
     await t.pumpAndSettle();
   });
 
+  testWidgets('with the card shown, a vertical swipe on the pad sends a key', (
+    t,
+  ) async {
+    await open(t);
+    client.events$.add(info('tmdb'));
+    await t.pumpAndSettle();
+    final before = t.getTopLeft(find.byType(TextField));
+    await t.drag(find.byKey(const Key('pad')), const Offset(0, 80));
+    await t.pumpAndSettle();
+    expect(client.keys, contains(RemoteKey.down));
+    expect(t.getTopLeft(find.byType(TextField)), before);
+  });
+
   testWidgets('step tmdb shows the key card; Save saves', (t) async {
     await open(t);
     client.events$.add(info('tmdb'));
