@@ -103,6 +103,7 @@ const _strings = {
     'instRelease': 'Latest release: IlonaTv {version}',
     'instUpToDate': 'This TV already has IlonaTv {version}. Go on to pairing, or reinstall it.',
     'instReinstall': 'Reinstall',
+    'instRateLimited': 'GitHub is limiting requests from this network. Try again in a few minutes.',
     'instOffline': "Couldn't reach GitHub to get IlonaTv. Check this phone's internet connection, then Retry.",
     'instNoRelease':
         "There's no IlonaTv release on GitHub yet. See the README: {url}",
@@ -221,6 +222,7 @@ const _strings = {
     'instRelease': 'Versão mais recente: IlonaTv {version}',
     'instUpToDate': 'Esta TV já tem o IlonaTv {version}. Siga para o pareamento ou reinstale.',
     'instReinstall': 'Reinstalar',
+    'instRateLimited': 'O GitHub está limitando os pedidos desta rede. Tente de novo em alguns minutos.',
     'instOffline': 'Não foi possível acessar o GitHub para baixar o IlonaTv. Confira a internet deste celular e tente de novo.',
     'instNoRelease': 'Ainda não há uma versão do IlonaTv publicada no GitHub. Veja o README: {url}',
     'instDownloading': 'Baixando o IlonaTv {version} do GitHub…',

@@ -31,6 +31,11 @@ class NoAsset implements Exception {
   const NoAsset();
 }
 
+/// GitHub answered 403 or 429: unauthenticated calls get 60 an hour per IP.
+class RateLimited implements Exception {
+  const RateLimited();
+}
+
 class BadChecksum implements Exception {
   const BadChecksum();
 }
@@ -70,6 +75,7 @@ Future<ReleaseAsset?> latestTvApk(
 Future<ReleaseAsset?> _latest(HttpClient client, String abi, Uri url) async {
   final (status, body) = await _get(client, url, api: true);
   if (status == 404) return null;
+  if (status == 403 || status == 429) throw const RateLimited();
   if (status != 200) throw HttpException('GitHub answered $status', uri: url);
   final release = jsonDecode(body) as Map<String, Object?>;
   final assets = (release['assets'] as List).cast<Map<String, Object?>>();
@@ -120,12 +126,13 @@ Future<File> download(
   File to, {
   void Function(int received, int total)? progress,
   HttpClient? http,
+  Duration stall = _stall,
 }) async {
   final client = http ?? HttpClient();
   client.userAgent = 'IlonaTv-Companion';
   try {
-    final req = await client.getUrl(a.url).timeout(_stall);
-    final res = await req.close().timeout(_stall);
+    final req = await client.getUrl(a.url).timeout(stall);
+    final res = await req.close().timeout(stall);
     if (res.statusCode != 200) {
       throw HttpException('download answered ${res.statusCode}', uri: a.url);
     }
@@ -136,7 +143,7 @@ Future<File> download(
     final sink = to.openWrite();
     var got = 0;
     try {
-      await for (final chunk in res.timeout(_stall)) {
+      await for (final chunk in res.timeout(stall)) {
         hash.add(chunk);
         sink.add(chunk);
         got += chunk.length;

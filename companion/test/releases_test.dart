@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -41,6 +42,13 @@ void main() {
       if (r.uri.path == '/latest') {
         res.statusCode = status;
         res.write(jsonEncode(release));
+      } else if (r.uri.path == '/moved') {
+        res.redirect(base.resolve('/dl/ilonatv-arm64-v8a.apk'));
+        return;
+      } else if (r.uri.path == '/stall') {
+        res.add(apk.sublist(0, 4));
+        res.flush();
+        return;
       } else if (r.uri.path == '/dl/SHA256SUMS') {
         res.write('${'0' * 64}  ilonatv-armeabi-v7a.apk\n');
         res.write('$apkSum  ilonatv-arm64-v8a.apk\n');
@@ -87,8 +95,36 @@ void main() {
   });
 
   test('another status throws', () async {
-    status = 403;
+    status = 500;
     await expectLater(latest('arm64-v8a'), throwsA(isA<HttpException>()));
+  });
+
+  for (final code in [403, 429]) {
+    test('$code is GitHub limiting requests', () async {
+      status = code;
+      await expectLater(latest('arm64-v8a'), throwsA(isA<RateLimited>()));
+    });
+  }
+
+  ReleaseAsset at(String path) => ReleaseAsset(
+    url: base.resolve(path),
+    size: apk.length,
+    version: 'v0.6.1',
+    sha256: apkSum,
+  );
+
+  test('download follows a redirect', () async {
+    final f = await download(at('/moved'), File('${dir.path}/a.apk'));
+    expect(f.readAsBytesSync(), apk);
+  });
+
+  test('a download that stalls times out and deletes the file', () async {
+    final to = File('${dir.path}/a.apk');
+    await expectLater(
+      download(at('/stall'), to, stall: const Duration(milliseconds: 200)),
+      throwsA(isA<TimeoutException>()),
+    );
+    expect(to.existsSync(), isFalse);
   });
 
   test('download writes the file and reports progress', () async {

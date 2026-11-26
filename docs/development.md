@@ -52,7 +52,9 @@ flutter test
 Two workflows in `.github/workflows/`:
 
 - **CI** (`ci.yml`) runs on every pull request and push to `main`: `flutter analyze` and `flutter test` at the root, `dart test` in `packages/ilonatv_protocol`, and `flutter analyze` and `flutter test` in `companion/`. It builds nothing signed.
-- **Build and Release** (`release.yml`) runs by hand. It bumps the patch version (0.6.9 goes to 0.7.0) and the build number in `pubspec.yaml` and `companion/pubspec.yaml` (one version for both apps), commits "chore: bump version to X" to `main`, tags `vX.Y.Z`, runs both test suites, builds the TV APKs (`ilonatv-armeabi-v7a.apk`, `ilonatv-arm64-v8a.apk`) and the companion (`ilonatv-companion.apk`), writes `SHA256SUMS`, and publishes a release with the commit subjects since the last release. Old releases are kept.
+- **Build and Release** (`release.yml`) runs by hand. It stops at once without the signing secrets below. It runs the same checks as CI, and only when they pass bumps the patch version (0.6.9 goes to 0.7.0) and the build number in `pubspec.yaml` and `companion/pubspec.yaml` (one version for both apps), commits "chore: bump version to X" to `main`, tags `vX.Y.Z`, builds the TV APKs (`ilonatv-armeabi-v7a.apk`, `ilonatv-arm64-v8a.apk`) and the companion (`ilonatv-companion.apk`), writes `SHA256SUMS`, and publishes a release with the commit subjects since the last release. Old releases are kept. Only one run goes at a time.
+
+The companion's version name follows the TV app's (0.6.x, where it was 1.0.0 before), while its versionCode keeps rising, so each release installs over the last one.
 
 To cut a release: Actions > Build and Release > Run workflow, on `main`.
 
@@ -62,7 +64,7 @@ Release signing needs three repository secrets (Settings > Secrets and variables
 - `KEY_ALIAS`: the key's alias in it.
 - `KEY_PASSWORD`: the password, used for both the keystore and the key.
 
-The workflow writes `android/key.properties` and `companion/android/key.properties` from them. Without them (a fork, say) it warns and signs with the debug key. Keep the keystore safe: an APK signed with another key will not install over one signed with this.
+The workflow writes `android/key.properties` and `companion/android/key.properties` from them. Without them it fails before it bumps or tags anything; a fork builds locally instead (see Build and Companion above). Keep the keystore safe: an APK signed with another key will not install over one signed with this.
 
 ## On a device
 

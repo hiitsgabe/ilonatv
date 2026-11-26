@@ -266,6 +266,9 @@ class _InstallFlowState extends State<InstallFlow> {
     } on NoAsset {
       if (_stale(g)) return;
       return _fail(t('instNoApk').replaceAll('{abi}', _abi!), retry: false);
+    } on RateLimited {
+      if (_stale(g)) return;
+      return _fail(t('instRateLimited'));
     } catch (_) {
       if (_stale(g)) return;
       return _fail(t('instOffline'));

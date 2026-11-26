@@ -10,6 +10,11 @@ env:
 permissions:
   contents: read
 
+# Two runs at once could publish an older release as "latest", which the companion installs.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   resolve-version:
     # workflow_dispatch can run from any branch; only main is bumped and released.
@@ -22,10 +27,50 @@ jobs:
       version_name: ${{ steps.resolve.outputs.VERSION_NAME }}
       build_number: ${{ steps.resolve.outputs.BUILD_NUMBER }}
     steps:
+      # A debug-signed public release could never be updated by a release-signed one.
+      - name: Check the signing secrets
+        env:
+          KEYSTORE64: ${{ secrets.KEYSTORE64 }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE64" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::error::KEYSTORE64/KEY_PASSWORD/KEY_ALIAS must be set"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+
+      # The gate: a failing check stops the run before a bump commit or tag is pushed.
+      - name: Get dependencies
+        run: |
+          flutter pub get
+          (cd companion && flutter pub get)
+          (cd packages/ilonatv_protocol && dart pub get)
+
+      - name: Analyze and test the TV app
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Test the protocol
+        working-directory: packages/ilonatv_protocol
+        run: dart test
+
+      - name: Analyze and test the companion
+        working-directory: companion
+        run: |
+          flutter analyze
+          flutter test
 
       # One version for both apps: the companion follows the TV app's pubspec.
       - name: Resolve and bump version
@@ -89,8 +134,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
 
-      # Without the secrets (a fork), key.properties is not written and both apps
-      # fall back to the debug key, so the build still gives installable APKs.
       - name: Apply keystore
         env:
           KEYSTORE64: ${{ secrets.KEYSTORE64 }}
@@ -99,34 +142,29 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$KEYSTORE64" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
-            echo "::warning::KEYSTORE64/KEY_PASSWORD/KEY_ALIAS not set: building with debug signing."
-            exit 0
+            echo "::error::KEYSTORE64/KEY_PASSWORD/KEY_ALIAS must be set"
+            exit 1
           fi
           STORE="$RUNNER_TEMP/release.jks"
           echo "$KEYSTORE64" | base64 --decode > "$STORE"
-          # key.properties is a Java properties file: a backslash in the password must be doubled.
+          # key.properties is a Java properties file: a backslash in a value must be doubled.
           PASS=${KEY_PASSWORD//\\/\\\\}
+          ALIAS=${KEY_ALIAS//\\/\\\\}
           for dir in android companion/android; do
             {
               echo "storePassword=$PASS"
               echo "keyPassword=$PASS"
-              echo "keyAlias=$KEY_ALIAS"
+              echo "keyAlias=$ALIAS"
               echo "storeFile=$STORE"
             } > "$dir/key.properties"
           done
           echo "Release signing: using the configured keystore."
 
+      # The tests ran in resolve-version on this same tree; the tag only changes the version lines.
       - name: Get dependencies
         run: |
           flutter pub get
           (cd companion && flutter pub get)
-
-      - name: Test the TV app
-        run: flutter test
-
-      - name: Test the companion
-        working-directory: companion
-        run: flutter test
 
       - name: Build the TV APKs (split ABI)
         run: flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64

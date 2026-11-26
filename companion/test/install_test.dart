@@ -313,6 +313,17 @@ void main() {
     expect(find.text(t('instInstall')), findsOneWidget);
   });
 
+  testWidgets('GitHub limiting requests has its own message, with Retry', (
+    tester,
+  ) async {
+    releases.latestError = const RateLimited();
+    await pump(tester, FakeAdb());
+    await toConnect(tester);
+    expect(find.text(t('instRateLimited')), findsOneWidget);
+    expect(find.text(t('instOffline')), findsNothing);
+    expect(find.text(t('retry')), findsOneWidget);
+  });
+
   testWidgets('the download shows MB of MB, then installs', (tester) async {
     releases.gate = Completer();
     final adb = FakeAdb();
