@@ -129,6 +129,29 @@ void main() {
     expect(_focusedRow(), t('newQr'));
   });
 
+  testWidgets('a quick second OK on Remove removes one device and nothing '
+      'breaks', (tester) async {
+    final pairing = await _pump(
+      tester,
+      '192.168.1.5',
+      devices: {'tok': 'Pixel 9', 'tok2': 'iPhone', 'tok3': 'iPad'},
+    );
+    Focus.of(
+      tester.element(
+        find.descendant(
+          of: _row('Pixel 9'),
+          matching: find.byIcon(Icons.delete_outline),
+        ),
+      ),
+    ).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(pairing.settings.companionDevices.values, ['iPhone', 'iPad']);
+  });
+
   testWidgets('leaving IlonaTv withdraws the code; coming back offers it', (
     tester,
   ) async {

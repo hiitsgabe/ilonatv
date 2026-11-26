@@ -11,8 +11,6 @@ driven by the remote alone.
 ![Fire TV and Android TV](https://img.shields.io/badge/Fire%20TV%20%C2%B7%20Android%20TV-Android%209%2B-3DDC84)
 ![Flutter](https://img.shields.io/badge/built%20with-Flutter-02569B)
 
-<img src="docs/images/setup-welcome.webp" alt="IlonaTv's first-run setup on a TV" width="860">
-
 </div>
 
 ## Why IlonaTv
@@ -29,15 +27,6 @@ The stock TV homes push ads and whatever their store wants you to watch. IlonaTv
 - **Private.** No cloud server, no account, no analytics. Everything stays on the TV.
 
 Plus the weather, the TV's HDMI inputs with console control over HDMI-CEC (Fire TV Edition TVs), a voice assistant powered by your own Gemini key (Fire TV), and English and Portuguese.
-
-## A quick look
-
-| | |
-| :---: | :---: |
-| <img src="docs/images/setup-titles.webp" alt="Choosing where titles open"> | <img src="docs/images/setup-sports.webp" alt="Picking leagues and teams"> |
-| **Where titles open**: Stremio, or your own streaming apps | **Sports**: follow a league or just your teams |
-| <img src="docs/images/setup-tmdb.webp" alt="Step-by-step guide to a TMDB key"> | <img src="docs/images/setup-location.webp" alt="City and temperature unit"> |
-| **Guided setup**, with pictures for every step | **Weather** for your city, in °C or °F |
 
 ## Get started
 

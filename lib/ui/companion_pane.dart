@@ -60,6 +60,8 @@ class _CompanionPaneState extends State<CompanionPane> {
   Future<void> _remove(String token) async {
     final p = widget.pairing;
     final i = p.settings.companionDevices.keys.toList().indexOf(token);
+    // A second OK while the first remove is still saving.
+    if (i < 0) return;
     await p.remove(token);
     final left = p.settings.companionDevices.keys.toList();
     final next = left.isEmpty ? _newQr : _rows[left[min(i, left.length - 1)]];
