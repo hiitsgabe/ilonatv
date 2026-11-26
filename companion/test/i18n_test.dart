@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilonatv_companion/i18n.dart';
 import 'package:ilonatv_companion/main.dart';
+import 'package:ilonatv_companion/tvs.dart';
 
 void main() {
   tearDown(() => I18n.language = 'en');
@@ -17,7 +18,7 @@ void main() {
   });
 
   testWidgets('CompanionApp shows the app name', (tester) async {
-    await tester.pumpWidget(const CompanionApp());
+    await tester.pumpWidget(CompanionApp(tvs: Tvs()));
     expect(find.text(t('appName')), findsOneWidget);
   });
 }

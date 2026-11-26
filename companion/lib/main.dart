@@ -3,16 +3,24 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 
 import 'i18n.dart';
+import 'tv_client.dart';
+import 'tvs.dart';
+import 'ui/home_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final tvs = Tvs();
+  await tvs.load();
   I18n.language = PlatformDispatcher.instance.locale.languageCode == 'pt'
       ? 'pt'
       : 'en';
-  runApp(const CompanionApp());
+  runApp(CompanionApp(tvs: tvs));
 }
 
 class CompanionApp extends StatelessWidget {
-  const CompanionApp({super.key});
+  const CompanionApp({super.key, required this.tvs});
+
+  final Tvs tvs;
 
   @override
   Widget build(BuildContext context) {
@@ -37,21 +45,7 @@ class CompanionApp extends StatelessWidget {
           ),
         ),
       ),
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                t('appName'),
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(t('tagline')),
-            ],
-          ),
-        ),
-      ),
+      home: HomePage(tvs: tvs, clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token)),
     );
   }
 }
