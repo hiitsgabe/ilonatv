@@ -61,12 +61,15 @@ void main() {
     expect(r.output, 'arm64-v8a,armeabi-v7a\n');
   });
 
-  test('shell that fails natively is a non-zero exit with the reason', () async {
-    answer = (_) => throw PlatformException(code: 'adb', message: 'closed');
-    final r = await Adb().shell('echo');
-    expect(r.exitCode, -1);
-    expect(r.output, 'closed');
-  });
+  test(
+    'shell that fails natively is a non-zero exit with the reason',
+    () async {
+      answer = (_) => throw PlatformException(code: 'adb', message: 'closed');
+      final r = await Adb().shell('echo');
+      expect(r.exitCode, -1);
+      expect(r.output, 'closed');
+    },
+  );
 
   test('install gives null on ok and the error otherwise', () async {
     answer = (_) => 'ok';

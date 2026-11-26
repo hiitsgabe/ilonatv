@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ilonatv/app.dart';
+import 'package:ilonatv/companion/api.dart';
 import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/companion/server.dart';
 import 'package:ilonatv/companion/state.dart';
 import 'package:ilonatv/data/sports.dart';
 import 'package:ilonatv/data/stremio.dart';
@@ -19,6 +21,7 @@ import 'package:ilonatv/sources.dart';
 import 'package:ilonatv/ui/home_screen.dart';
 import 'package:ilonatv/ui/qr_code.dart';
 import 'package:ilonatv/ui/settings_kit.dart';
+import 'package:ilonatv/ui/settings_panes.dart' show maskKey;
 import 'package:ilonatv/ui/settings_screen.dart';
 import 'package:ilonatv/ui/setup_wizard.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
@@ -36,8 +39,9 @@ const _other = 'com.example.other';
 /// YouTube's links; [prefs] as stored.
 Future<(Settings, Sources)> _setUp(
   WidgetTester tester,
-  Map<String, Object> prefs,
-) async {
+  Map<String, Object> prefs, {
+  Map<String, String> tmdbRoutes = const {},
+}) async {
   tester.view
     ..physicalSize = const Size(1920, 1080)
     ..devicePixelRatio = 2;
@@ -64,7 +68,12 @@ Future<(Settings, Sources)> _setUp(
   final store = MemStore();
   final sources = Sources(
     weather: WeatherSource(s, store, fetch: fake({}).call),
-    tmdb: TmdbSource(s, store, fetch: fake({}).call, post: fakePost({}).call),
+    tmdb: TmdbSource(
+      s,
+      store,
+      fetch: fake(tmdbRoutes).call,
+      post: fakePost({}).call,
+    ),
     stremio: StremioSource(
       s,
       store,
@@ -90,7 +99,9 @@ late Pairing _pairing;
 Future<Settings> _app(WidgetTester tester, Map<String, Object> prefs) async {
   final (s, sources) = await _setUp(tester, prefs);
   _pairing = Pairing(s);
-  await tester.pumpWidget(IlonaTvApp(s, sources, MemStore(), pairing: _pairing));
+  await tester.pumpWidget(
+    IlonaTvApp(s, sources, MemStore(), pairing: _pairing),
+  );
   await tester.pumpAndSettle();
   return s;
 }
@@ -394,5 +405,144 @@ void main() {
     expect(jsonEncode(s.tiles), jsonEncode(tiles));
     // A re-run does not choose for the user.
     expect(s.youtubeProvider, '');
+  });
+
+  testWidgets('a city and a TMDB key set from the phone show on the TV at '
+      'once', (tester) async {
+    final (s, sources) = await _setUp(
+      tester,
+      {},
+      tmdbRoutes: {'genre/movie/list': 'tmdb_genres_movie.json'},
+    );
+    final pairing = Pairing(s);
+    await tester.pumpWidget(
+      IlonaTvApp(s, sources, MemStore(), pairing: pairing),
+    );
+    await tester.pumpAndSettle();
+    final server = CompanionServer(
+      pairing,
+      IlonaTvApi(s, sources),
+      port: 0,
+      address: InternetAddress.loopbackIPv4,
+    );
+    // The test binding answers every HttpClient with a 400; this one is real.
+    final mock = HttpOverrides.current;
+    HttpOverrides.global = null;
+    final client = HttpClient();
+    HttpOverrides.global = mock;
+    Future<(int, Object?)> post(
+      String path,
+      Object body, [
+      String? token,
+    ]) => tester
+        .runAsync(() async {
+          final req = await client.post('127.0.0.1', server.boundPort, path);
+          if (token != null) req.headers.set('authorization', 'Bearer $token');
+          req.write(jsonEncode(body));
+          final res = await req.close();
+          final text = await utf8.decodeStream(res);
+          return (res.statusCode, text.isEmpty ? null : jsonDecode(text));
+        })
+        .then((r) => r!);
+    await tester.runAsync(server.start);
+    addTearDown(
+      () => tester.runAsync(() async {
+        client.close(force: true);
+        await server.stop();
+      }),
+    );
+    final (_, paired) = await post('/api/pair', {
+      'secret': s.companionSecret,
+      'name': 'Phone',
+    });
+    final token = (paired as Map)['token'] as String;
+    await tester.pumpAndSettle();
+
+    await _press(tester, 'Continue');
+    expect(find.text(t('wizLocation')), findsOneWidget);
+    final (status, _) = await post('/api/setup/city', {
+      'name': 'Toronto',
+      'region': 'Ontario',
+      'country': 'Canada',
+      'lat': 43.7,
+      'lon': -79.4,
+      'countryCode': 'CA',
+    }, token);
+    expect(status, 204);
+    await tester.pumpAndSettle();
+    expect(find.text('Toronto'), findsOneWidget);
+
+    await _press(tester, 'Continue');
+    expect(find.text(t('wizTmdb')), findsOneWidget);
+    final (_, body) = await post('/api/setup/tmdb', {
+      'key': 'abcdef0123456789',
+      'save': true,
+    }, token);
+    expect(body, {'result': 'keyOk'});
+    await tester.pumpAndSettle();
+    expect(find.text(maskKey('abcdef0123456789')), findsOneWidget);
+  });
+
+  testWidgets('a city set from the phone closes the search opened on the TV', (
+    tester,
+  ) async {
+    final (s, sources) = await _setUp(tester, {});
+    await tester.pumpWidget(
+      IlonaTvApp(s, sources, MemStore(), pairing: Pairing(s)),
+    );
+    await tester.pumpAndSettle();
+    await _press(tester, 'Continue');
+    await _press(tester, t('city'));
+    expect(find.byType(TextField), findsOneWidget);
+    await IlonaTvApi(s, sources).handle('POST', '/api/setup/city', {}, {
+      'name': 'Toronto',
+      'region': 'Ontario',
+      'country': 'Canada',
+      'lat': 43.7,
+      'lon': -79.4,
+      'countryCode': 'CA',
+    });
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Toronto'), findsOneWidget);
+    expect(
+      Focus.of(
+        tester.element(
+          find
+              .descendant(of: _row(t('city')), matching: find.byType(Row))
+              .first,
+        ),
+      ).hasPrimaryFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets('a TMDB key saved from the phone replaces the field opened on '
+      'the TV, and Continue keeps it', (tester) async {
+    final (s, sources) = await _setUp(
+      tester,
+      {},
+      tmdbRoutes: {'genre/movie/list': 'tmdb_genres_movie.json'},
+    );
+    await tester.pumpWidget(
+      IlonaTvApp(s, sources, MemStore(), pairing: Pairing(s)),
+    );
+    await tester.pumpAndSettle();
+    await _press(tester, 'Continue');
+    await _press(tester, 'Continue');
+    await _press(tester, t('tmdbKey'));
+    await tester.enterText(find.byType(TextField), 'typedonthetv');
+    final (_, body) = await tester.runAsync(
+      () => IlonaTvApi(s, sources).handle('POST', '/api/setup/tmdb', {}, {
+        'key': 'abcdef0123456789',
+        'save': true,
+      }),
+    ) as (int, Object);
+    expect(body, {'result': 'keyOk'});
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text(maskKey('abcdef0123456789')), findsOneWidget);
+    await _press(tester, 'Continue');
+    expect(s.tmdbKey, 'abcdef0123456789');
   });
 }

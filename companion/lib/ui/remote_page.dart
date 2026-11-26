@@ -271,6 +271,7 @@ class _TmdbCardState extends State<_TmdbCard> {
     setState(() {
       _busy = false;
       _message = switch (r) {
+        Ok(value: 'keyOk') when save => t('keySaved'),
         Ok(:final value) => t(value),
         Unreachable() || Refused() => t('networkError'),
         _ => null,
@@ -337,6 +338,7 @@ class _CityCardState extends State<_CityCard> {
   final _q = TextEditingController();
   List<Place>? _places;
   bool _busy = false;
+  String? _set;
 
   @override
   void dispose() {
@@ -347,7 +349,10 @@ class _CityCardState extends State<_CityCard> {
   Future<void> _search() async {
     final q = _q.text.trim();
     if (q.isEmpty || _busy) return;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _set = null;
+    });
     final r = await widget.client.cities(q);
     if (!mounted) return;
     setState(() => _busy = false);
@@ -359,7 +364,14 @@ class _CityCardState extends State<_CityCard> {
   }
 
   Future<void> _pick(Place p) async {
-    await widget.onResult(await widget.client.setCity(p));
+    final r = await widget.client.setCity(p);
+    if (mounted && r is Ok) {
+      setState(() {
+        _places = null;
+        _set = p.name;
+      });
+    }
+    await widget.onResult(r);
   }
 
   @override
@@ -391,6 +403,11 @@ class _CityCardState extends State<_CityCard> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(t('noResults')),
+            )
+          else if (_set case final city?)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(t('citySet').replaceAll('{city}', city)),
             ),
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 160),

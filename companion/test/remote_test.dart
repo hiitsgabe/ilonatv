@@ -243,6 +243,10 @@ void main() {
     await t.tap(find.text(t0('save')));
     await t.pumpAndSettle();
     expect(client.tmdb, ('abc', true));
+    expect(find.text(t0('keySaved')), findsOneWidget);
+    await t.tap(find.text(t0('test')));
+    await t.pumpAndSettle();
+    expect(client.tmdb, ('abc', false));
     expect(find.text(t0('keyOk')), findsOneWidget);
   });
 
@@ -256,6 +260,11 @@ void main() {
     await t.tap(find.text('Lisbon'));
     await t.pumpAndSettle();
     expect(client.city?.name, 'Lisbon');
+    expect(find.text('Lisboa, Portugal'), findsNothing);
+    expect(
+      find.text(t0('citySet').replaceAll('{city}', 'Lisbon')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an Ok after Unreachable clears the banner', (t) async {

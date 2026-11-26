@@ -1118,6 +1118,18 @@ class _KeyRowState extends State<_KeyRow> {
   var _testing = false;
   String? _result;
 
+  /// A key saved elsewhere (the phone) while one is typed here wins: the
+  /// field closes, so what was typed is not saved over it.
+  @override
+  void didUpdateWidget(_KeyRow old) {
+    super.didUpdateWidget(old);
+    if (old.value == widget.value || !_editing) return;
+    final focused = _fieldNode.hasFocus || _saveNode.hasFocus;
+    _editing = false;
+    _result = null;
+    if (focused) _editNode.requestFocus();
+  }
+
   @override
   void dispose() {
     // A key typed with the remote is not lost to a Continue or Back.
@@ -1247,6 +1259,31 @@ class _WeatherPaneState extends State<WeatherPane> {
   /// The last search found nothing (or the network failed: the source cannot
   /// tell).
   var _noResults = false;
+
+  late String _city;
+
+  @override
+  void initState() {
+    super.initState();
+    _city = widget.settings.weatherCity;
+  }
+
+  /// A city picked elsewhere (the phone) ends a search open here.
+  @override
+  void didUpdateWidget(WeatherPane old) {
+    super.didUpdateWidget(old);
+    if (widget.settings.weatherCity == _city) return;
+    _city = widget.settings.weatherCity;
+    if (!_open) return;
+    final focused =
+        primaryFocus != _changeNode &&
+        primaryFocus?.context?.findAncestorStateOfType<_WeatherPaneState>() ==
+            this;
+    _open = false;
+    _places = [];
+    _noResults = false;
+    if (focused) _changeNode.requestFocus();
+  }
 
   @override
   void dispose() {
