@@ -38,7 +38,14 @@ class Fake extends TvClient {
 
   @override
   Future<TvResult<List<Place>>> cities(String q) async => const Ok([
-    Place(name: 'Lisbon', region: 'Lisboa', country: 'Portugal', countryCode: 'PT', lat: 1, lon: 2),
+    Place(
+      name: 'Lisbon',
+      region: 'Lisboa',
+      country: 'Portugal',
+      countryCode: 'PT',
+      lat: 1,
+      lon: 2,
+    ),
   ]);
 
   @override
@@ -48,13 +55,23 @@ class Fake extends TvClient {
   }
 }
 
-TvInfo info(String? step) =>
-    TvInfo(protocol: 1, version: '1', step: step, inFront: true, launcherMode: false);
+TvInfo info(String? step) => TvInfo(
+  protocol: 1,
+  version: '1',
+  step: step,
+  inFront: true,
+  launcherMode: false,
+);
 
 void main() {
   late Fake client;
   late Tvs tvs;
-  final tv = Tv(host: '1.2.3.4', port: 8642, name: 'IlonaTv on Box', token: 'x');
+  final tv = Tv(
+    host: '1.2.3.4',
+    port: 8642,
+    name: 'IlonaTv on Box',
+    token: 'x',
+  );
 
   Future<void> open(WidgetTester t) async {
     SharedPreferences.setMockInitialValues({});
@@ -66,7 +83,9 @@ void main() {
           builder: (c) => Scaffold(
             body: TextButton(
               onPressed: () => Navigator.of(c).push(
-                MaterialPageRoute(builder: (_) => RemotePage(tv: tv, client: client, tvs: tvs)),
+                MaterialPageRoute(
+                  builder: (_) => RemotePage(tv: tv, client: client, tvs: tvs),
+                ),
               ),
               child: const Text('go'),
             ),

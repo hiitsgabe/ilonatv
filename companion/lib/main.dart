@@ -45,7 +45,10 @@ class CompanionApp extends StatelessWidget {
           ),
         ),
       ),
-      home: HomePage(tvs: tvs, clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token)),
+      home: HomePage(
+        tvs: tvs,
+        clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token),
+      ),
     );
   }
 }

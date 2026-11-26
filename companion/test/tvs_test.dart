@@ -36,7 +36,11 @@ void main() {
 
   test('a found TV is listed unpaired and lost removes it', () async {
     final tvs = await make();
-    await native('found', {'name': 'IlonaTv on X', 'host': '10.0.0.5', 'port': 8642});
+    await native('found', {
+      'name': 'IlonaTv on X',
+      'host': '10.0.0.5',
+      'port': 8642,
+    });
     expect(tvs.all.single.token, isNull);
     expect(tvs.all.single.found, isTrue);
     await native('lost', {'name': 'IlonaTv on X'});
@@ -47,7 +51,10 @@ void main() {
 
   test('savePaired persists and a reload keeps it', () async {
     final tvs = await make();
-    await tvs.savePaired(Tv(host: '10.0.0.5', port: 8642, name: 'Living'), 'tok');
+    await tvs.savePaired(
+      Tv(host: '10.0.0.5', port: 8642, name: 'Living'),
+      'tok',
+    );
     final again = Tvs();
     await again.load();
     expect(again.all.single.token, 'tok');
@@ -56,8 +63,15 @@ void main() {
 
   test('the same host found and paired appears once, paired', () async {
     final tvs = await make();
-    await tvs.savePaired(Tv(host: '10.0.0.5', port: 8642, name: 'Living'), 'tok');
-    await native('found', {'name': 'IlonaTv on X', 'host': '10.0.0.5', 'port': 8642});
+    await tvs.savePaired(
+      Tv(host: '10.0.0.5', port: 8642, name: 'Living'),
+      'tok',
+    );
+    await native('found', {
+      'name': 'IlonaTv on X',
+      'host': '10.0.0.5',
+      'port': 8642,
+    });
     expect(tvs.all.length, 1);
     expect(tvs.all.single.token, 'tok');
     expect(tvs.all.single.found, isTrue);
@@ -72,7 +86,10 @@ void main() {
 
   test('forget removes it, also from storage', () async {
     final tvs = await make();
-    await tvs.savePaired(Tv(host: '10.0.0.5', port: 8642, name: 'Living'), 'tok');
+    await tvs.savePaired(
+      Tv(host: '10.0.0.5', port: 8642, name: 'Living'),
+      'tok',
+    );
     await tvs.forget('10.0.0.5');
     expect(tvs.all, isEmpty);
     final again = Tvs();

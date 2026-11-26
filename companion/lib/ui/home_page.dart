@@ -6,7 +6,12 @@ import 'pair_page.dart';
 import 'remote_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.tvs, required this.clientFor, this.onInstall});
+  const HomePage({
+    super.key,
+    required this.tvs,
+    required this.clientFor,
+    this.onInstall,
+  });
 
   final Tvs tvs;
   final ClientFor clientFor;
@@ -37,7 +42,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _pairWithCode() => Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => PairPage(tvs: widget.tvs, clientFor: widget.clientFor)),
+    MaterialPageRoute(
+      builder: (_) => PairPage(tvs: widget.tvs, clientFor: widget.clientFor),
+    ),
   );
 
   @override
@@ -56,7 +63,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 8),
                   Text(
                     t('appName'),
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Expanded(
@@ -64,8 +74,10 @@ class _HomePageState extends State<HomePage> {
                         ? _Empty()
                         : ListView.separated(
                             itemCount: tvs.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 12),
-                            itemBuilder: (_, i) => _TvCard(tv: tvs[i], onTap: () => _open(tvs[i])),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (_, i) =>
+                                _TvCard(tv: tvs[i], onTap: () => _open(tvs[i])),
                           ),
                   ),
                   const SizedBox(height: 12),
@@ -77,15 +89,20 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
-                    onPressed: widget.onInstall ?? () => ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(t('installSoon')))),
+                    onPressed:
+                        widget.onInstall ??
+                        () => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(t('installSoon'))),
+                        ),
                     icon: const Icon(Icons.download_outlined),
                     label: Text(t('installOnTv')),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(56),
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Color(0x66FFFFFF)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
                   ),
                 ],
@@ -111,7 +128,11 @@ class _Empty extends StatelessWidget {
       children: [
         const Icon(Icons.tv, size: 72, color: Color(0x66FFFFFF)),
         const SizedBox(height: 16),
-        Text(t('noTvs'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+        Text(
+          t('noTvs'),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 16),
+        ),
       ],
     ),
   );
@@ -141,7 +162,10 @@ class _TvCard extends StatelessWidget {
                 children: [
                   Text(
                     tv.label,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(

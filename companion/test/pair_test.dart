@@ -14,7 +14,11 @@ class FakeClient extends TvClient {
   String? code;
 
   @override
-  Future<TvResult<String>> pair({String? code, String? secret, required String name}) async {
+  Future<TvResult<String>> pair({
+    String? code,
+    String? secret,
+    required String name,
+  }) async {
     this.code = code;
     return result;
   }
@@ -32,7 +36,10 @@ void main() {
       final r = parsePairUrl('http://192.168.1.20:8642/#s=abc123')!;
       expect((r.host, r.port, r.secret), ('192.168.1.20', 8642, 'abc123'));
     });
-    test('wrong scheme', () => expect(parsePairUrl('https://1.2.3.4:8642/#s=x'), isNull));
+    test(
+      'wrong scheme',
+      () => expect(parsePairUrl('https://1.2.3.4:8642/#s=x'), isNull),
+    );
     test('missing secret', () {
       expect(parsePairUrl('http://1.2.3.4:8642/'), isNull);
       expect(parsePairUrl('http://1.2.3.4:8642/#x=1'), isNull);
@@ -77,15 +84,22 @@ void main() {
       tvs = Tvs();
     });
 
-    Future<FakeClient> pump(WidgetTester tester, TvResult<String> result) async {
+    Future<FakeClient> pump(
+      WidgetTester tester,
+      TvResult<String> result,
+    ) async {
       final fake = FakeClient('10.0.0.5', result);
       await tester.pumpWidget(
-        MaterialApp(home: PairPage(tvs: tvs, clientFor: (_) => fake, host: '10.0.0.5')),
+        MaterialApp(
+          home: PairPage(tvs: tvs, clientFor: (_) => fake, host: '10.0.0.5'),
+        ),
       );
       await tester.enterText(find.byType(TextField).last, '123456');
       await tester.pump();
       await tester.tap(find.text(t('pairNow')));
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
       await tester.pumpAndSettle();
       return fake;
     }
@@ -100,7 +114,13 @@ void main() {
     testWidgets('an invalid address is not sent', (tester) async {
       final fake = FakeClient('x', const Ok('tok'));
       await tester.pumpWidget(
-        MaterialApp(home: PairPage(tvs: tvs, clientFor: (_) => fake, host: 'http://1.2.3.4')),
+        MaterialApp(
+          home: PairPage(
+            tvs: tvs,
+            clientFor: (_) => fake,
+            host: 'http://1.2.3.4',
+          ),
+        ),
       );
       await tester.enterText(find.byType(TextField).last, '123456');
       await tester.pump();

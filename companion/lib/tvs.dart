@@ -25,7 +25,12 @@ class Tv {
     return i > 0 ? name.substring(0, i) : name;
   }
 
-  Map<String, Object?> toJson() => {'host': host, 'port': port, 'name': name, 'token': token};
+  Map<String, Object?> toJson() => {
+    'host': host,
+    'port': port,
+    'name': name,
+    'token': token,
+  };
 }
 
 class Tvs extends ChangeNotifier {
@@ -72,7 +77,10 @@ class Tvs extends ChangeNotifier {
 
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, jsonEncode(_paired.values.map((t) => t.toJson()).toList()));
+    await prefs.setString(
+      _key,
+      jsonEncode(_paired.values.map((t) => t.toJson()).toList()),
+    );
   }
 
   Future<void> savePaired(Tv tv, String token) async {
@@ -113,7 +121,12 @@ class Tvs extends ChangeNotifier {
     final a = call.arguments as Map;
     final name = a['name'] as String;
     if (call.method == 'found') {
-      final tv = Tv(host: a['host'] as String, port: a['port'] as int, name: name, found: true);
+      final tv = Tv(
+        host: a['host'] as String,
+        port: a['port'] as int,
+        name: name,
+        found: true,
+      );
       _seen[tv.host] = tv;
       _hostByService[name] = tv.host;
       final p = _paired[tv.host];

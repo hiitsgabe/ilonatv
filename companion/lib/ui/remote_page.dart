@@ -7,9 +7,15 @@ import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import '../i18n.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
+import 'browse.dart';
 
 class RemotePage extends StatefulWidget {
-  const RemotePage({super.key, required this.tv, required this.client, required this.tvs});
+  const RemotePage({
+    super.key,
+    required this.tv,
+    required this.client,
+    required this.tvs,
+  });
 
   final Tv tv;
   final TvClient client;
@@ -42,16 +48,13 @@ class _RemotePageState extends State<RemotePage> {
   void _connect() {
     _retry?.cancel();
     _sub?.cancel();
-    _sub = widget.client.events().listen(
-      (i) {
-        if (!mounted) return;
-        setState(() {
-          _info = i;
-          _unreachable = false;
-        });
-      },
-      onDone: _ended,
-    );
+    _sub = widget.client.events().listen((i) {
+      if (!mounted) return;
+      setState(() {
+        _info = i;
+        _unreachable = false;
+      });
+    }, onDone: _ended);
   }
 
   // events() ends silently on a failed connect, so ask the TV why.
@@ -127,7 +130,10 @@ class _RemotePageState extends State<RemotePage> {
             if (_unreachable)
               _Banner(
                 text: t('cantReachTv').replaceAll('{name}', widget.tv.label),
-                action: TextButton(onPressed: _retryNow, child: Text(t('retry'))),
+                action: TextButton(
+                  onPressed: _retryNow,
+                  child: Text(t('retry')),
+                ),
               ),
             if (_notInFront != null)
               _Banner(
@@ -144,14 +150,20 @@ class _RemotePageState extends State<RemotePage> {
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: step == 'tmdb'
-                              ? _TmdbCard(client: widget.client, onResult: _handle)
-                              : _CityCard(client: widget.client, onResult: _handle),
+                              ? _TmdbCard(
+                                  client: widget.client,
+                                  onResult: _handle,
+                                )
+                              : _CityCard(
+                                  client: widget.client,
+                                  onResult: _handle,
+                                ),
                         ),
                       Expanded(child: _Pad(onKey: _press)),
                     ],
                   ),
-                  Center(child: Text(t('tabSearch'))),
-                  Center(child: Text(t('tabBrowse'))),
+                  SearchTab(client: widget.client, onResult: _handle),
+                  BrowseTab(client: widget.client, onResult: _handle),
                 ],
               ),
             ),
@@ -181,7 +193,8 @@ class _Banner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
-                if (sub != null) Text(sub!, style: const TextStyle(fontSize: 13)),
+                if (sub != null)
+                  Text(sub!, style: const TextStyle(fontSize: 13)),
               ],
             ),
           ),
@@ -243,12 +256,21 @@ class _TmdbCardState extends State<_TmdbCard> {
             decoration: InputDecoration(labelText: t('tmdbKey')),
           ),
           if (_message != null)
-            Padding(padding: const EdgeInsets.only(top: 8), child: Text(_message!)),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_message!),
+            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(onPressed: _busy ? null : () => _run(false), child: Text(t('test'))),
-              FilledButton(onPressed: _busy ? null : () => _run(true), child: Text(t('save'))),
+              TextButton(
+                onPressed: _busy ? null : () => _run(false),
+                child: Text(t('test')),
+              ),
+              FilledButton(
+                onPressed: _busy ? null : () => _run(true),
+                child: Text(t('save')),
+              ),
             ],
           ),
         ],
@@ -307,7 +329,10 @@ class _CityCardState extends State<_CityCard> {
             decoration: InputDecoration(
               labelText: t('city'),
               hintText: t('searchCity'),
-              suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: _search),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: _search,
+              ),
             ),
           ),
           ConstrainedBox(
@@ -319,7 +344,12 @@ class _CityCardState extends State<_CityCard> {
                   ListTile(
                     dense: true,
                     title: Text(p.name),
-                    subtitle: Text([p.region, p.country].where((s) => s.isNotEmpty).join(', ')),
+                    subtitle: Text(
+                      [
+                        p.region,
+                        p.country,
+                      ].where((s) => s.isNotEmpty).join(', '),
+                    ),
                     onTap: () => _pick(p),
                   ),
               ],
@@ -388,8 +418,9 @@ class _PadState extends State<_Pad> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, c) {
-      final size = (c.maxWidth < c.maxHeight - 130 ? c.maxWidth : c.maxHeight - 130)
-          .clamp(120.0, 340.0);
+      final size =
+          (c.maxWidth < c.maxHeight - 130 ? c.maxWidth : c.maxHeight - 130)
+              .clamp(120.0, 340.0);
       return Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -410,10 +441,22 @@ class _PadState extends State<_Pad> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Align(alignment: Alignment(0, -0.78), child: Icon(Icons.keyboard_arrow_up, size: 40)),
-                  const Align(alignment: Alignment(0, 0.78), child: Icon(Icons.keyboard_arrow_down, size: 40)),
-                  const Align(alignment: Alignment(-0.78, 0), child: Icon(Icons.keyboard_arrow_left, size: 40)),
-                  const Align(alignment: Alignment(0.78, 0), child: Icon(Icons.keyboard_arrow_right, size: 40)),
+                  const Align(
+                    alignment: Alignment(0, -0.78),
+                    child: Icon(Icons.keyboard_arrow_up, size: 40),
+                  ),
+                  const Align(
+                    alignment: Alignment(0, 0.78),
+                    child: Icon(Icons.keyboard_arrow_down, size: 40),
+                  ),
+                  const Align(
+                    alignment: Alignment(-0.78, 0),
+                    child: Icon(Icons.keyboard_arrow_left, size: 40),
+                  ),
+                  const Align(
+                    alignment: Alignment(0.78, 0),
+                    child: Icon(Icons.keyboard_arrow_right, size: 40),
+                  ),
                   Container(
                     width: size * 0.36,
                     height: size * 0.36,
@@ -425,7 +468,11 @@ class _PadState extends State<_Pad> {
                     alignment: Alignment.center,
                     child: const Text(
                       'OK',
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 22),
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 22,
+                      ),
                     ),
                   ),
                 ],

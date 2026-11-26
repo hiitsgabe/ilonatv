@@ -13,7 +13,11 @@ import 'remote_page.dart';
   if (u == null || u.scheme != 'http' || u.host.isEmpty) return null;
   final m = RegExp(r'^s=([^&]+)').firstMatch(u.fragment);
   if (m == null) return null;
-  return (host: u.host, port: u.hasPort ? u.port : kCompanionPort, secret: m.group(1)!);
+  return (
+    host: u.host,
+    port: u.hasPort ? u.port : kCompanionPort,
+    secret: m.group(1)!,
+  );
 }
 
 final _hostRe = RegExp(
@@ -37,7 +41,12 @@ final _hostRe = RegExp(
 typedef ClientFor = TvClient Function(Tv tv);
 
 class PairPage extends StatefulWidget {
-  const PairPage({super.key, required this.tvs, required this.clientFor, this.host});
+  const PairPage({
+    super.key,
+    required this.tvs,
+    required this.clientFor,
+    this.host,
+  });
 
   final Tvs tvs;
   final ClientFor clientFor;
@@ -85,7 +94,11 @@ class _PairPageState extends State<PairPage> {
       _error = null;
     });
     final client = widget.clientFor(tv);
-    final r = await client.pair(code: code, secret: secret, name: await _deviceName());
+    final r = await client.pair(
+      code: code,
+      secret: secret,
+      name: await _deviceName(),
+    );
     if (!mounted) return;
     switch (r) {
       case Ok(:final value):
@@ -94,7 +107,11 @@ class _PairPageState extends State<PairPage> {
         final paired = _tvFor(tv.host, tv.port);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => RemotePage(tv: paired, client: widget.clientFor(paired), tvs: widget.tvs),
+            builder: (_) => RemotePage(
+              tv: paired,
+              client: widget.clientFor(paired),
+              tvs: widget.tvs,
+            ),
           ),
         );
       case Unpaired():
@@ -111,9 +128,13 @@ class _PairPageState extends State<PairPage> {
   }
 
   Future<void> _scan() async {
-    final url = await Navigator.of(context).push<({String host, int port, String secret})>(
-      MaterialPageRoute(fullscreenDialog: true, builder: (_) => const _ScanPage()),
-    );
+    final url = await Navigator.of(context)
+        .push<({String host, int port, String secret})>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => const _ScanPage(),
+          ),
+        );
     if (url == null || !mounted) return;
     await _pair(_tvFor(url.host, url.port), secret: url.secret);
   }
@@ -144,15 +165,26 @@ class _PairPageState extends State<PairPage> {
               label: Text(t('scanQr')),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(64),
-                textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                textStyle: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
               ),
             ),
             const SizedBox(height: 28),
-            Text(t('typeCode'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+            Text(
+              t('typeCode'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 14),
             if (widget.host == null && tvs.isNotEmpty) ...[
-              Text(t('chooseTv'), style: TextStyle(color: cs.onSurface.withAlpha(180))),
+              Text(
+                t('chooseTv'),
+                style: TextStyle(color: cs.onSurface.withAlpha(180)),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -180,7 +212,11 @@ class _PairPageState extends State<PairPage> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: const TextStyle(fontSize: 26, letterSpacing: 8, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 26,
+                letterSpacing: 8,
+                fontWeight: FontWeight.w700,
+              ),
               decoration: _field(t('codeHint')).copyWith(counterText: ''),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _submit(),
@@ -188,16 +224,22 @@ class _PairPageState extends State<PairPage> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(_error!, style: const TextStyle(color: Color(0xFFFF8A80))),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Color(0xFFFF8A80)),
+                ),
               ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: _busy || _host.text.trim().isEmpty || _code.text.length != 6
+              onPressed:
+                  _busy || _host.text.trim().isEmpty || _code.text.length != 6
                   ? null
                   : _submit,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
               ),
               child: _busy
                   ? const SizedBox(
