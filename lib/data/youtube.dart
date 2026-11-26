@@ -200,6 +200,10 @@ class YoutubeSource extends ChangeNotifier {
         // The home is had: the history keeps what it had.
         debugPrint('youtube history ${a.name}: $e');
       }
+      debugPrint(
+        'youtube ${a.name}: ${_lists[a.key]!.length} videos, '
+        '${_history[a.key]?.length ?? 0} in progress',
+      );
       return true;
     } on YtAuthError catch (e) {
       if (e != YtAuthError.revoked) return false;

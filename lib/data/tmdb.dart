@@ -803,6 +803,7 @@ class TmdbSource extends ChangeNotifier {
       return;
     }
     if (newMovies == null || newSeries == null || newRecommended == null) {
+      debugPrint('tmdb: ${failure.name}');
       _setError(failure);
       return;
     }
@@ -813,6 +814,7 @@ class TmdbSource extends ChangeNotifier {
     popular = newPopular ?? popular;
     genres = newGenres ?? genres;
     error = null;
+    _log();
     notifyListeners();
     // Last, so a cache that will not write (a full disk) cannot undo a good
     // fetch.
@@ -835,6 +837,12 @@ class TmdbSource extends ChangeNotifier {
     'rows': rows,
     'shape': _shape,
   };
+
+  // What `adb logcat -s flutter` shows of the rows, as for Stremio.
+  void _log() => debugPrint(
+    'tmdb: ${movies.length} movies, ${series.length} series, '
+    '${recommended.length} recommended from ${seeds.length} seeds',
+  );
 
   void _setError(TmdbError e) {
     if (error == e) return;
@@ -980,11 +988,13 @@ class TmdbSource extends ChangeNotifier {
       return;
     }
     if (newRecommended == null) {
+      debugPrint('tmdb recommended: ${failure.name}');
       _setError(failure);
       return;
     }
     recommended = newRecommended;
     error = null;
+    _log();
     notifyListeners();
     try {
       await store.write(_cache, _cacheJson(language, rows));
