@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FakeApi implements CompanionApi {
   final calls = <(String, String, Map<String, String>, Object?)>[];
   bool fail = false;
+  (int, Object) answer = (404, {'error': 'notFound'});
 
   @override
   Future<(int, Object)> handle(
@@ -25,7 +26,7 @@ class FakeApi implements CompanionApi {
   ) async {
     calls.add((method, path, query, body));
     if (fail) throw StateError('boom');
-    return (404, {'error': 'notFound'});
+    return answer;
   }
 }
 
@@ -262,6 +263,14 @@ void main() {
 
     await send('GET', '/api/thing', token: token);
     expect(api.calls.last.$4, isNull);
+  });
+
+  test('a 204 from the api has no body', () async {
+    final token = await pairWithSecret();
+    api.answer = (204, const {});
+    final (status, body, _) = await send('POST', '/api/key', token: token);
+    expect(status, 204);
+    expect(body, isEmpty);
   });
 
   test('a body that is not JSON is 400 before the api', () async {

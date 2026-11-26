@@ -1,0 +1,166 @@
+import 'package:elimor_protocol/elimor_protocol.dart';
+
+import '../data/media.dart';
+import '../data/tmdb.dart';
+import '../data/weather.dart';
+import '../host.dart';
+import '../i18n.dart';
+import '../providers.dart' show openItem;
+import '../settings.dart';
+import '../sources.dart';
+import 'server.dart';
+import 'state.dart';
+
+const _max = 20;
+const _badRequest = (400, {'error': 'badRequest'});
+const _notFound = (404, {'error': 'notFound'});
+
+/// What a paired phone can do: what the TV's own screens do, with the TV's
+/// code. Answers carry display data only, never a key or a token.
+class ElimorApi implements CompanionApi {
+  ElimorApi(
+    this.settings,
+    this.sources, {
+    this.injectKey = Host.injectKey,
+    void Function()? goHome,
+  }) : goHome = goHome ?? Host.goHome;
+
+  final Settings settings;
+  final Sources sources;
+  final Future<bool> Function(RemoteKey) injectKey;
+  final void Function() goHome;
+
+  @override
+  Future<(int, Object)> handle(
+    String method,
+    String path,
+    Map<String, String> query,
+    Object? body,
+  ) async {
+    final b = body is Map ? body : const {};
+    return switch ((method, path)) {
+      ('POST', '/api/key') => _key(b['key']),
+      ('GET', '/api/search') => _search(query['q']?.trim() ?? ''),
+      ('GET', '/api/rows') => (200, _rows()),
+      ('POST', '/api/open') => _open(b['item']),
+      ('POST', '/api/setup/tmdb') => _tmdb(b['key'], b['save']),
+      ('GET', '/api/setup/cities') => _cities(query['q']?.trim() ?? ''),
+      ('POST', '/api/setup/city') => _city(b),
+      _ => _notFound,
+    };
+  }
+
+  Future<(int, Object)> _key(Object? name) async {
+    final key = name is String ? remoteKeyByName(name) : null;
+    if (key == null) return _badRequest;
+    if (!companionState.inFront || !await injectKey(key)) {
+      return (409, {'error': 'notInFront'});
+    }
+    return (204, const {});
+  }
+
+  Future<(int, Object)> _search(String q) async {
+    if (q.isEmpty) return _badRequest;
+    final tmdb = sources.tmdb.client;
+    Future<List<Object>> safe(Future<List<MediaItem>> f) =>
+        f.then(_items, onError: (_) => const <Object>[]);
+    final (movies, series, videos) = await (
+      safe(tmdb.search(MediaType.movie, q)),
+      safe(tmdb.search(MediaType.series, q)),
+      safe(sources.youtube.searchFirstAccount(q)),
+    ).wait;
+    return (200, {'movies': movies, 'series': series, 'videos': videos});
+  }
+
+  List<Object> _rows() => [
+    for (final (key, items) in settings.shownRows(sources.rowItems()))
+      {'key': key, 'title': t(key), 'items': _items(items)},
+  ];
+
+  Future<(int, Object)> _open(Object? json) async {
+    final MediaItem item;
+    try {
+      item = MediaItem.fromJson(json as Map);
+    } catch (_) {
+      return _badRequest;
+    }
+    if (item.type case MediaType.game || MediaType.input) return _badRequest;
+    final opened = await openItem(
+      item,
+      settings,
+      sources.tmdb,
+      lastVideo: sources.stremio.lastVideo,
+    );
+    return (200, {'opened': opened});
+  }
+
+  Future<(int, Object)> _tmdb(Object? key, Object? save) async {
+    if (key is! String || save is! bool?) return _badRequest;
+    final k = key.trim();
+    String result;
+    try {
+      await sources.tmdb.testKey(k);
+      result = 'keyOk';
+    } on TmdbError catch (e) {
+      result = e == TmdbError.badKey ? 'keyBad' : 'networkError';
+    } catch (_) {
+      result = 'networkError';
+    }
+    if (result == 'keyOk' && save == true) {
+      settings.tmdbKey = k;
+      await settings.save();
+      sources.tmdb.refresh(force: true).ignore();
+    }
+    return (200, {'result': result});
+  }
+
+  Future<(int, Object)> _cities(String q) async {
+    if (q.isEmpty) return _badRequest;
+    final places = await sources.weather.search(q);
+    return (
+      200,
+      [
+        for (final p in places.take(_max))
+          {
+            'name': p.name,
+            'region': p.region,
+            'country': p.country,
+            'lat': p.lat,
+            'lon': p.lon,
+            'countryCode': p.countryCode,
+          },
+      ],
+    );
+  }
+
+  Future<(int, Object)> _city(Map b) async {
+    if (b
+        case {
+          'name': final String name,
+          'region': final String region,
+          'country': final String country,
+          'lat': final num lat,
+          'lon': final num lon,
+          'countryCode': final String countryCode,
+        }
+        when name.isNotEmpty) {
+      await settings.applyPlace(
+        Place(
+          name,
+          region,
+          country,
+          lat.toDouble(),
+          lon.toDouble(),
+          countryCode,
+        ),
+      );
+      sources.weather.refresh(force: true).ignore();
+      return (204, const {});
+    }
+    return _badRequest;
+  }
+
+  static List<Object> _items(List<MediaItem> items) => [
+    for (final i in items.take(_max)) i.toJson(),
+  ];
+}
