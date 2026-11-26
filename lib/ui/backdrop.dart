@@ -79,7 +79,7 @@ class BackdropImage extends ImageProvider<BackdropImage> {
   ImageStreamCompleter loadImage(
     BackdropImage key,
     ImageDecoderCallback decode,
-  ) => OneFrameImageStreamCompleter(_bake(decode));
+  ) => _OneFrame(_bake(decode));
 
   Future<ImageInfo> _bake(ImageDecoderCallback decode) async {
     final codec = await decode(
@@ -114,6 +114,34 @@ class BackdropImage extends ImageProvider<BackdropImage> {
 
   @override
   int get hashCode => bytes.hashCode;
+}
+
+/// [OneFrameImageStreamCompleter], but a bake done after the stream was
+/// disposed (evicted, or no one left listening) is dropped: setting it would
+/// throw.
+class _OneFrame extends ImageStreamCompleter {
+  var _gone = false;
+
+  _OneFrame(Future<ImageInfo> image) {
+    image.then<void>(
+      (info) => _gone ? info.dispose() : setImage(info),
+      onError: (Object error, StackTrace stack) {
+        if (_gone) return;
+        reportError(
+          context: ErrorDescription('baking a backdrop'),
+          exception: error,
+          stack: stack,
+          silent: true,
+        );
+      },
+    );
+  }
+
+  @override
+  void onDisposed() {
+    _gone = true;
+    super.onDisposed();
+  }
 }
 
 /// The provider of a backdrop's [bytes]: the key it has in [imageCache].
@@ -235,7 +263,8 @@ class _BackdropState extends State<Backdrop> {
     final rotation = widget.rotation;
     final focused = widget.focused.value;
     final item =
-        focused ?? (rotation.isEmpty ? null : rotation[_index % rotation.length]);
+        focused ??
+        (rotation.isEmpty ? null : rotation[_index % rotation.length]);
     final url = item?.backdropUrl;
     _follow?.cancel();
     if (url == null) return _put(null);
