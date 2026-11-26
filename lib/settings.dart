@@ -60,6 +60,18 @@ AppTile _retired(AppTile t) => t.icon == 'netflix' || t.icon == 'globoplay'
     ? AppTile(t.package, 'app')
     : t;
 
+/// The pseudo tiles of the build before Ilona TV, `elimor:apps` and
+/// `elimor:settings`, which an imported row still has.
+AppTile _renamed(AppTile t) => t.package.startsWith('elimor:')
+    ? AppTile(
+        'ilonatv:${t.package.substring('elimor:'.length)}',
+        t.icon,
+        image: t.image,
+        centered: t.centered,
+        background: t.background,
+      )
+    : t;
+
 /// A team followed in a league: its games come first in the home's games row.
 class SportsTeam {
   /// ESPN's id of the team.
@@ -276,7 +288,7 @@ class Settings extends ChangeNotifier {
       try {
         tiles = [
           for (final t in jsonDecode(json) as List)
-            _retired(AppTile.fromJson(t)),
+            _retired(_renamed(AppTile.fromJson(t))),
         ];
       } catch (_) {
         // ponytail: one bad entry resets the whole row to the factory tiles;

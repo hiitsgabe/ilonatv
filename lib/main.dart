@@ -25,6 +25,7 @@ import 'host.dart';
 import 'i18n.dart';
 import 'providers.dart' show openGame, openItem, youtubeUri, youtubeWebUri;
 import 'settings.dart';
+import 'settings_import.dart';
 import 'snapshot.dart';
 import 'sources.dart';
 import 'store.dart';
@@ -57,9 +58,11 @@ Future<void> main() async {
   // Posters, thumbs and icons, by the device's RAM; the backdrops keep their
   // own bytes.
   await Device.tune();
+  final filesDir = await Host.filesDir();
+  // Before the load, so what came over adb goes through its migrations.
+  await importSettings(File('$filesDir/import/settings.json'));
   final s = await Settings.load();
   I18n.language = s.language;
-  final filesDir = await Host.filesDir();
   final store = Store(Directory(filesDir));
   DiskImages.dir = Directory('$filesDir/cache/img');
   // The app list of the last run, so the dock is in the first frame.
