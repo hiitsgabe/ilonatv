@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -28,25 +29,36 @@ List<String> subnetHosts(String ip) {
   ];
 }
 
-/// Hosts on the phone's /24 with ADB (TCP 5555) open, as they answer.
-Stream<String> scanSubnet() async* {
-  final interfaces = await NetworkInterface.list(
-    type: InternetAddressType.IPv4,
-  );
-  final ip = pickIpv4([
-    for (final i in interfaces)
-      for (final a in i.addresses) (i.name, a.address),
-  ]);
-  if (ip == null) return;
-  final hosts = subnetHosts(ip);
-  for (var i = 0; i < hosts.length; i += 32) {
-    final found = await Future.wait(
-      hosts.sublist(i, min(i + 32, hosts.length)).map(_adbOpen),
-    );
-    for (final h in found) {
-      if (h != null) yield h;
+/// Hosts on the phone's /24 with ADB (TCP 5555) open, as they answer. Cancelling stops it after the batch in flight.
+Stream<String> scanSubnet() {
+  var cancelled = false;
+  final out = StreamController<String>(onCancel: () => cancelled = true);
+  out.onListen = () async {
+    try {
+      final interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      );
+      final ip = pickIpv4([
+        for (final i in interfaces)
+          for (final a in i.addresses) (i.name, a.address),
+      ]);
+      if (ip == null) return;
+      final hosts = subnetHosts(ip);
+      for (var i = 0; i < hosts.length && !cancelled; i += 32) {
+        final found = await Future.wait(
+          hosts.sublist(i, min(i + 32, hosts.length)).map(_adbOpen),
+        );
+        for (final h in found) {
+          if (h != null && !cancelled) out.add(h);
+        }
+      }
+    } catch (e) {
+      if (!cancelled) out.addError(e);
+    } finally {
+      out.close();
     }
-  }
+  };
+  return out.stream;
 }
 
 Future<String?> _adbOpen(String host) async {

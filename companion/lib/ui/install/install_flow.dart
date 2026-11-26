@@ -93,15 +93,19 @@ class _InstallFlowState extends State<InstallFlow> {
   });
 
   // dadb's shell and install have no bound of their own; a TV that drops off Wi-Fi would block forever.
-  Future<ShellResult> _sh(String cmd) => _adb
-      .shell(cmd)
-      .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          _adb.close();
-          return const ShellResult(-1, 'timeout');
-        },
-      );
+  Future<ShellResult> _sh(String cmd) {
+    final g = _gen;
+    return _adb
+        .shell(cmd)
+        .timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            // A run left with Back must not close the connection a newer run opened.
+            if (g == _gen) _adb.close();
+            return const ShellResult(-1, 'timeout');
+          },
+        );
+  }
 
   void _back() {
     _gen++;
@@ -115,6 +119,7 @@ class _InstallFlowState extends State<InstallFlow> {
       _step = _step >= 3 ? 2 : _step - 1;
       _busy = false;
       _error = null;
+      _canRetry = false;
     });
     if (_step == 2) _startScan();
   }
@@ -137,6 +142,9 @@ class _InstallFlowState extends State<InstallFlow> {
     });
     _scan = widget.scan().listen(
       (h) => setState(() => _hits.add(h)),
+      onError: (Object _) {
+        if (mounted) setState(() => _busy = false);
+      },
       onDone: () {
         if (mounted) setState(() => _busy = false);
       },
@@ -146,7 +154,10 @@ class _InstallFlowState extends State<InstallFlow> {
   void _typed() {
     final h = parseHostInput(_ip.text);
     if (h == null) {
-      setState(() => _error = t('badAddress'));
+      setState(() {
+        _error = t('badAddress');
+        _canRetry = false;
+      });
       return;
     }
     _pick(h.host, h.port ?? _adbPort);
@@ -173,11 +184,12 @@ class _InstallFlowState extends State<InstallFlow> {
 
   String _whyNot(AdbResult r) => r == AdbResult.unauthorized
       ? t('instNotAllowed')
-      : t('instNoAdb').replaceAll('{host}', _host);
+      : t('instNoAdb').replaceAll('{host}', '$_host:$_port');
 
   Future<void> _retry() async {
     final step = _step;
     if (step == 3) return _connect();
+    if (step < 4 || step > 7) return;
     final g = ++_gen;
     _show(step);
     await _adb.close();
@@ -195,7 +207,7 @@ class _InstallFlowState extends State<InstallFlow> {
         return _install(g);
       case 6:
         return _perms(g);
-      default:
+      case 7:
         return _pair(g);
     }
   }
@@ -250,13 +262,15 @@ class _InstallFlowState extends State<InstallFlow> {
       return _fail(t('instNoSpace'));
     }
     if (_stale(g)) return;
+    var timedOut = false;
     final err = await _adb
         .install(file.path)
         .timeout(
           const Duration(minutes: 3),
           onTimeout: () {
-            _adb.close();
-            return 'timeout';
+            timedOut = true;
+            if (!_stale(g)) _adb.close();
+            return '';
           },
         );
     try {
@@ -265,6 +279,7 @@ class _InstallFlowState extends State<InstallFlow> {
       // the cache is cleared by the system anyway
     }
     if (_stale(g)) return;
+    if (timedOut) return _fail(t('instTooLong'));
     if (err != null) return _fail(t('instFailed').replaceAll('{why}', err));
     return _perms(g);
   }

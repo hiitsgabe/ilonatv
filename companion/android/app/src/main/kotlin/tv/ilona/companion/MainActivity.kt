@@ -1,6 +1,5 @@
 package tv.ilona.companion
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -21,14 +20,18 @@ class MainActivity : FlutterActivity() {
                 "discoverStart" -> { finder.start(); result.success(null) }
                 "discoverStop" -> { finder.stop(); result.success(null) }
                 "deviceName" -> result.success(Build.MODEL)
-                "openUrl" -> result.success(
-                    try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.arguments as String)))
-                        true
-                    } catch (e: ActivityNotFoundException) {
-                        false
-                    },
-                )
+                "openUrl" -> {
+                    val uri = (call.arguments as? String)?.let(Uri::parse)
+                    result.success(
+                        uri?.scheme == "https" &&
+                            try {
+                                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                true
+                            } catch (e: Exception) {
+                                false
+                            },
+                    )
+                }
                 else -> result.notImplemented()
             }
         }

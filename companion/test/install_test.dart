@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,8 +22,9 @@ class FakeAdb extends Adb {
     this.abis = 'arm64-v8a,armeabi-v7a,armeabi',
     this.packages = '',
     this.hang,
+    this.secret = _secret,
   });
-  final String sdk, abis, packages;
+  final String sdk, abis, packages, secret;
   String? hang;
   final log = <String>[];
   final connects = <AdbResult>[];
@@ -43,7 +45,7 @@ class FakeAdb extends Adb {
       'getprop ro.product.cpu.abilist' => '$abis\n',
       'pm list packages tv.ilona.app' => packages,
       'content query --uri content://tv.ilona.app.pairing/secret' =>
-        'Row: 0 secret=$_secret\n',
+        'Row: 0 secret=$secret\n',
       _ => '',
     };
     return ShellResult(0, out);
@@ -112,6 +114,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester,
     FakeAdb adb, {
+    Stream<String> Function()? scan,
     Set<String> apks = const {
       'assets/tv/ilonatv-arm64-v8a.apk',
       'assets/tv/ilonatv-armeabi-v7a.apk',
@@ -124,7 +127,7 @@ void main() {
           tvs: tvs,
           assets: FakeAssets(apks),
           clientFor: (_) => client,
-          scan: () => Stream.value('10.0.0.7'),
+          scan: scan ?? () => Stream.value('10.0.0.7'),
         ),
       ),
     );
@@ -278,6 +281,91 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(t('instFireTv')), findsOneWidget);
     expect(adb.log, isEmpty);
+  });
+
+  testWidgets('after a failed connect, Back and a bad IP show Connect', (
+    tester,
+  ) async {
+    final adb = FakeAdb()..connects.add(AdbResult.unauthorized);
+    await pump(tester, adb);
+    await toConnect(tester);
+    expect(find.text(t('retry')), findsOneWidget);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'not an ip');
+    await tester.tap(find.text(t('instConnect')).last);
+    await tester.pumpAndSettle();
+    expect(find.text(t('badAddress')), findsOneWidget);
+    expect(find.text(t('retry')), findsNothing);
+    expect(find.widgetWithText(FilledButton, t('instConnect')), findsOneWidget);
+  });
+
+  testWidgets('unreachable names the port that was tried', (tester) async {
+    final adb = FakeAdb()..connects.add(AdbResult.unreachable);
+    await pump(tester, adb);
+    await tester.tap(find.text(t('instFireTv')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('next')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '10.0.0.9:5556');
+    await tester.tap(find.text(t('instConnect')).last);
+    await tester.pumpAndSettle();
+    expect(
+      find.text(t('instNoAdb').replaceAll('{host}', '10.0.0.9:5556')),
+      findsOneWidget,
+    );
+  });
+
+  for (final (name, hang) in [
+    ('Check', null),
+    ('Start and pair', 'am start -n tv.ilona.app/.MainActivity'),
+  ]) {
+    testWidgets('Back during $name closes ADB and returns to Find', (
+      tester,
+    ) async {
+      final adb = FakeAdb(hang: hang);
+      await pump(tester, adb);
+      await toConnect(tester);
+      if (hang != null) {
+        await tester.tap(find.text(t('instInstall')));
+        await tester.pump();
+        await tester.pump();
+        expect(find.text(t('instStarting')), findsOneWidget);
+      }
+      adb.log.clear();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(adb.log, ['close']);
+      expect(find.text(t('instFindTitle')), findsOneWidget);
+      expect(find.text('10.0.0.7'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 31));
+      expect(adb.log, ['close'], reason: 'a stale timeout closes nothing');
+    });
+  }
+
+  testWidgets('no secret yet shows instNoSecret with Retry', (tester) async {
+    final adb = FakeAdb(secret: 'NULL');
+    await pump(tester, adb);
+    await toConnect(tester);
+    await tester.tap(find.text(t('instInstall')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('instNoSecret')), findsOneWidget);
+    expect(find.text(t('retry')), findsOneWidget);
+    expect(tvs.all, isEmpty);
+  });
+
+  testWidgets('a scan that fails leaves the type-the-IP path', (tester) async {
+    await pump(
+      tester,
+      FakeAdb(),
+      scan: () => Stream.error(const SocketException('no network')),
+    );
+    await tester.tap(find.text(t('instFireTv')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('next')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('instNoneFound')), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
   });
 
   testWidgets('Home opens the installer', (tester) async {

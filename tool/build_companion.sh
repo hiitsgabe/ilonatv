@@ -6,6 +6,8 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if ! command -v flutter >/dev/null; then
   export PATH="$HOME/.cache/elimor-toolchain/flutter/bin:$PATH"
 fi
+export JAVA_HOME="${JAVA_HOME:-$HOME/.cache/elimor-toolchain/jdk}"
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/.cache/elimor-toolchain/sdk}"
 
 cd "$root"
 flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
