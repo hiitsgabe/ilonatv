@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../../adb.dart';
 import '../../i18n.dart';
+import '../../releases.dart';
 import '../../tv_client.dart';
 import '../../tvs.dart';
 import '../pair_page.dart';
@@ -35,14 +35,14 @@ class InstallFlow extends StatefulWidget {
     super.key,
     required this.adb,
     required this.tvs,
-    required this.assets,
     required this.clientFor,
+    this.releases = const ReleaseSource(),
     this.scan = scanSubnet,
   });
 
   final Adb adb;
   final Tvs tvs;
-  final AssetBundle assets;
+  final ReleaseSource releases;
   final ClientFor clientFor;
   final Stream<String> Function() scan;
 
@@ -59,9 +59,14 @@ class _InstallFlowState extends State<InstallFlow> {
   bool _busy = false;
   String? _error;
   bool _canRetry = false;
-  int _sdk = 0;
+  // Null when getprop gave no number; pm then reports a too-old TV itself.
+  int? _sdk;
   String? _abi;
   bool _update = false;
+  String? _onTv;
+  ReleaseAsset? _release;
+  int _got = 0;
+  bool _installing = false;
   List<String> _missed = const [];
   final _hits = <String>[];
   StreamSubscription<String>? _scan;
@@ -236,8 +241,10 @@ class _InstallFlowState extends State<InstallFlow> {
       out.add(r.output);
     }
     final [sdk, abis, pkgs] = out;
-    _sdk = int.tryParse(sdk.trim()) ?? 0;
-    if (_sdk < _minSdk) return _fail(t('instOldAndroid'), retry: false);
+    final api = _sdk = int.tryParse(sdk.trim());
+    if (api != null && api < _minSdk) {
+      return _fail(t('instOldAndroid'), retry: false);
+    }
     _abi = pickAbi(abis);
     if (_abi == null) {
       return _fail(
@@ -246,32 +253,65 @@ class _InstallFlowState extends State<InstallFlow> {
       );
     }
     _update = pkgs.split('\n').any((l) => l.trim() == 'package:$_pkg');
+    _onTv = null;
+    if (_update) {
+      final r = await _sh('dumpsys package $_pkg | grep versionName');
+      if (_stale(g)) return;
+      if (r.exitCode == -1) return _fail(t('instAdbLost'));
+      _onTv = RegExp(r'versionName=(\S+)').firstMatch(r.output)?.group(1);
+    }
+    final ReleaseAsset? release;
+    try {
+      release = await widget.releases.latest(_abi!);
+    } on NoAsset {
+      if (_stale(g)) return;
+      return _fail(t('instNoApk').replaceAll('{abi}', _abi!), retry: false);
+    } catch (_) {
+      if (_stale(g)) return;
+      return _fail(t('instOffline'));
+    }
+    if (_stale(g)) return;
+    if (release == null) {
+      return _fail(
+        t('instNoRelease').replaceAll('{url}', readmeUrl),
+        retry: false,
+      );
+    }
+    _release = release;
     setState(() => _busy = false);
   }
 
   Future<void> _install(int g) async {
     _show(5);
-    final name = 'ilonatv-$_abi.apk';
-    final ByteData data;
+    setState(() {
+      _got = 0;
+      _installing = false;
+    });
+    // One file per run: a run left with Back may still be downloading.
+    final file = File('${Directory.systemTemp.path}/ilonatv-$_abi-$g.apk');
     try {
-      data = await widget.assets.load('assets/tv/$name');
-    } catch (_) {
-      if (_stale(g)) return;
-      return _fail(t('instNoApk').replaceAll('{abi}', _abi!), retry: false);
-    }
-    if (_stale(g)) return;
-    final file = File('${Directory.systemTemp.path}/$name');
-    try {
-      // shortcut: a sync write blocks the UI for the APK's size (tens of MB, well under a second); go async if it janks.
-      file.writeAsBytesSync(
-        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-        flush: true,
+      await widget.releases.fetch(
+        _release!,
+        file,
+        progress: (got, _) {
+          if (!_stale(g)) setState(() => _got = got);
+        },
       );
+    } on BadChecksum {
+      if (_stale(g)) return;
+      return _fail(t('instBadChecksum'));
     } on FileSystemException {
       if (_stale(g)) return;
       return _fail(t('instNoSpace'));
+    } catch (_) {
+      if (_stale(g)) return;
+      return _fail(t('instOffline'));
     }
-    if (_stale(g)) return;
+    if (_stale(g)) {
+      _delete(file);
+      return;
+    }
+    setState(() => _installing = true);
     var timedOut = false;
     final err = await _adb
         .install(file.path)
@@ -283,11 +323,7 @@ class _InstallFlowState extends State<InstallFlow> {
             return '';
           },
         );
-    try {
-      file.deleteSync();
-    } on FileSystemException {
-      // the cache is cleared by the system anyway
-    }
+    _delete(file);
     if (_stale(g)) return;
     if (timedOut) return _fail(t('instTooLong'));
     if (err != null) {
@@ -303,12 +339,20 @@ class _InstallFlowState extends State<InstallFlow> {
     return _perms(g);
   }
 
+  void _delete(File f) {
+    try {
+      f.deleteSync();
+    } on FileSystemException {
+      // the cache is cleared by the system anyway
+    }
+  }
+
   Future<void> _perms(int g) async {
     _show(6);
     final cmds = {
       for (final p in ['WRITE_SECURE_SETTINGS', 'DUMP', 'PACKAGE_USAGE_STATS'])
         p: 'pm grant $_pkg android.permission.$p',
-      if (_sdk >= 33)
+      if ((_sdk ?? 0) >= 33)
         'ACCESS_RESTRICTED_SETTINGS':
             'appops set $_pkg ACCESS_RESTRICTED_SETTINGS allow',
     };
@@ -525,25 +569,60 @@ class _InstallFlowState extends State<InstallFlow> {
       case 4:
         if (working) return ([_Note(t('instChecking')), _spinner], null);
         if (_error != null) return (const [], null);
+        final onTv = _onTv;
+        final current =
+            onTv != null && compareVersions(onTv, _release!.version) >= 0;
         return (
           [
             _Note(
               t('instTvSummary')
-                  .replaceAll('{sdk}', '$_sdk')
+                  .replaceAll('{sdk}', '${_sdk ?? '?'}')
                   .replaceAll('{abi}', _abi!),
             ),
-            _Note(t(_update ? 'instExisting' : 'instFresh'), big: true),
+            _Note(t('instRelease').replaceAll('{version}', _release!.version)),
+            if (current) ...[
+              _Note(t('instUpToDate').replaceAll('{version}', onTv), big: true),
+              TextButton(
+                onPressed: () => _install(++_gen),
+                child: Text(t('instReinstall')),
+              ),
+            ] else
+              _Note(t(_update ? 'instExisting' : 'instFresh'), big: true),
           ],
-          _Primary(
-            t(_update ? 'instUpdate' : 'instInstall'),
-            () => _install(++_gen),
-          ),
+          current
+              ? _Primary(t('next'), () => _pair(++_gen))
+              : _Primary(
+                  t(_update ? 'instUpdate' : 'instInstall'),
+                  () => _install(++_gen),
+                ),
         );
       case 5:
+        if (_installing) {
+          return (
+            [
+              _Note(t('instInstalling')),
+              if (working) const LinearProgressIndicator(),
+            ],
+            null,
+          );
+        }
+        final total = _release?.size ?? 0;
+        String mb(int bytes) => (bytes / (1 << 20)).toStringAsFixed(1);
         return (
           [
-            _Note(t('instInstalling')),
-            if (working) const LinearProgressIndicator(),
+            _Note(
+              t('instDownloading')
+                  .replaceAll('{version}', '${_release?.version}'),
+            ),
+            if (working) ...[
+              LinearProgressIndicator(value: total > 0 ? _got / total : null),
+              const SizedBox(height: 8),
+              Text(
+                t('instMbOf')
+                    .replaceAll('{got}', mb(_got))
+                    .replaceAll('{total}', mb(total)),
+              ),
+            ],
           ],
           null,
         );

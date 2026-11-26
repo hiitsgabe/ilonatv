@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilonatv_companion/adb.dart';
 import 'package:ilonatv_companion/i18n.dart';
+import 'package:ilonatv_companion/releases.dart';
 import 'package:ilonatv_companion/tv_client.dart';
 import 'package:ilonatv_companion/tvs.dart';
 import 'package:ilonatv_companion/ui/install/install_flow.dart';
@@ -23,8 +24,10 @@ class FakeAdb extends Adb {
     this.packages = '',
     this.hang,
     this.secret = _secret,
+    this.version,
   });
   final String sdk, abis, packages, secret;
+  final String? version;
   String? hang;
   final log = <String>[];
   final connects = <AdbResult>[];
@@ -45,6 +48,8 @@ class FakeAdb extends Adb {
       'getprop ro.build.version.sdk' => '$sdk\n',
       'getprop ro.product.cpu.abilist' => '$abis\n',
       'pm list packages tv.ilona.app' => packages,
+      'dumpsys package tv.ilona.app | grep versionName' =>
+        version == null ? '' : '    versionName=$version\n',
       'content query --uri content://tv.ilona.app.pairing/secret' =>
         'Row: 0 secret=$secret\n',
       _ => '',
@@ -54,7 +59,9 @@ class FakeAdb extends Adb {
 
   @override
   Future<String?> install(String path) async {
-    log.add('install ${path.split('/').last}');
+    log.add(
+      'install ${path.split('/').last.replaceFirst(RegExp(r'-\d+\.apk$'), '.apk')}',
+    );
     installed = path;
     return installError;
   }
@@ -86,22 +93,50 @@ class FakeClient extends TvClient {
   Stream<TvInfo> events() => const Stream.empty();
 }
 
-class FakeAssets extends CachingAssetBundle {
-  FakeAssets(this.files);
-  final Set<String> files;
+class FakeReleases extends ReleaseSource {
+  FakeReleases({this.abis = const {'arm64-v8a', 'armeabi-v7a'}});
+  final Set<String> abis;
+  String? version = 'v0.6.1';
+  Object? latestError;
+  final fetchErrors = <Object>[];
+  Completer<void>? gate;
+  final fetched = <String>[];
 
   @override
-  Future<ByteData> load(String key) async {
-    if (!files.contains(key)) throw FlutterError('Unable to load asset: $key');
-    return ByteData.sublistView(Uint8List.fromList([1, 2, 3]));
+  Future<ReleaseAsset?> latest(String abi) async {
+    if (latestError case final e?) throw e;
+    if (version == null) return null;
+    if (!abis.contains(abi)) throw const NoAsset();
+    return ReleaseAsset(
+      url: Uri.parse('https://example.test/ilonatv-$abi.apk'),
+      size: 3 << 20,
+      version: version!,
+      sha256: '',
+    );
+  }
+
+  @override
+  Future<File> fetch(
+    ReleaseAsset a,
+    File to, {
+    void Function(int received, int total)? progress,
+  }) async {
+    fetched.add(a.url.pathSegments.last);
+    if (fetchErrors.isNotEmpty) throw fetchErrors.removeAt(0);
+    progress?.call(1 << 20, a.size);
+    await gate?.future;
+    to.writeAsBytesSync([1, 2, 3]);
+    return to;
   }
 }
 
 void main() {
   late Tvs tvs;
   late FakeClient client;
+  late FakeReleases releases;
 
   setUp(() {
+    releases = FakeReleases();
     I18n.language = 'en';
     SharedPreferences.setMockInitialValues({});
     tvs = Tvs();
@@ -117,17 +152,13 @@ void main() {
     WidgetTester tester,
     FakeAdb adb, {
     Stream<String> Function()? scan,
-    Set<String> apks = const {
-      'assets/tv/ilonatv-arm64-v8a.apk',
-      'assets/tv/ilonatv-armeabi-v7a.apk',
-    },
   }) async {
     await tester.pumpWidget(
       MaterialApp(
         home: InstallFlow(
           adb: adb,
           tvs: tvs,
-          assets: FakeAssets(apks),
+          releases: releases,
           clientFor: (_) => client,
           scan: scan ?? () => Stream.value('10.0.0.7'),
         ),
@@ -152,7 +183,11 @@ void main() {
     await pump(tester, adb);
     expect(find.text(t('instStepOf').replaceAll('{n}', '1')), findsOneWidget);
     await toConnect(tester);
-    expect(find.text(t('instInstall')), findsOneWidget);
+    expect(
+      find.text(t('instRelease').replaceAll('{version}', 'v0.6.1')),
+      findsOneWidget,
+    );
+    expect(find.text(t('instFresh')), findsOneWidget);
     await tester.tap(find.text(t('instInstall')));
     await tester.pumpAndSettle();
 
@@ -233,18 +268,97 @@ void main() {
     expect(adb.installed, isNull);
   });
 
-  testWidgets('a missing APK for the ABI says so', (tester) async {
+  testWidgets('a release without the ABI asset stops at Check', (tester) async {
+    releases = FakeReleases(abis: {'arm64-v8a'});
     final adb = FakeAdb(abis: 'armeabi-v7a,armeabi');
-    await pump(tester, adb, apks: {'assets/tv/ilonatv-arm64-v8a.apk'});
+    await pump(tester, adb);
     await toConnect(tester);
-    await tester.tap(find.text(t('instInstall')));
-    await tester.pumpAndSettle();
     expect(
       find.text(t('instNoApk').replaceAll('{abi}', 'armeabi-v7a')),
       findsOneWidget,
     );
-    expect(adb.installed, isNull);
+    expect(find.text(t('instInstall')), findsNothing);
+    expect(find.text(t('retry')), findsNothing);
+    expect(releases.fetched, isEmpty);
   });
+
+  testWidgets('no release yet points to the README, without Retry', (
+    tester,
+  ) async {
+    releases.version = null;
+    final adb = FakeAdb();
+    await pump(tester, adb);
+    await toConnect(tester);
+    expect(
+      find.text(t('instNoRelease').replaceAll('{url}', readmeUrl)),
+      findsOneWidget,
+    );
+    expect(find.text(t('retry')), findsNothing);
+    expect(find.text(t('instInstall')), findsNothing);
+  });
+
+  testWidgets('GitHub unreachable at Check offers Retry', (tester) async {
+    releases.latestError = const SocketException('no network');
+    final adb = FakeAdb();
+    await pump(tester, adb);
+    await toConnect(tester);
+    expect(find.text(t('instOffline')), findsOneWidget);
+    releases.latestError = null;
+    await tester.tap(find.text(t('retry')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(t('instRelease').replaceAll('{version}', 'v0.6.1')),
+      findsOneWidget,
+    );
+    expect(find.text(t('instInstall')), findsOneWidget);
+  });
+
+  testWidgets('the download shows MB of MB, then installs', (tester) async {
+    releases.gate = Completer();
+    final adb = FakeAdb();
+    await pump(tester, adb);
+    await toConnect(tester);
+    await tester.tap(find.text(t('instInstall')));
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.text(t('instDownloading').replaceAll('{version}', 'v0.6.1')),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        t('instMbOf').replaceAll('{got}', '1.0').replaceAll('{total}', '3.0'),
+      ),
+      findsOneWidget,
+    );
+    expect(adb.installed, isNull);
+    releases.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(releases.fetched, ['ilonatv-arm64-v8a.apk']);
+    expect(adb.installed, contains('ilonatv-arm64-v8a'));
+    expect(File(adb.installed!).existsSync(), isFalse);
+    expect(find.text(t('instDoneFire')), findsOneWidget);
+  });
+
+  for (final (name, error, key) in [
+    ('a checksum mismatch', const BadChecksum(), 'instBadChecksum'),
+    ('a lost download', const SocketException('reset'), 'instOffline'),
+  ]) {
+    testWidgets('$name shows $key, and Retry downloads again', (tester) async {
+      releases.fetchErrors.add(error);
+      final adb = FakeAdb();
+      await pump(tester, adb);
+      await toConnect(tester);
+      await tester.tap(find.text(t('instInstall')));
+      await tester.pumpAndSettle();
+      expect(find.text(t(key)), findsOneWidget);
+      expect(adb.installed, isNull);
+      await tester.tap(find.text(t('retry')));
+      await tester.pumpAndSettle();
+      expect(releases.fetched, hasLength(2));
+      expect(find.text(t('instDoneFire')), findsOneWidget);
+    });
+  }
 
   testWidgets('SDK 33 adds the appops command', (tester) async {
     final adb = FakeAdb(sdk: '33');
@@ -262,16 +376,77 @@ void main() {
     expect(find.text(t('instDoneFire')), findsOneWidget);
   });
 
-  testWidgets('an existing package says Update and still installs', (
+  testWidgets('an older IlonaTv on the TV says Update and installs', (
     tester,
   ) async {
-    final adb = FakeAdb(packages: 'package:tv.ilona.app\n');
+    final adb = FakeAdb(packages: 'package:tv.ilona.app\n', version: '0.6.0');
     await pump(tester, adb);
     await toConnect(tester);
+    expect(
+      adb.log,
+      contains('dumpsys package tv.ilona.app | grep versionName'),
+    );
+    expect(find.text(t('instExisting')), findsOneWidget);
     expect(find.text(t('instInstall')), findsNothing);
     await tester.tap(find.text(t('instUpdate')));
     await tester.pumpAndSettle();
-    expect(adb.installed, endsWith('ilonatv-arm64-v8a.apk'));
+    expect(adb.installed, contains('ilonatv-arm64-v8a'));
+    expect(find.text(t('instDoneFire')), findsOneWidget);
+  });
+
+  for (final version in ['0.6.1', '0.7.0']) {
+    testWidgets('IlonaTv $version on the TV skips to pairing by default', (
+      tester,
+    ) async {
+      final adb = FakeAdb(packages: 'package:tv.ilona.app\n', version: version);
+      await pump(tester, adb);
+      await toConnect(tester);
+      expect(
+        find.text(t('instUpToDate').replaceAll('{version}', version)),
+        findsOneWidget,
+      );
+      expect(find.text(t('instUpdate')), findsNothing);
+      expect(find.text(t('instReinstall')), findsOneWidget);
+      await tester.tap(find.text(t('next')));
+      await tester.pumpAndSettle();
+      expect(find.text(t('instDoneFire')), findsOneWidget);
+      expect(releases.fetched, isEmpty);
+      expect(adb.installed, isNull);
+      expect(adb.log.where((l) => l.startsWith('pm grant')), isEmpty);
+      expect(tvs.all.single.token, 'tok');
+    });
+  }
+
+  testWidgets('Reinstall on the same version downloads and installs', (
+    tester,
+  ) async {
+    final adb = FakeAdb(packages: 'package:tv.ilona.app\n', version: '0.6.1');
+    await pump(tester, adb);
+    await toConnect(tester);
+    await tester.tap(find.text(t('instReinstall')));
+    await tester.pumpAndSettle();
+    expect(releases.fetched, ['ilonatv-arm64-v8a.apk']);
+    expect(adb.installed, contains('ilonatv-arm64-v8a'));
+    expect(find.text(t('instDoneFire')), findsOneWidget);
+  });
+
+  testWidgets('an SDK that does not parse goes on to install', (tester) async {
+    final adb = FakeAdb(sdk: '');
+    await pump(tester, adb);
+    await toConnect(tester);
+    expect(find.text(t('instOldAndroid')), findsNothing);
+    expect(
+      find.text(
+        t('instTvSummary')
+            .replaceAll('{sdk}', '?')
+            .replaceAll('{abi}', 'arm64-v8a'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text(t('instInstall')));
+    await tester.pumpAndSettle();
+    expect(adb.installed, isNotNull);
+    expect(adb.log.where((l) => l.startsWith('appops')), isEmpty);
     expect(find.text(t('instDoneFire')), findsOneWidget);
   });
 

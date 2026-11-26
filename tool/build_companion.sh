@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the TV APKs, bundles them into the companion, and builds the companion release APK.
+# Builds the companion release APK. It installs IlonaTv from the latest GitHub Release, so no TV APK goes in.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,13 +9,6 @@ fi
 export JAVA_HOME="${JAVA_HOME:-$HOME/.cache/elimor-toolchain/jdk}"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/.cache/elimor-toolchain/sdk}"
 
-cd "$root"
-flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
-mkdir -p companion/assets/tv
-for abi in armeabi-v7a arm64-v8a; do
-  cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "companion/assets/tv/ilonatv-$abi.apk"
-done
-
-cd companion
+cd "$root/companion"
 flutter build apk --release
 echo "$root/companion/build/app/outputs/flutter-apk/app-release.apk"

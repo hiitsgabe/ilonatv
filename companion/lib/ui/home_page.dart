@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../adb.dart';
 import '../i18n.dart';
@@ -69,12 +68,8 @@ class _HomePageState extends State<HomePage> {
 
   void _install() => Navigator.of(context).push(
     MaterialPageRoute(
-      builder: (_) => InstallFlow(
-        adb: Adb(),
-        tvs: widget.tvs,
-        assets: rootBundle,
-        clientFor: widget.clientFor,
-      ),
+      builder: (_) =>
+          InstallFlow(adb: Adb(), tvs: widget.tvs, clientFor: widget.clientFor),
     ),
   );
 
