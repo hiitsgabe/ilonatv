@@ -19,7 +19,7 @@ final _dump = [
 ].join();
 
 const _apps = {
-  'tv.ilona.app': InstalledApp('tv.ilona.app', 'IlonaTv', tv: true),
+  'tv.ilona.app': InstalledApp('tv.ilona.app', 'Ilona TV', tv: true),
   'com.example.vpn': InstalledApp('com.example.vpn', 'Example VPN'),
   'com.stremio.one': InstalledApp('com.stremio.one', 'Stremio'),
   'com.amazon.tv.ime': InstalledApp('com.amazon.tv.ime', 'Keyboard', tv: true),
@@ -65,8 +65,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('293 MB free of 1663 MB'), findsOneWidget);
-    // Not IlonaTv, not the keyboard, not a package with no app.
-    expect(find.text('IlonaTv'), findsNothing);
+    // Not Ilona TV, not the keyboard, not a package with no app.
+    expect(find.text('Ilona TV'), findsNothing);
     expect(find.text('Keyboard'), findsNothing);
     final stremio = tester.getTopLeft(find.text('Stremio'));
     final vpn = tester.getTopLeft(find.text('Example VPN'));
@@ -74,7 +74,7 @@ void main() {
     expect(find.text('104 MB · Cached'), findsOneWidget);
     expect(find.text('59 MB · Active'), findsOneWidget);
 
-    // Each Close is a Force stop; the next waits for IlonaTv to come back.
+    // Each Close is a Force stop; the next waits for Ilona TV to come back.
     Future<void> back() async {
       for (final s in [
         AppLifecycleState.inactive,
@@ -92,7 +92,7 @@ void main() {
     await tester.tap(find.text('Stremio'));
     await tester.pumpAndSettle();
     expect(stopped, ['com.stremio.one']);
-    // Still waiting for IlonaTv: a second press does nothing.
+    // Still waiting for Ilona TV: a second press does nothing.
     await tester.tap(find.text('Example VPN'));
     await tester.pumpAndSettle();
     expect(stopped, ['com.stremio.one']);

@@ -20,7 +20,7 @@ class Tv {
   String? token;
   bool found;
 
-  // The service name is "IlonaTv on <model>"; the model is a detail for the list.
+  // The service name is "Ilona TV on <model>"; the model is a detail for the list.
   String get label {
     final i = name.lastIndexOf(' on ');
     return i > 0 ? name.substring(0, i) : name;

@@ -23,7 +23,7 @@ class AppTile {
   final String package;
   final String icon;
 
-  /// A picture of the user's, copied into IlonaTv's files: drawn in [icon]'s
+  /// A picture of the user's, copied into Ilona TV's files: drawn in [icon]'s
   /// place, covering the card, or with [centered] contained in its middle
   /// over [background] (ARGB; null is glass).
   final String? image;
@@ -163,10 +163,10 @@ class Settings extends ChangeNotifier {
   /// instead of stopping on the list of streams.
   bool stremioAutoPlay = true;
 
-  /// The remote's mic button opens IlonaTv instead of Alexa: the accessibility
+  /// The remote's mic button opens Ilona TV instead of Alexa: the accessibility
   /// service dismisses Alexa's window and comes to the front
   /// (`flutter.alexaBounce`, HomeWatcher.onAlexa). Fire OS still hears the
-  /// button, so Alexa may flash before IlonaTv takes over.
+  /// button, so Alexa may flash before Ilona TV takes over.
   bool alexaBounce = false;
 
   /// The one colour the assistant screen's gradient is built from (ARGB).

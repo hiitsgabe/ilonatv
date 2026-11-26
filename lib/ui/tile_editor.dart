@@ -424,7 +424,7 @@ class _TileEditorState extends State<TileEditor> {
 }
 
 /// The pictures on the device, newest first, as a grid of [width] whose
-/// thumbnails load as they scroll in. OK on one copies it into IlonaTv's files
+/// thumbnails load as they scroll in. OK on one copies it into Ilona TV's files
 /// and pops the copy's path. Without read access or without pictures, it says
 /// how to put some on the TV, with a retry.
 class _ImagePicker extends StatefulWidget {

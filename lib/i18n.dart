@@ -52,15 +52,15 @@ const _strings = {
     'images': 'images',
     'fireTvMode': 'Launcher mode',
     'fireTvModeHelp':
-        'Brings IlonaTv back when the Home button is pressed. '
+        'Brings Ilona TV back when the Home button is pressed. '
         'Needs the accessibility service.',
     'doublePowerFix': 'Remote sends power twice',
     'doublePowerFixHelp':
         'For a remote whose power toggles the TV twice: '
         'turning off then straight back on is undone. To turn the TV on, press any other button.',
-    'alexaBounce': 'Mic button opens IlonaTv',
+    'alexaBounce': 'Mic button opens Ilona TV',
     'alexaBounceHelp':
-        'When the remote mic button opens Alexa, dismiss it and come back to IlonaTv. '
+        'When the remote mic button opens Alexa, dismiss it and come back to Ilona TV. '
         'Fire OS still hears the button, so Alexa may flash for a moment first.',
     'assistantColor': 'Assistant colour',
     'language': 'Language',
@@ -71,7 +71,7 @@ const _strings = {
     'sysDevice': 'My Fire TV',
     'sysAccessibility': 'Accessibility',
     'sysAll': 'All settings',
-    'sysAllHint': "Amazon's own screen: press Home to come back to IlonaTv.",
+    'sysAllHint': "Amazon's own screen: press Home to come back to Ilona TV.",
     'about': 'About',
     'memory': 'Memory in use',
     'imageCache': 'Image cache',
@@ -82,8 +82,8 @@ const _strings = {
     'customImage': 'Custom image…',
     'chooseImage': 'Choose an image',
     'imagesDenied':
-        'IlonaTv may not read the pictures on this TV. Allow it when Android '
-        'asks, or in the system settings under Apps, IlonaTv, Permissions.',
+        'Ilona TV may not read the pictures on this TV. Allow it when Android '
+        'asks, or in the system settings under Apps, Ilona TV, Permissions.',
     'imagesNone': 'There are no pictures on this TV yet.',
     'imagesHowTo':
         'Put a PNG or JPEG in the Download or Pictures folder: from a computer '
@@ -102,7 +102,7 @@ const _strings = {
     'checkAgain': 'Check again',
     'openAccessibilitySettings': 'Open accessibility settings',
     'restrictedHint':
-        'IlonaTv greyed out there? Allow restricted settings first:',
+        'Ilona TV greyed out there? Allow restricted settings first:',
     'openAppInfo': 'Open app info',
     'version': 'Version',
     'notInstalled': 'Not installed',
@@ -186,13 +186,13 @@ const _strings = {
     'stepOf': '{n} of {total}',
     'runSetup': 'Run setup again',
     'licence': 'Licence',
-    'attribution': 'This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB. Where-to-watch data and streaming charts by JustWatch. IlonaTv is not affiliated with the apps and services it opens.',
+    'attribution': 'This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB. Where-to-watch data and streaming charts by JustWatch. Ilona TV is not affiliated with the apps and services it opens.',
     'temperatureUnit': 'Temperature unit',
     'wizWelcomeHelp': "Your TV's home: your apps, what to watch next and today's games, on one screen. A few steps and it's yours.",
     'wizLocation': 'Where you are',
-    'wizLocationHelp': 'Your city brings the weather to the home and tells IlonaTv which country your streaming services are in.',
+    'wizLocationHelp': 'Your city brings the weather to the home and tells Ilona TV which country your streaming services are in.',
     'wizTmdb': 'Movies and series',
-    'wizTmdbHelp': 'TMDB gives IlonaTv its movie and series rows, posters and search. Make an account at themoviedb.org, ask for an API key at themoviedb.org/settings/api and type it here.',
+    'wizTmdbHelp': 'TMDB gives Ilona TV its movie and series rows, posters and search. Make an account at themoviedb.org, ask for an API key at themoviedb.org/settings/api and type it here.',
     'wizTitles': 'Where titles open',
     'wizTitlesHelp': 'In a Stremio app, or in the streaming apps you already have: each title in one that carries it.',
     'wizNeedsKey': 'Your streaming apps need the TMDB key of the step before: go back to add it, or add it later in Settings.',
@@ -229,7 +229,7 @@ const _strings = {
     'inSpotlight': 'in the spotlight',
     'companion': 'Companion',
     'companionHelp':
-        "Open the IlonaTv Companion, or scan with your phone's camera.",
+        "Open the Ilona TV Companion, or scan with your phone's camera.",
     'pairCode': 'Code',
     'pairedDevices': 'Paired devices',
     'newQr': 'New QR',
@@ -272,15 +272,15 @@ const _strings = {
     'images': 'imagens',
     'fireTvMode': 'Modo launcher',
     'fireTvModeHelp':
-        'Traz o IlonaTv de volta quando você aperta o botão Home. '
+        'Traz o Ilona TV de volta quando você aperta o botão Home. '
         'Precisa do serviço de acessibilidade.',
     'doublePowerFix': 'Controle manda power duas vezes',
     'doublePowerFixHelp':
         'Para um controle cujo power alterna a TV duas vezes: '
         'desligar e religar na hora é desfeito. Para ligar a TV, aperte qualquer outro botão.',
-    'alexaBounce': 'Botão de mic abre o IlonaTv',
+    'alexaBounce': 'Botão de mic abre o Ilona TV',
     'alexaBounceHelp':
-        'Quando o botão de microfone do controle abre a Alexa, ela é dispensada e o IlonaTv volta. '
+        'Quando o botão de microfone do controle abre a Alexa, ela é dispensada e o Ilona TV volta. '
         'A Fire OS ainda ouve o botão, então a Alexa pode piscar por um instante antes.',
     'assistantColor': 'Cor do assistente',
     'language': 'Idioma',
@@ -291,7 +291,7 @@ const _strings = {
     'sysDevice': 'Meu Fire TV',
     'sysAccessibility': 'Acessibilidade',
     'sysAll': 'Todos os ajustes',
-    'sysAllHint': 'Tela da própria Amazon: aperte Home para voltar ao IlonaTv.',
+    'sysAllHint': 'Tela da própria Amazon: aperte Home para voltar ao Ilona TV.',
     'about': 'Sobre',
     'memory': 'Memória em uso',
     'imageCache': 'Cache de imagens',
@@ -302,9 +302,9 @@ const _strings = {
     'customImage': 'Imagem personalizada…',
     'chooseImage': 'Escolha uma imagem',
     'imagesDenied':
-        'O IlonaTv não tem permissão para ler as imagens desta TV. Permita '
+        'O Ilona TV não tem permissão para ler as imagens desta TV. Permita '
         'quando o Android perguntar, ou nos ajustes do sistema em Apps, '
-        'IlonaTv, Permissões.',
+        'Ilona TV, Permissões.',
     'imagesNone': 'Ainda não há imagens nesta TV.',
     'imagesHowTo':
         'Coloque um PNG ou JPEG na pasta Download ou Pictures: de um computador '
@@ -323,7 +323,7 @@ const _strings = {
     'checkAgain': 'Verificar de novo',
     'openAccessibilitySettings': 'Abrir ajustes de acessibilidade',
     'restrictedHint':
-        'IlonaTv cinza lá? Antes, permita configurações restritas:',
+        'Ilona TV cinza lá? Antes, permita configurações restritas:',
     'openAppInfo': 'Abrir informações do app',
     'version': 'Versão',
     'notInstalled': 'Não instalado',
@@ -408,13 +408,13 @@ const _strings = {
     'stepOf': '{n} de {total}',
     'runSetup': 'Refazer a configuração',
     'licence': 'Licença',
-    'attribution': 'Este produto usa o TMDB e as APIs do TMDB, mas não é endossado, certificado nem aprovado de outra forma pelo TMDB. Dados de onde assistir e rankings de streaming: JustWatch. O IlonaTv não tem ligação com os apps e serviços que abre.',
+    'attribution': 'Este produto usa o TMDB e as APIs do TMDB, mas não é endossado, certificado nem aprovado de outra forma pelo TMDB. Dados de onde assistir e rankings de streaming: JustWatch. O Ilona TV não tem ligação com os apps e serviços que abre.',
     'temperatureUnit': 'Unidade de temperatura',
     'wizWelcomeHelp': 'A tela inicial da sua TV: seus apps, o que assistir a seguir e os jogos do dia, numa tela só. Alguns passos e ela fica do seu jeito.',
     'wizLocation': 'Onde você está',
-    'wizLocationHelp': 'Sua cidade traz o tempo para a tela inicial e diz ao IlonaTv de que país são os seus serviços de streaming.',
+    'wizLocationHelp': 'Sua cidade traz o tempo para a tela inicial e diz ao Ilona TV de que país são os seus serviços de streaming.',
     'wizTmdb': 'Filmes e séries',
-    'wizTmdbHelp': 'O TMDB dá ao IlonaTv as linhas de filmes e séries, os pôsteres e a busca. Crie uma conta em themoviedb.org, peça uma chave de API em themoviedb.org/settings/api e digite aqui.',
+    'wizTmdbHelp': 'O TMDB dá ao Ilona TV as linhas de filmes e séries, os pôsteres e a busca. Crie uma conta em themoviedb.org, peça uma chave de API em themoviedb.org/settings/api e digite aqui.',
     'wizTitles': 'Onde os títulos abrem',
     'wizTitlesHelp': 'Num app do Stremio, ou nos apps de streaming que você já tem: cada título num que o oferece.',
     'wizNeedsKey': 'Os apps de streaming precisam da chave do TMDB do passo anterior: volte para adicioná-la, ou adicione depois em Ajustes.',
@@ -450,7 +450,7 @@ const _strings = {
     'inSpotlight': 'em destaque',
     'companion': 'Companion',
     'companionHelp':
-        'Abra o IlonaTv Companion, ou escaneie com a câmera do celular.',
+        'Abra o Ilona TV Companion, ou escaneie com a câmera do celular.',
     'pairCode': 'Código',
     'pairedDevices': 'Aparelhos pareados',
     'newQr': 'Novo QR',

@@ -87,7 +87,7 @@ void main() {
     );
   });
 
-  test('getJson sends its headers and the IlonaTv user agent', () async {
+  test('getJson sends its headers and the Ilona TV user agent', () async {
     final base = await serve((req) {
       req.response.headers.contentType = ContentType.json;
       req.response.write(
@@ -104,7 +104,7 @@ void main() {
     final Fetch fetch = getJson;
     expect(await fetch(base, headers: {'x-test': 'yes'}), {
       'x': 'yes',
-      'ua': 'IlonaTv/0.2',
+      'ua': 'IlonaTV/0.2',
     });
   });
 
@@ -148,7 +148,7 @@ void main() {
     final GetText text = getText;
     expect(await post(base, {}, headers: headers), {'heard': 'TV|b'});
     expect(await text(base, headers: headers), 'ação TV|b');
-    expect(await text(base), 'ação IlonaTv/0.2|null');
+    expect(await text(base), 'ação IlonaTV/0.2|null');
   });
 
   test('postJson encodes the body before it connects', () async {

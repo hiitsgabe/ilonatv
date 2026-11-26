@@ -22,15 +22,15 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import kotlin.math.roundToInt
 
-/** The Launcher mode switch in IlonaTv's settings, as Flutter's shared_preferences stores it. */
+/** The Launcher mode switch in Ilona TV's settings, as Flutter's shared_preferences stores it. */
 fun Context.fireTvMode(): Boolean =
     getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE).getBoolean("flutter.fireTvMode", false)
 
-/** The "remote sends power twice" fix in IlonaTv's settings (see HomeWatcher.screen). */
+/** The "remote sends power twice" fix in Ilona TV's settings (see HomeWatcher.screen). */
 fun Context.doublePowerFix(): Boolean =
     getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE).getBoolean("flutter.doublePowerFix", false)
 
-/** The "mic button opens IlonaTv, not Alexa" switch (see HomeWatcher.onAlexa). */
+/** The "mic button opens Ilona TV, not Alexa" switch (see HomeWatcher.onAlexa). */
 fun Context.alexaBounce(): Boolean =
     getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE).getBoolean("flutter.alexaBounce", false)
 
@@ -41,7 +41,7 @@ fun Context.assistantColor(): Int =
 
 private fun Context.prefs() = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
 
-/** IlonaTv's UI language ("en" or "pt"), as Settings stores it. */
+/** Ilona TV's UI language ("en" or "pt"), as Settings stores it. */
 fun Context.language(): String = prefs().getString("flutter.language", "en") ?: "en"
 
 /** The Gemini API key for the assistant (never committed; set in Settings). */
@@ -51,9 +51,9 @@ fun Context.geminiKey(): String = prefs().getString("flutter.geminiKey", "") ?: 
 fun Context.geminiModel(): String = prefs().getString("flutter.geminiModel", "gemini-3.6-flash") ?: "gemini-3.6-flash"
 
 /**
- * Opaque window over the Amazon home while IlonaTv comes back: the last snapshot of IlonaTv's home, else black, with
+ * Opaque window over the Amazon home while Ilona TV comes back: the last snapshot of Ilona TV's home, else black, with
  * a "Loading" pill at the bottom, since the snapshot alone looks ready while the keys pressed under it are dropped.
- * Comes down once MainActivity shows IlonaTv's UI again, or after 7 s. Main thread only.
+ * Comes down once MainActivity shows Ilona TV's UI again, or after 7 s. Main thread only.
  */
 object Curtain {
     private val handler = Handler(Looper.getMainLooper())
@@ -63,7 +63,7 @@ object Curtain {
 
     val isUp get() = view != null
 
-    /** IlonaTv's home as last drawn. The curtain, if up, moves to the new bitmap before the old one is recycled. */
+    /** Ilona TV's home as last drawn. The curtain, if up, moves to the new bitmap before the old one is recycled. */
     @Volatile
     var snapshot: Bitmap? = null
         set(value) {
@@ -75,7 +75,7 @@ object Curtain {
 
     private fun dp(ctx: Context, n: Int) = (n * ctx.resources.displayMetrics.density).roundToInt()
 
-    /** A spinner and "Loading…" (in IlonaTv's language) on a dark glass pill. */
+    /** A spinner and "Loading…" (in Ilona TV's language) on a dark glass pill. */
     private fun loadingPill(ctx: Context): View = LinearLayout(ctx).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL

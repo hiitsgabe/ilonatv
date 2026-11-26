@@ -39,7 +39,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
-internal const val TAG = "IlonaTv"
+internal const val TAG = "IlonaTV"
 
 /** Android side of the `tv.ilona/host` channel. A missing package answers false/null, never a channel error. */
 object HostChannel {
@@ -67,7 +67,7 @@ object HostChannel {
 
     /**
      * Asks the Dart side (Host.onAssistantSearch) for the assistant's hits of [type] ("youtube"), on the main thread,
-     * [done] on it too: the hits, or null when there is no engine to ask (IlonaTv's activity was destroyed) or no
+     * [done] on it too: the hits, or null when there is no engine to ask (Ilona TV's activity was destroyed) or no
      * answer within [SEARCH_TIMEOUT_MS].
      */
     fun assistantSearch(type: String, query: String, what: String, done: (List<SearchHit>?) -> Unit) {
@@ -224,7 +224,7 @@ object HostChannel {
                         Intent(call.argument<String>("action") ?: Settings.ACTION_SETTINGS)
                     }
                     val opened = start(activity, intent)
-                    // Only once it opened: a failed start leaves IlonaTv up and nothing would clear the flag.
+                    // Only once it opened: a failed start leaves Ilona TV up and nothing would clear the flag.
                     if (opened && call.argument<Boolean>("pause") == true) HomeWatcher.pausedForSettings = true
                     result.success(opened)
                 }
@@ -242,7 +242,7 @@ object HostChannel {
                     }
                 }
                 "advertise" -> {
-                    advertise(activity, call.argument<Int>("port") ?: 0, call.argument<String>("name") ?: "IlonaTv")
+                    advertise(activity, call.argument<Int>("port") ?: 0, call.argument<String>("name") ?: "Ilona TV")
                     result.success(null)
                 }
                 "unadvertise" -> {
@@ -413,12 +413,12 @@ object HostChannel {
         return out.toByteArray()
     }
 
-    /** Sends IlonaTv back to its home screen (see MainActivity.onNewIntent). Main thread. */
+    /** Sends Ilona TV back to its home screen (see MainActivity.onNewIntent). Main thread. */
     fun goHome(messenger: BinaryMessenger) = MethodChannel(messenger, CHANNEL).invokeMethod("goHome", null)
 
     private var inputsCallback: TvInputManager.TvInputCallback? = null
 
-    /** While IlonaTv is in front ([on]), tells Dart (`inputsChanged`) when an input comes, goes or changes state. */
+    /** While Ilona TV is in front ([on]), tells Dart (`inputsChanged`) when an input comes, goes or changes state. */
     fun watchInputs(ctx: Context, messenger: BinaryMessenger, on: Boolean) {
         val tim = ctx.getSystemService(Context.TV_INPUT_SERVICE) as? TvInputManager ?: return
         inputsCallback?.let { tim.unregisterCallback(it) }
@@ -461,7 +461,7 @@ object HostChannel {
         device.javaClass.getMethod("getDisplayName").invoke(device) as? String
     }.getOrNull()?.takeIf { it.isNotBlank() }
 
-    // Apps with a TV or a phone launcher activity, minus IlonaTv, by label. TV activity first, so its label wins.
+    // Apps with a TV or a phone launcher activity, minus Ilona TV, by label. TV activity first, so its label wins.
     // Each says whether it has a TV activity and whether it is a system app (an updated one counts as the
     // user's); Dart's offeredApps picks what to show.
     @Suppress("DEPRECATION") // the ResolveInfoFlags overload needs API 33, minSdk is 28
@@ -486,7 +486,7 @@ object HostChannel {
             .sortedWith(compareBy(Collator.getInstance()) { it.getValue("label") as String })
     }
 
-    // Packages with an activity that views [uri], minus IlonaTv.
+    // Packages with an activity that views [uri], minus Ilona TV.
     @Suppress("DEPRECATION") // as in listApps
     private fun appsFor(ctx: Context, uri: String?): List<String> {
         if (uri == null) return emptyList()
@@ -576,7 +576,7 @@ object HostChannel {
 internal fun launchIntent(ctx: Context, pkg: String): Intent? =
     ctx.packageManager.run { getLeanbackLaunchIntentForPackage(pkg) ?: getLaunchIntentForPackage(pkg) }
 
-// Own task, so the target app never lands on top of IlonaTv's (singleTask) stack; the service and the boot receiver,
+// Own task, so the target app never lands on top of Ilona TV's (singleTask) stack; the service and the boot receiver,
 // not being activities, need it anyway.
 internal fun start(ctx: Context, intent: Intent): Boolean = try {
     ctx.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

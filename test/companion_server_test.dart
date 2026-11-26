@@ -116,7 +116,7 @@ void main() {
     final (status, body, headers) = await send('GET', '/');
     expect(status, 200);
     expect(headers.contentType?.mimeType, 'text/html');
-    expect(body, contains('IlonaTv is running'));
+    expect(body, contains('Ilona TV is running'));
   });
 
   test('GET /api/info without a token is 401', () async {

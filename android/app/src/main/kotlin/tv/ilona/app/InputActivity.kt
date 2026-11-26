@@ -14,7 +14,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.view.WindowManager
 
-// An HDMI input full screen, in IlonaTv's own TvView: Fire OS keeps its input
+// An HDMI input full screen, in Ilona TV's own TvView: Fire OS keeps its input
 // player and the passthrough link behind Amazon-signed permissions. The
 // remote's keys go to the input's session, and the TV's input service passes
 // them on to the HDMI-CEC device there (a console's menus move with the TV's
@@ -106,7 +106,7 @@ class InputActivity : Activity() {
         }
     }
 
-    // Home (Launcher mode brings IlonaTv back) or another app: nothing plays behind it.
+    // Home (Launcher mode brings Ilona TV back) or another app: nothing plays behind it.
     override fun onStop() {
         super.onStop()
         finish()

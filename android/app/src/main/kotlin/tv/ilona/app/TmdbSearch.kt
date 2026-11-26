@@ -37,7 +37,7 @@ data class SearchHit(
 }
 
 /**
- * IlonaTv's own movie/series search, from the assistant. Uses TMDB (the key the person set in Settings) so the voice
+ * Ilona TV's own movie/series search, from the assistant. Uses TMDB (the key the person set in Settings) so the voice
  * assistant finds the same titles the home rows do. YouTube search is a later step.
  */
 object TmdbSearch {

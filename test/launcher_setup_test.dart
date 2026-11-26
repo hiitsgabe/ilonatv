@@ -19,7 +19,7 @@ void main() {
     expect(launcherHint(fire, wanted: true), LauncherHint.grant);
     expect(launcherHint(google, wanted: true), LauncherHint.systemSettings);
   });
-  test('the grant commands connect to the TV, then grant to IlonaTv', () {
+  test('the grant commands connect to the TV, then grant to Ilona TV', () {
     expect(grantCommands('10.0.0.5'), [
       'adb connect 10.0.0.5:5555',
       'adb -s 10.0.0.5:5555 shell pm grant tv.ilona.app android.permission.WRITE_SECURE_SETTINGS',

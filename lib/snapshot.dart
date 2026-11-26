@@ -7,8 +7,8 @@ import 'host.dart';
 import 'settings.dart';
 
 /// Hands the home screen, as last drawn, to the Fire TV curtain (Curtain.kt)
-/// each time IlonaTv leaves the screen, so a Home press shows IlonaTv instead of
-/// the Amazon home while IlonaTv comes back. Only in Launcher mode, the one
+/// each time Ilona TV leaves the screen, so a Home press shows Ilona TV instead of
+/// the Amazon home while Ilona TV comes back. Only in Launcher mode, the one
 /// place the curtain is drawn.
 class SnapshotObserver extends WidgetsBindingObserver {
   final GlobalKey boundaryKey;

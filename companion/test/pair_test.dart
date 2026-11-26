@@ -48,7 +48,7 @@ void main() {
       final r = parsePairUrl('http://1.2.3.4:8642/?a=b#s=zz')!;
       expect(r.secret, 'zz');
     });
-    test('no port uses the IlonaTv port', () {
+    test('no port uses the Ilona TV port', () {
       expect(parsePairUrl('http://1.2.3.4/#s=zz')!.port, kCompanionPort);
     });
     test('garbage', () => expect(parsePairUrl('hello'), isNull));

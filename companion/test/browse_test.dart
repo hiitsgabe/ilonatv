@@ -64,7 +64,7 @@ void main() {
   final tv = Tv(
     host: '1.2.3.4',
     port: 8642,
-    name: 'IlonaTv on Box',
+    name: 'Ilona TV on Box',
     token: 'x',
   );
 
@@ -142,7 +142,7 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('watch')));
     await t.pumpAndSettle();
-    expect(find.text('Open IlonaTv on the TV'), findsOneWidget);
+    expect(find.text('Open Ilona TV on the TV'), findsOneWidget);
   });
 
   testWidgets('rows with videos do not overflow, even at 1.5x text', (t) async {

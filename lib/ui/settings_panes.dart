@@ -816,7 +816,7 @@ class AccountsPane extends StatelessWidget {
             () => TmdbPane(s, sources.tmdb),
           ),
         ),
-        // The voice assistant's brain; only useful where the mic button opens IlonaTv.
+        // The voice assistant's brain; only useful where the mic button opens Ilona TV.
         if (s.alexaBounce)
           SettingsRow(
             title: 'Gemini',

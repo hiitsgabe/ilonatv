@@ -133,12 +133,12 @@ Future<void> main() async {
   );
   WidgetsBinding.instance.addObserver(SnapshotObserver(homeBoundaryKey, s));
   sources.start();
-  // Another app on the port, or no network, leaves IlonaTv without its
+  // Another app on the port, or no network, leaves Ilona TV without its
   // Companion, not without its home.
   unawaited(
     CompanionServer(pairing, IlonaTvApi(s, sources))
         .start()
-        .then((_) => Host.advertise(kCompanionPort, 'IlonaTv'))
+        .then((_) => Host.advertise(kCompanionPort, 'Ilona TV'))
         .catchError((Object e) => debugPrint('companion server: $e')),
   );
   DiskImages.prune().ignore();

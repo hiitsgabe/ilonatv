@@ -60,7 +60,7 @@ Future<ReleaseAsset?> latestTvApk(
   Uri? url,
 }) async {
   final client = http ?? HttpClient();
-  client.userAgent = 'IlonaTv-Companion';
+  client.userAgent = 'IlonaTV-Companion';
   try {
     return await _latest(
       client,
@@ -129,7 +129,7 @@ Future<File> download(
   Duration stall = _stall,
 }) async {
   final client = http ?? HttpClient();
-  client.userAgent = 'IlonaTv-Companion';
+  client.userAgent = 'IlonaTV-Companion';
   try {
     final req = await client.getUrl(a.url).timeout(stall);
     final res = await req.close().timeout(stall);

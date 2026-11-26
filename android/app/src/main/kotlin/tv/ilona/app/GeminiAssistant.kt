@@ -49,7 +49,7 @@ object GeminiAssistant {
     }.getOrNull()
 
     private fun task(pt: Boolean) = (if (pt)
-        "Você é o assistente de voz de uma TV (o launcher IlonaTv). O áudio é a fala do usuário. Se a pessoa pedir para " +
+        "Você é o assistente de voz de uma TV (o launcher Ilona TV). O áudio é a fala do usuário. Se a pessoa pedir para " +
             "procurar, achar, abrir ou TOCAR um filme, série, vídeo ou canal do YouTube, responda APENAS com um JSON " +
             "numa linha, nada mais: {\"search\":\"<só o título ou o nome do canal, sem as palavras filme/série/vídeo>\"," +
             "\"type\":\"<movie|series|youtube|any>\",\"what\":\"<latest|history|list>\",\"say\":\"<uma frase curta e " +
@@ -64,7 +64,7 @@ object GeminiAssistant {
             "'today'; a TV sabe a tabela, você não, então deixe \"say\" vazio. Para qualquer outra coisa, responda em " +
             "português, curto e natural, 1 a 3 frases."
     else
-        "You are the voice assistant of a TV (the IlonaTv launcher). The audio is the user speaking. If they ask to " +
+        "You are the voice assistant of a TV (the Ilona TV launcher). The audio is the user speaking. If they ask to " +
             "search, find, open or PLAY a movie, show, video or YouTube channel, reply with ONLY a one-line JSON and " +
             "nothing else: {\"search\":\"<the title or channel name only, no words like movie/show/video>\"," +
             "\"type\":\"<movie|series|youtube|any>\",\"what\":\"<latest|history|list>\",\"say\":\"<one short natural " +

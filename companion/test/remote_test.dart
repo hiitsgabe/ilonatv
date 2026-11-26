@@ -84,7 +84,7 @@ void main() {
   final tv = Tv(
     host: '1.2.3.4',
     port: 8642,
-    name: 'IlonaTv on Box',
+    name: 'Ilona TV on Box',
     token: 'x',
   );
 
@@ -153,7 +153,7 @@ void main() {
     client.keyResult = const Unreachable('x');
     await t.tap(find.byKey(const Key('key-back')));
     await t.pumpAndSettle();
-    expect(find.text("Can't reach IlonaTv"), findsOneWidget);
+    expect(find.text("Can't reach Ilona TV"), findsOneWidget);
     expect(find.text(t0('retry')), findsOneWidget);
   });
 
@@ -209,7 +209,7 @@ void main() {
     for (var i = 0; i < 4; i++) {
       await t.pump(const Duration(seconds: 3));
     }
-    expect(find.text("Can't reach IlonaTv"), findsOneWidget);
+    expect(find.text("Can't reach Ilona TV"), findsOneWidget);
     expect(client.infoCalls, 3);
   });
 
@@ -263,11 +263,11 @@ void main() {
     client.keyResult = const Unreachable('x');
     await t.tap(find.byKey(const Key('key-back')));
     await t.pumpAndSettle();
-    expect(find.text("Can't reach IlonaTv"), findsOneWidget);
+    expect(find.text("Can't reach Ilona TV"), findsOneWidget);
     client.keyResult = const Ok(null);
     await t.tap(find.byKey(const Key('key-back')));
     await t.pumpAndSettle();
-    expect(find.text("Can't reach IlonaTv"), findsNothing);
+    expect(find.text("Can't reach Ilona TV"), findsNothing);
   });
 
   testWidgets('Back and Home are labelled in the language', (t) async {

@@ -17,7 +17,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 
 /**
  * Launcher mode. Home always opens the Amazon home, and for 5 s after it Android holds back activity starts from
- * background apps. So on Home this raises the [Curtain] and clicks IlonaTv's tile on the Amazon home, which is not held
+ * background apps. So on Home this raises the [Curtain] and clicks Ilona TV's tile on the Amazon home, which is not held
  * back, with a startActivity queued behind the lock in case the tile is missing. Inert while [fireTvMode] is off.
  */
 class HomeWatcher : AccessibilityService() {
@@ -32,8 +32,8 @@ class HomeWatcher : AccessibilityService() {
         fun sinceHome() = SystemClock.uptimeMillis() - lastHomePressed
 
         /**
-         * Set while Fire OS's own settings are open from IlonaTv: that grid is a tab of the Amazon home, so its window
-         * is not a Home. Only a Home press (the broadcast) or IlonaTv coming back clears it.
+         * Set while Fire OS's own settings are open from Ilona TV: that grid is a tab of the Amazon home, so its window
+         * is not a Home. Only a Home press (the broadcast) or Ilona TV coming back clears it.
          */
         @Volatile
         var pausedForSettings = false
@@ -46,16 +46,16 @@ class HomeWatcher : AccessibilityService() {
         const val HOME_PRESSED_ACTION = "com.amazon.tv.launcher.HOME_PRESSED"
 
         /**
-         * The Alexa voice UI: when the mic button raises it and [alexaBounce] is on, IlonaTv dismisses it and comes to
+         * The Alexa voice UI: when the mic button raises it and [alexaBounce] is on, Ilona TV dismisses it and comes to
          * the front ([onAlexa]). The button's key never reaches an app (Fire OS takes it natively), but its window
-         * does, so IlonaTv bounces the window instead. `vizzini` draws the listening/thinking chrome; `aria` the APL
+         * does, so Ilona TV bounces the window instead. `vizzini` draws the listening/thinking chrome; `aria` the APL
          * response card.
          */
         val ALEXA_PACKAGES = setOf("com.amazon.vizzini", "com.amazon.aria")
 
         /**
          * Only to drop the duplicate window event Android fires for one window. While the button is held Alexa keeps
-         * redrawing (listen, think); each redraw is bounced so IlonaTv keeps the front until the button is released.
+         * redrawing (listen, think); each redraw is bounced so Ilona TV keeps the front until the button is released.
          */
         const val ALEXA_BOUNCE_MS = 500L
 
@@ -69,8 +69,8 @@ class HomeWatcher : AccessibilityService() {
         const val MERGE_MS = 300L
 
         /**
-         * After a tile click that took, the home's window events this soon are the switch to IlonaTv under way, not
-         * a new Home: clicking again would bounce between the two apps (and click) until IlonaTv wins.
+         * After a tile click that took, the home's window events this soon are the switch to Ilona TV under way, not
+         * a new Home: clicking again would bounce between the two apps (and click) until Ilona TV wins.
          */
         const val CLICK_SETTLE_MS = 1500L
 
@@ -78,8 +78,8 @@ class HomeWatcher : AccessibilityService() {
         const val DOUBLE_POWER_MS = 1500L
 
         /**
-         * Starts [pkg]'s launcher activity; false if it has none. A plain start: this only runs with IlonaTv in front,
-         * so the active window is IlonaTv's own and there is no Amazon tile to click.
+         * Starts [pkg]'s launcher activity; false if it has none. A plain start: this only runs with Ilona TV in front,
+         * so the active window is Ilona TV's own and there is no Amazon tile to click.
          */
         fun launch(ctx: Context, pkg: String): Boolean = launchIntent(ctx, pkg)?.let { start(ctx, it) } ?: false
 
@@ -108,7 +108,7 @@ class HomeWatcher : AccessibilityService() {
         }
 
         /**
-         * Opens [pkg]'s page in Fire OS's settings and has the service click Force stop, then OK, then brings IlonaTv
+         * Opens [pkg]'s page in Fire OS's settings and has the service click Force stop, then OK, then brings Ilona TV
          * back ([stopApp]). False without the service, for a package [keepRunning] protects, or when the page does
          * not open.
          */
@@ -129,7 +129,7 @@ class HomeWatcher : AccessibilityService() {
             return true
         }
 
-        /** IlonaTv is back (MainActivity.onResume): drops a click chain still looking for a tile. */
+        /** Ilona TV is back (MainActivity.onResume): drops a click chain still looking for a tile. */
         fun cancelClick() {
             instance?.handler?.removeCallbacksAndMessages(null)
         }
@@ -142,7 +142,7 @@ class HomeWatcher : AccessibilityService() {
 
     /**
      * While the curtain is up, the D-pad and OK would land on the Amazon home under it (moving its focus, with a click
-     * each): they are dropped until IlonaTv is back. Home, power, volume and media keys pass.
+     * each): they are dropped until Ilona TV is back. Home, power, volume and media keys pass.
      */
     override fun onKeyEvent(event: KeyEvent): Boolean {
         // While the assistant overlay is up, Back closes it (and does not reach the app behind).
@@ -169,7 +169,7 @@ class HomeWatcher : AccessibilityService() {
         KeyEvent.KEYCODE_MENU,
     )
 
-    /** The double power re-sleep: apart from [handler], which IlonaTv's return clears to drop a pending tile click. */
+    /** The double power re-sleep: apart from [handler], which Ilona TV's return clears to drop a pending tile click. */
     private val powerHandler = Handler(Looper.getMainLooper())
 
     private val homePressed = object : BroadcastReceiver() {
@@ -251,7 +251,7 @@ class HomeWatcher : AccessibilityService() {
     private var lastAlexaBounce = 0L
 
     /**
-     * The mic button opened Alexa: cancel its visible chrome with Back and raise IlonaTv's assistant overlay over
+     * The mic button opened Alexa: cancel its visible chrome with Back and raise Ilona TV's assistant overlay over
      * whatever is in front (the accessibility overlay sits above Alexa too). The app behind keeps playing. While the
      * button is held Alexa redraws and this runs again, each time extending the overlay; releasing lets it hide.
      */
@@ -265,7 +265,7 @@ class HomeWatcher : AccessibilityService() {
         lastAlexaBounce = now
         if (!repeat) Log.i(TAG, "alexa bounce: $pkg $className")
         // Cancel Alexa's session the way Home does (a non-protected broadcast): she stops listening and answering, so
-        // she does not talk over IlonaTv, the audio focus frees for IlonaTv's own speech, and she releases the mic. No
+        // she does not talk over Ilona TV, the audio focus frees for Ilona TV's own speech, and she releases the mic. No
         // Back, which inside an app would exit the player.
         sendBroadcast(Intent("amazon.speech.RESET_INTERACTIONS"))
         Assistant.show(this, assistantColor(), fresh)
@@ -320,7 +320,7 @@ class HomeWatcher : AccessibilityService() {
         if (!fireTvMode() || now - lastHomePressed < MERGE_MS) return
         // Curtain already up: the home's window event (it lands up to 1.6 s after the broadcast) or a second Home.
         // The press that raised it keeps its time, the base of every +Nms log, and has queued the start already;
-        // only the click restarts, which saves a Home pressed between the click and IlonaTv's return.
+        // only the click restarts, which saves a Home pressed between the click and Ilona TV's return.
         val raised = Curtain.isUp
         if (raised && now - clickedAt < CLICK_SETTLE_MS) {
             Log.i(TAG, "home event ignored: a click is under way")
@@ -332,7 +332,7 @@ class HomeWatcher : AccessibilityService() {
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         if (!raised) start(this, relaunch) // held back until the lock lifts, unless the tile click gets there first
         // Posted, so the curtain draws before the click's blocking calls into the home.
-        handler.post { clickTile("IlonaTv", 0) }
+        handler.post { clickTile("Ilona TV", 0) }
     }
 
     // Clicks the tile whose description is [label] on the home in front, every 50 ms for 4 s while that home comes up.
@@ -352,7 +352,7 @@ class HomeWatcher : AccessibilityService() {
         }
     }
 
-    /** Stremio's first-stream tap: apart from the other handlers, so IlonaTv's return cannot cut it short. */
+    /** Stremio's first-stream tap: apart from the other handlers, so Ilona TV's return cannot cut it short. */
     private val streamHandler = Handler(Looper.getMainLooper())
 
     /**
@@ -413,14 +413,14 @@ class HomeWatcher : AccessibilityService() {
         step()
     }
 
-    /** Force stop and its dialog: apart from the other handlers, so IlonaTv's return cannot cut it short. */
+    /** Force stop and its dialog: apart from the other handlers, so Ilona TV's return cannot cut it short. */
     private val stopHandler = Handler(Looper.getMainLooper())
 
     /**
      * On the app page [forceStop] opened, every 250 ms for 6 s, acting only on [settings]' window and only once the
-     * page's title is [label] (the app's name): clicks Force stop, then brings IlonaTv back. Fire OS stops at once;
+     * page's title is [label] (the app's name): clicks Force stop, then brings Ilona TV back. Fire OS stops at once;
      * a confirmation, where there is one, gets its OK first. Force stop greyed out (the app is already stopped)
-     * brings IlonaTv back at once. Once the page was seen, IlonaTv in front again (the user pressed Back or Home) ends
+     * brings Ilona TV back at once. Once the page was seen, Ilona TV in front again (the user pressed Back or Home) ends
      * it with nothing done. Home and the service's end cancel it. Text matches are English and Portuguese.
      */
     fun stopApp(pkg: String, settings: String, label: String?) {
@@ -436,7 +436,7 @@ class HomeWatcher : AccessibilityService() {
                 val root = rootInActiveWindow
                 val front = root?.packageName?.toString()
                 if (front == packageName && seen) {
-                    Log.i(TAG, "force stop $pkg: IlonaTv is back")
+                    Log.i(TAG, "force stop $pkg: Ilona TV is back")
                     return
                 }
                 val now = SystemClock.uptimeMillis()
@@ -494,8 +494,8 @@ class HomeWatcher : AccessibilityService() {
     }
 
     /**
-     * IlonaTv's own task to the front: Back could land on another settings page, under the app's. No new intent, so
-     * the Settings screen stays where it was. Back only if IlonaTv has no task.
+     * Ilona TV's own task to the front: Back could land on another settings page, under the app's. No new intent, so
+     * the Settings screen stays where it was. Back only if Ilona TV has no task.
      */
     private fun backToIlonaTv() {
         val task = (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).appTasks.firstOrNull {

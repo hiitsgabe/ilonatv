@@ -167,7 +167,7 @@ void main() {
     await _app(tester, {});
     expect(find.byType(SetupWizard), findsOneWidget);
     expect(find.byType(HomeScreen), findsNothing);
-    expect(find.text('IlonaTv'), findsOneWidget);
+    expect(find.text('Ilona TV'), findsOneWidget);
     expect(find.text('1 of 8'), findsOneWidget);
     // Back on the first step of a first run stays.
     await _back(tester);
@@ -337,7 +337,7 @@ void main() {
     tester,
   ) async {
     await _app(tester, {});
-    for (final step in ['IlonaTv', t('wizLocation'), t('wizTmdb')]) {
+    for (final step in ['Ilona TV', t('wizLocation'), t('wizTmdb')]) {
       expect(find.text(step), findsWidgets);
       expect(find.byType(QrCode), findsOneWidget, reason: step);
       expect(find.text(t('setupFromPhone')), findsOneWidget, reason: step);

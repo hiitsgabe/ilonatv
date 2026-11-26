@@ -11,8 +11,8 @@ import android.os.Binder
 /**
  * The pairing secret for the companion's installer, read over adb with
  * `content query --uri content://tv.ilona.app.pairing/secret`, which prints `Row: 0 secret=<32 hex>`
- * (`secret=NULL` before IlonaTv's first launch has made one). The manifest guards it with DUMP, which the adb shell
- * holds and ordinary apps cannot; any caller but the shell or root (an app granted DUMP over adb, IlonaTv itself) gets
+ * (`secret=NULL` before Ilona TV's first launch has made one). The manifest guards it with DUMP, which the adb shell
+ * holds and ordinary apps cannot; any caller but the shell or root (an app granted DUMP over adb, Ilona TV itself) gets
  * no row. Pairing with the secret renews it, so each read pairs once.
  */
 class PairingProvider : ContentProvider() {

@@ -152,7 +152,7 @@ void main() {
     expect(pairing.settings.companionDevices.values, ['iPhone', 'iPad']);
   });
 
-  testWidgets('leaving IlonaTv withdraws the code; coming back offers it', (
+  testWidgets('leaving Ilona TV withdraws the code; coming back offers it', (
     tester,
   ) async {
     final pairing = await _pump(tester, '192.168.1.5');

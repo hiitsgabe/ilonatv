@@ -178,7 +178,7 @@ class ContentRowState extends State<ContentRow> {
   /// Only while OK is down on a card with a trailer.
   Timer? _ticks;
 
-  /// Android pauses IlonaTv without taking focus from the card, and the
+  /// Android pauses Ilona TV without taking focus from the card, and the
   /// release may never come: the hold ends there.
   late final AppLifecycleListener _lifecycle;
 

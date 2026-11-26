@@ -387,7 +387,7 @@ void main() {
     expect(find.text(t('instDoneFire')), findsOneWidget);
   });
 
-  testWidgets('an older IlonaTv on the TV says Update and installs', (
+  testWidgets('an older Ilona TV on the TV says Update and installs', (
     tester,
   ) async {
     final adb = FakeAdb(packages: 'package:tv.ilona.app\n', version: '0.6.0');
@@ -406,7 +406,7 @@ void main() {
   });
 
   for (final version in ['0.6.1', '0.7.0']) {
-    testWidgets('IlonaTv $version on the TV skips to pairing by default', (
+    testWidgets('Ilona TV $version on the TV skips to pairing by default', (
       tester,
     ) async {
       final adb = FakeAdb(packages: 'package:tv.ilona.app\n', version: version);

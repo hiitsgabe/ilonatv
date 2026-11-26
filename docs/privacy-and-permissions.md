@@ -2,7 +2,7 @@
 
 ## What leaves the TV
 
-IlonaTv has no cloud server, no analytics and no ads. The one thing it serves is the Companion: a small server on the TV, on port 8642, that answers only phones and computers you paired, and only on your local network. Your keys, accounts and settings stay in IlonaTv's private storage on the TV, and backup and device-to-device transfer are turned off for it. IlonaTv talks directly to these services, and only for the features you turn on:
+Ilona TV has no cloud server, no analytics and no ads. The one thing it serves is the Companion: a small server on the TV, on port 8642, that answers only phones and computers you paired, and only on your local network. Your keys, accounts and settings stay in Ilona TV's private storage on the TV, and backup and device-to-device transfer are turned off for it. Ilona TV talks directly to these services, and only for the features you turn on:
 
 | Service | For | With |
 | --- | --- | --- |
@@ -21,9 +21,9 @@ IlonaTv has no cloud server, no analytics and no ads. The one thing it serves is
 | Permission | Why |
 | --- | --- |
 | `INTERNET` | The services above. |
-| `RECEIVE_BOOT_COMPLETED` | Launcher mode starts IlonaTv at boot. |
-| Accessibility service | Launcher mode (see [launcher-mode.md](launcher-mode.md)). While it is on it can also undo a double power press, replace Alexa with IlonaTv's assistant, tap the first stream in Stremio when "Play the first stream" is on, and tap Force stop when you close an app from Processes. It keeps nothing it reads on screen. |
-| `WRITE_SECURE_SETTINGS` (adb only) | Lets IlonaTv turn its own accessibility service on, on Fire TV. |
+| `RECEIVE_BOOT_COMPLETED` | Launcher mode starts Ilona TV at boot. |
+| Accessibility service | Launcher mode (see [launcher-mode.md](launcher-mode.md)). While it is on it can also undo a double power press, replace Alexa with Ilona TV's assistant, tap the first stream in Stremio when "Play the first stream" is on, and tap Force stop when you close an app from Processes. It keeps nothing it reads on screen. |
+| `WRITE_SECURE_SETTINGS` (adb only) | Lets Ilona TV turn its own accessibility service on, on Fire TV. |
 | `DUMP`, `PACKAGE_USAGE_STATS` (adb only) | Settings > Processes: what each app holds in memory. |
 | `KILL_BACKGROUND_PROCESSES` | Processes: Close and Clean for apps in the background. |
 | `RECORD_AUDIO` | The voice assistant only, asked for when you turn it on. |
@@ -39,15 +39,15 @@ adb shell pm grant tv.ilona.app android.permission.PACKAGE_USAGE_STATS
 
 ## The Companion phone app
 
-The IlonaTv Companion (`tv.ilona.companion`) asks for three permissions:
+The Ilona TV Companion (`tv.ilona.companion`) asks for three permissions:
 
 | Permission | Why |
 | --- | --- |
-| `INTERNET` | Talking to the TV on your local network (and ADB, only while installing), and, in the installer, downloading IlonaTv from GitHub. |
-| `CHANGE_WIFI_MULTICAST_STATE` | Finding IlonaTv on the network by its mDNS name. |
+| `INTERNET` | Talking to the TV on your local network (and ADB, only while installing), and, in the installer, downloading Ilona TV from GitHub. |
+| `CHANGE_WIFI_MULTICAST_STATE` | Finding Ilona TV on the network by its mDNS name. |
 | `CAMERA` | Scanning the pairing QR code, asked for when the scanner opens. No picture is kept or sent. |
 
-It stores, for each paired TV, only the host, port, name and token. It also keeps the ADB key it uses to talk to a TV in the app's private storage, excluded from backup and device transfer; a new phone makes a new key and the TV asks "Allow debugging?" again. It connects over ADB only in the installer. The installer asks GitHub's API for this repository's latest release (`api.github.com`, with the generic user agent `IlonaTv-Companion` and nothing about you), downloads the APK for the TV's CPU from it, and checks its SHA-256 before installing; nothing else leaves the phone.
+It stores, for each paired TV, only the host, port, name and token. It also keeps the ADB key it uses to talk to a TV in the app's private storage, excluded from backup and device transfer; a new phone makes a new key and the TV asks "Allow debugging?" again. It connects over ADB only in the installer. The installer asks GitHub's API for this repository's latest release (`api.github.com`, with the generic user agent `Ilona TV-Companion` and nothing about you), downloads the APK for the TV's CPU from it, and checks its SHA-256 before installing; nothing else leaves the phone.
 
 On the TV, a content provider (`content://tv.ilona.app.pairing`) hands the pairing secret to the installer so the phone can pair without a QR code. It is guarded by `DUMP` and answers only the adb shell (or root), so no app on the TV can read it. Reading does not change the secret: a successful pairing with it renews it, and so does removing a phone in Settings > Companion.
 

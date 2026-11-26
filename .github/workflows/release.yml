@@ -237,9 +237,9 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.resolve-version.outputs.version }}
-          name: IlonaTv ${{ needs.resolve-version.outputs.version }}
+          name: Ilona TV ${{ needs.resolve-version.outputs.version }}
           body: |
-            ## IlonaTv ${{ needs.resolve-version.outputs.version }}
+            ## Ilona TV ${{ needs.resolve-version.outputs.version }}
 
             ### Changes
 
@@ -258,7 +258,7 @@ jobs:
 
             ### Install
 
-            - **From your phone:** sideload `ilonatv-companion.apk`, open it and choose "Install IlonaTv on a TV". It downloads the right TV APK from this release and checks its SHA-256.
+            - **From your phone:** sideload `ilonatv-companion.apk`, open it and choose "Install Ilona TV on a TV". It downloads the right TV APK from this release and checks its SHA-256.
             - **From a computer:** follow [Get started](https://github.com/${{ github.repository }}#get-started) in the README. `adb shell getprop ro.product.cpu.abilist` says which TV APK to use.
           files: |
             dist/ilonatv-armeabi-v7a.apk

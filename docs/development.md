@@ -37,7 +37,7 @@ UI text goes through `t('key')` in `lib/i18n.dart`, in English and Portuguese; `
 
 The phone app is a separate Flutter project in `companion/` (package `ilonatv_companion`, app id `tv.ilona.companion`). It shares the TV's wire format with the app through `packages/ilonatv_protocol`. The TV's side is `lib/companion/` (server) and, for the installer, `PairingProvider.kt`.
 
-The companion carries no TV APK: its installer downloads `ilonatv-<abi>.apk` from the latest GitHub Release (`companion/lib/releases.dart`), checks the SHA-256 GitHub reports for the asset (or the release's `SHA256SUMS`), then installs it. So a companion you build installs the latest *published* IlonaTv, not your local build; to try a local TV build, install it with adb.
+The companion carries no TV APK: its installer downloads `ilonatv-<abi>.apk` from the latest GitHub Release (`companion/lib/releases.dart`), checks the SHA-256 GitHub reports for the asset (or the release's `SHA256SUMS`), then installs it. So a companion you build installs the latest *published* Ilona TV, not your local build; to try a local TV build, install it with adb.
 
 `tool/build_companion.sh` builds the companion release APK and prints its path: `companion/build/app/outputs/flutter-apk/app-release.apk`. `JAVA_HOME` and `ANDROID_HOME` default to `~/.cache/elimor-toolchain/jdk` and `.../sdk` when unset, and flutter is taken from `~/.cache/elimor-toolchain/flutter/bin` when it is not on the `PATH`.
 
@@ -70,13 +70,13 @@ The workflow writes `android/key.properties` and `companion/android/key.properti
 
 `adb shell input keyevent <code>` drives the remote from a computer: Up 19, Down 20, Left 21, Right 22, OK 23, Back 4, Home 3. On-device checks are listed in [verification.md](verification.md).
 
-**Frame times.** A profile build (`flutter build apk --profile --split-per-abi --target-platform android-arm`) logs every frame over 17 ms with its build and raster times (`adb logcat -s flutter`). `adb shell dumpsys SurfaceFlinger --latency 'SurfaceView - tv.ilona.app/tv.ilona.app.MainActivity#0'` gives frame times without a build. IlonaTv forces Skia over Impeller in the manifest: on a Fire TV Edition's Mali-G52, Impeller took 21-22 ms per home frame, Skia 5-14.
+**Frame times.** A profile build (`flutter build apk --profile --split-per-abi --target-platform android-arm`) logs every frame over 17 ms with its build and raster times (`adb logcat -s flutter`). `adb shell dumpsys SurfaceFlinger --latency 'SurfaceView - tv.ilona.app/tv.ilona.app.MainActivity#0'` gives frame times without a build. Ilona TV forces Skia over Impeller in the manifest: on a Fire TV Edition's Mali-G52, Impeller took 21-22 ms per home frame, Skia 5-14.
 
 **Memory.** Measure on a profile build; a debug build's memory is inflated by the JIT.
 
 ## Seeding an emulator
 
-The fixtures can give an emulator its rows with no keys. Each source writes what it fetched to `files/cache/<name>.json` (`tmdb.json`, `stremio.json`, `youtube.json`), and a start shows those files at any age. On a debug build, run IlonaTv once so `files/cache` exists, then:
+The fixtures can give an emulator its rows with no keys. Each source writes what it fetched to `files/cache/<name>.json` (`tmdb.json`, `stremio.json`, `youtube.json`), and a start shows those files at any age. On a debug build, run Ilona TV once so `files/cache` exists, then:
 
 ```sh
 adb shell "run-as tv.ilona.app sh -c 'cat > files/cache/tmdb.json'" < tmdb.json

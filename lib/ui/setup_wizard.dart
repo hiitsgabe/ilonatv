@@ -178,7 +178,7 @@ class _SetupWizardState extends State<SetupWizard> {
   (IconData, String, String) get _text => switch (_at) {
     _Step.welcome => (
       Icons.waving_hand_outlined,
-      'IlonaTv',
+      'Ilona TV',
       t('wizWelcomeHelp'),
     ),
     _Step.location => (

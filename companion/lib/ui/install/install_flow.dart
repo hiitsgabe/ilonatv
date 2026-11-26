@@ -16,7 +16,7 @@ import 'scan.dart';
 const readmeUrl = 'https://github.com/hiitsgabe/ilonatv#get-started';
 const _pkg = 'tv.ilona.app';
 const _adbPort = 5555;
-// IlonaTv's minSdk (android/app/build.gradle.kts).
+// Ilona TV's minSdk (android/app/build.gradle.kts).
 const _minSdk = 28;
 const _steps = 9;
 
@@ -413,7 +413,7 @@ class _InstallFlowState extends State<InstallFlow> {
     if (_stale(g)) return;
     if (r is! Ok<String>) return _fail(t('instPairFailed'));
     await widget.tvs.savePaired(
-      Tv(host: _host, port: kCompanionPort, name: 'IlonaTv'),
+      Tv(host: _host, port: kCompanionPort, name: 'Ilona TV'),
       r.value,
     );
     if (_stale(g)) return;

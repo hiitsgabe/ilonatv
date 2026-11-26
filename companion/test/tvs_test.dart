@@ -37,13 +37,13 @@ void main() {
   test('a found TV is listed unpaired and lost removes it', () async {
     final tvs = await make();
     await native('found', {
-      'name': 'IlonaTv on X',
+      'name': 'Ilona TV on X',
       'host': '10.0.0.5',
       'port': 8642,
     });
     expect(tvs.all.single.token, isNull);
     expect(tvs.all.single.found, isTrue);
-    await native('lost', {'name': 'IlonaTv on X'});
+    await native('lost', {'name': 'Ilona TV on X'});
     expect(tvs.all, isEmpty);
     tvs.stopDiscovery();
     expect(calls, ['discoverStart', 'discoverStop']);
@@ -68,7 +68,7 @@ void main() {
       'tok',
     );
     await native('found', {
-      'name': 'IlonaTv on X',
+      'name': 'Ilona TV on X',
       'host': '10.0.0.5',
       'port': 8642,
     });

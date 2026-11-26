@@ -113,7 +113,7 @@ class CompanionServer {
     if (method == 'GET' && path == '/') {
       req.response.headers.contentType = ContentType.html;
       req.response.write(
-        '<!doctype html><title>IlonaTv</title>IlonaTv is running',
+        '<!doctype html><title>Ilona TV</title>Ilona TV is running',
       );
       return req.response.close();
     }

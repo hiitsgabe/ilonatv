@@ -33,7 +33,7 @@ class IlonaTvApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'IlonaTv',
+    title: 'Ilona TV',
     debugShowCheckedModeBanner: false,
     // A held OK presses once. Flutter's defaults repeat it, so holding OK on
     // Remove would clear row after row, and the hold that opens Settings from

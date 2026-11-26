@@ -76,7 +76,7 @@ void main() {
     expect(a.version, 'v0.6.1');
     expect(a.sha256, apkSum);
     expect(requests.single.value('accept'), 'application/vnd.github+json');
-    expect(requests.single.value('user-agent'), 'IlonaTv-Companion');
+    expect(requests.single.value('user-agent'), 'IlonaTV-Companion');
   });
 
   test('without a digest, the sum comes from SHA256SUMS', () async {

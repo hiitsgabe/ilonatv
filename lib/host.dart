@@ -34,7 +34,7 @@ class InstalledApp {
   );
 }
 
-/// The apps IlonaTv offers, in [apps] order: those with a TV activity and those
+/// The apps Ilona TV offers, in [apps] order: those with a TV activity and those
 /// the user installed, minus [hidden]. A system app with only a phone launcher
 /// activity (Fire OS has dozens) never shows.
 Map<String, InstalledApp> offeredApps(
@@ -106,14 +106,14 @@ class Host {
     _listen();
   }
 
-  /// Called when Android sends IlonaTv back to its home screen: Home pressed,
+  /// Called when Android sends Ilona TV back to its home screen: Home pressed,
   /// or the Fire TV curtain relaunching it (MainActivity.onNewIntent).
   static set onGoHome(void Function()? f) {
     _goHome = f;
     _listen();
   }
 
-  /// Called, while IlonaTv is in front, when an HDMI input comes, goes or
+  /// Called, while Ilona TV is in front, when an HDMI input comes, goes or
   /// changes state (MainActivity.onResume).
   static set onInputsChanged(void Function()? f) {
     _inputsChanged = f;
@@ -122,7 +122,7 @@ class Host {
 
   static void goHome() => _goHome?.call();
 
-  /// Sends [key] into IlonaTv's window; false when no activity is resumed, or
+  /// Sends [key] into Ilona TV's window; false when no activity is resumed, or
   /// for Home before the home screen exists (the first run's setup).
   static Future<bool> injectKey(RemoteKey key) async {
     if (key == RemoteKey.home) {
@@ -146,7 +146,7 @@ class Host {
     return [for (final a in apps) InstalledApp.fromJson(a)];
   }
 
-  /// Packages of the apps that open [uri], IlonaTv aside.
+  /// Packages of the apps that open [uri], Ilona TV aside.
   static Future<List<String>> appsFor(String uri) async =>
       await _channel.invokeListMethod<String>('appsFor', {'uri': uri}) ??
       const [];
@@ -156,7 +156,7 @@ class Host {
       _channel.invokeMethod<Uint8List>('appIcon', {'package': package});
 
   /// Content URIs of the pictures on the device, newest first; null when
-  /// IlonaTv may not read them. The first call asks the user.
+  /// Ilona TV may not read them. The first call asks the user.
   static Future<List<String>?> images() =>
       _channel.invokeListMethod<String>('images');
 
@@ -164,7 +164,7 @@ class Host {
   static Future<Uint8List?> imageThumb(String uri) =>
       _channel.invokeMethod<Uint8List>('imageThumb', {'uri': uri});
 
-  /// Copies the picture at [uri] into IlonaTv's files, scaled down to a tile's
+  /// Copies the picture at [uri] into Ilona TV's files, scaled down to a tile's
   /// size; the copy's path, null if it does not read.
   static Future<String?> copyImage(String uri) =>
       _channel.invokeMethod<String>('copyImage', {'uri': uri});
@@ -202,7 +202,7 @@ class Host {
     );
   }
 
-  /// Adds IlonaTv's accessibility service to the system's list or takes it
+  /// Adds Ilona TV's accessibility service to the system's list or takes it
   /// out; false without WRITE_SECURE_SETTINGS.
   static Future<bool> setServiceEnabled(bool on) =>
       _bool('setServiceEnabled', {'on': on});
@@ -210,7 +210,7 @@ class Host {
   static Future<void> openAccessibilitySettings() =>
       _channel.invokeMethod<void>('openAccessibilitySettings');
 
-  /// IlonaTv's App info screen, where Android 13+ allows restricted settings.
+  /// Ilona TV's App info screen, where Android 13+ allows restricted settings.
   static Future<void> openAppInfo() =>
       _channel.invokeMethod<void>('openAppInfo');
 

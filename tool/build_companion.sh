@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the companion release APK. It installs IlonaTv from the latest GitHub Release, so no TV APK goes in.
+# Builds the companion release APK. It installs Ilona TV from the latest GitHub Release, so no TV APK goes in.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

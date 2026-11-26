@@ -3,10 +3,10 @@ import 'dart:io';
 /// What Launcher mode needs from the device, as `LauncherSetup.kt` reads it.
 class LauncherSetup {
   /// An Amazon device: Fire OS lists no third-party accessibility service, so
-  /// only IlonaTv itself can enable it, after [grantCommands].
+  /// only Ilona TV itself can enable it, after [grantCommands].
   final bool fireTv;
 
-  /// IlonaTv's accessibility service is in the system's enabled list.
+  /// Ilona TV's accessibility service is in the system's enabled list.
   final bool serviceOn;
 
   /// `Build.VERSION.SDK_INT`.
@@ -28,7 +28,7 @@ LauncherHint launcherHint(LauncherSetup s, {required bool wanted}) {
   return s.fireTv ? LauncherHint.grant : LauncherHint.systemSettings;
 }
 
-/// What a computer on the same network runs once so IlonaTv may enable its own
+/// What a computer on the same network runs once so Ilona TV may enable its own
 /// service; typed there, so shown as is and never translated. [ip] is the TV's
 /// address, `<tv-ip>` when unknown. `-s` keeps the grant on the TV when the
 /// computer has other devices attached.
