@@ -75,6 +75,22 @@ class YoutubeSource extends ChangeNotifier {
     return client.search(query, accessToken: token, pageId: a?.pageId);
   }
 
+  /// YouTube's search, signed in as the first enabled account still signed
+  /// in; empty without one, or when the search fails.
+  Future<List<MediaItem>> searchFirstAccount(String query) async {
+    final account = _mixed.firstOrNull;
+    if (account == null) return const [];
+    try {
+      return await client.search(
+        query,
+        accessToken: await client.accessToken(account.refreshToken),
+        pageId: account.pageId,
+      );
+    } catch (_) {
+      return const [];
+    }
+  }
+
   /// Lower-case words without accents, so "Linus tech" matches "Linus Tech Tips".
   static List<String> _words(String s) => plainName(s).split(' ');
 

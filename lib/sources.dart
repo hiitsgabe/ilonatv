@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'data/media.dart';
 import 'data/sports.dart';
 import 'data/stremio.dart';
 import 'data/tmdb.dart';
@@ -28,6 +29,18 @@ class Sources {
   /// Adding a YouTube login; it shares [youtube]'s client, so a token is
   /// asked once.
   late final youtubeSignIn = YoutubeSignIn(youtube.settings, youtube.client);
+
+  /// The home's content rows by key, for `Settings.shownRows`; the inputs
+  /// row is the home's own.
+  Map<String, List<MediaItem>> rowItems() => {
+    'continueWatching': stremio.continueWatching,
+    'youtubeContinue': youtube.continueWatching,
+    'trendingMovies': tmdb.movies,
+    'trendingSeries': tmdb.series,
+    'recommended': tmdb.recommended,
+    'youtube': youtube.videos,
+    'games': sports.games,
+  };
 
   /// What Stremio has in progress is where TMDB's recommendations start from.
   /// When that changes, only the recommendations are redone.

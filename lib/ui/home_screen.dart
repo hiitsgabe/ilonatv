@@ -8,10 +8,7 @@ import 'package:flutter/services.dart';
 import '../data/inputs.dart';
 import '../data/media.dart';
 import '../device.dart';
-import '../data/sports.dart';
-import '../data/stremio.dart';
 import '../data/tmdb.dart';
-import '../data/youtube.dart';
 import '../host.dart';
 import '../i18n.dart';
 import '../providers.dart';
@@ -658,23 +655,10 @@ class _HomeScreenState extends State<HomeScreen> {
   /// content rows below the fold. One row is on screen at a time: each content
   /// row gets at least the band under the highlight, so at the bottom it has
   /// pushed the one before under the clip.
-  Widget _rows(
-    Size size,
-    Map<String, InstalledApp> apps,
-    TmdbSource tmdb,
-    StremioSource stremio,
-    YoutubeSource youtube,
-    SportsSource sports,
-  ) {
+  Widget _rows(Size size, Map<String, InstalledApp> apps, TmdbSource tmdb) {
     final rows = widget.settings.shownRows({
       'inputs': _inputs,
-      'continueWatching': stremio.continueWatching,
-      'youtubeContinue': youtube.continueWatching,
-      'trendingMovies': tmdb.movies,
-      'trendingSeries': tmdb.series,
-      'recommended': tmdb.recommended,
-      'youtube': youtube.videos,
-      'games': sports.games,
+      ...widget.sources.rowItems(),
     });
     // The rows changed (a refresh): the switches follow, after this frame.
     final keys = [for (final r in rows) r.$1];
@@ -936,7 +920,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             _rowPadTop -
                             4,
                       ),
-                      child: _rows(size, apps, tmdb, stremio, youtube, sports),
+                      child: _rows(size, apps, tmdb),
                     ),
                   ),
                 Positioned(

@@ -133,26 +133,6 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  /// What the first enabled, signed-in YouTube account finds for [query];
-  /// none without one or when the call fails.
-  Future<List<MediaItem>> _youtube(String query) async {
-    final source = widget.sources.youtube;
-    final account = widget.settings.youtubeAccounts
-        .where((a) => a.enabled && !source.isRevoked(a))
-        .firstOrNull;
-    if (account == null) return const [];
-    final client = source.client;
-    try {
-      return await client.search(
-        query,
-        accessToken: await client.accessToken(account.refreshToken),
-        pageId: account.pageId,
-      );
-    } catch (_) {
-      return const [];
-    }
-  }
-
   void _searchAgain(String query) {
     _query.text = query;
     _search();
@@ -176,7 +156,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final query = _query.text.trim();
     if (query.isEmpty) return;
     final client = widget.sources.tmdb.client;
-    final videos = _youtube(query);
+    final videos = widget.sources.youtube.searchFirstAccount(query);
     List<MediaItem>? movies, series;
     try {
       (movies, series) = await (

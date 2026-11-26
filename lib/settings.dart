@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/media.dart';
+import 'data/weather.dart' show Place;
 import 'data/youtube_tv.dart';
 import 'locale.dart';
 
@@ -417,6 +418,16 @@ class Settings extends ChangeNotifier {
       } catch (_) {} // ponytail: unreadable reads as the default order
     }
     return s;
+  }
+
+  /// The weather's city is [place], and the country is its country when it
+  /// has one; saved.
+  Future<void> applyPlace(Place place) {
+    weatherCity = place.name;
+    weatherLat = place.lat;
+    weatherLon = place.lon;
+    if (place.countryCode.isNotEmpty) country = place.countryCode.toUpperCase();
+    return save();
   }
 
   Future<void> save() async {

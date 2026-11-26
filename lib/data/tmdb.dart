@@ -991,6 +991,10 @@ class TmdbSource extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// Whether TMDB takes [key]: throws as [TmdbClient] does.
+  Future<void> testKey(String key) =>
+      TmdbClient(key, 'en-US', fetch: _fetch).genres(MediaType.movie);
+
   /// A client for the key and the language in Settings now.
   TmdbClient get client =>
       TmdbClient(settings.tmdbKey, settings.tmdbLanguage, fetch: _fetch);

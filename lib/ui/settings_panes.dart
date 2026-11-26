@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../data/media.dart';
 import '../data/justwatch.dart';
 import '../data/stremio.dart';
 import '../data/tmdb.dart';
@@ -870,7 +869,7 @@ class TmdbPane extends StatelessWidget {
   Widget build(BuildContext context) => _KeyRow(
     label: t('tmdbKey'),
     value: settings.tmdbKey,
-    test: (key) => TmdbClient(key, 'en-US').genres(MediaType.movie),
+    test: tmdb.testKey,
     save: (key) async {
       settings.tmdbKey = key;
       await settings.save();
@@ -1287,14 +1286,7 @@ class _WeatherPaneState extends State<WeatherPane> {
   }
 
   Future<void> _pick(Place place) async {
-    widget.settings
-      ..weatherCity = place.name
-      ..weatherLat = place.lat
-      ..weatherLon = place.lon;
-    if (place.countryCode.isNotEmpty) {
-      widget.settings.country = place.countryCode.toUpperCase();
-    }
-    await widget.settings.save();
+    await widget.settings.applyPlace(place);
     widget.source.refresh(force: true).ignore();
     if (!mounted) return;
     setState(() {
