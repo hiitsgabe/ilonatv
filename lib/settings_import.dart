@@ -83,7 +83,7 @@ final Map<String, _Check> _keys = {
 Iterable<String> get importKeys => _keys.keys;
 
 /// Writes the prefs in [file] (a JSON object of pref key to value, put there
-/// over adb through ImportProvider) and deletes it. Runs before
+/// over adb through PairingProvider.kt) and deletes it. Runs before
 /// [Settings.load], so the load's migrations apply to what came in. Keys not
 /// in [_keys] or of the wrong type are skipped; an unreadable file imports
 /// nothing. Logs keys, never values: they hold account tokens.

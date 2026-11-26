@@ -79,8 +79,9 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-        <!-- The companion's installer reads the pairing secret over adb (see PairingProvider). DUMP is held by the adb
-             shell and is signature|privileged|development, so no ordinary app can read it, and nothing can write. -->
+        <!-- The companion's installer reads the pairing secret over adb, and a settings import is written over adb (see
+             PairingProvider). DUMP is held by the adb shell and is signature|privileged|development, so no ordinary app
+             can read or write it. -->
         <provider
             android:name=".PairingProvider"
             android:authorities="tv.ilona.app.pairing"

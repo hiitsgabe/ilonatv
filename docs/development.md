@@ -68,7 +68,7 @@ The workflow writes `android/key.properties` and `companion/android/key.properti
 
 ## On a device
 
-`adb shell input keyevent <code>` drives the remote from a computer: Up 19, Down 20, Left 21, Right 22, OK 23, Back 4, Home 3. On-device checks are listed in [verification.md](verification.md).
+`adb shell input keyevent <code>` drives the remote from a computer: Up 19, Down 20, Left 21, Right 22, OK 23, Back 4, Home 3. On-device checks are listed in [verification.md](verification.md). Settings can be imported from a JSON file over adb: [import.md](import.md).
 
 **Frame times.** A profile build (`flutter build apk --profile --split-per-abi --target-platform android-arm`) logs every frame over 17 ms with its build and raster times (`adb logcat -s flutter`). `adb shell dumpsys SurfaceFlinger --latency 'SurfaceView - tv.ilona.app/tv.ilona.app.MainActivity#0'` gives frame times without a build. Ilona TV forces Skia over Impeller in the manifest: on a Fire TV Edition's Mali-G52, Impeller took 21-22 ms per home frame, Skia 5-14.
 
