@@ -1,0 +1,34 @@
+{
+  "id": 550,
+  "results": {
+    "CA": {
+      "link": "https://www.themoviedb.org/movie/550-fight-club/watch?locale=CA",
+      "flatrate": [
+        {"logo_path": "/crave.jpg", "provider_id": 230, "provider_name": "Crave", "display_priority": 4}
+      ],
+      "rent": [
+        {"logo_path": "/apple.jpg", "provider_id": 2, "provider_name": "Apple TV", "display_priority": 6}
+      ]
+    },
+    "US": {
+      "link": "https://www.themoviedb.org/movie/550-fight-club/watch?locale=US",
+      "flatrate": [
+        {"logo_path": "/flix.jpg", "provider_id": 8, "provider_name": "Netflix", "display_priority": 0},
+        {"logo_path": "/prime.jpg", "provider_id": 9, "provider_name": "Amazon Prime Video", "display_priority": 2}
+      ],
+      "free": [
+        {"logo_path": "/tubi.jpg", "provider_id": 73, "provider_name": "Tubi TV", "display_priority": 11}
+      ],
+      "ads": [
+        {"logo_path": "/flixads.jpg", "provider_id": 1796, "provider_name": "Netflix Standard with Ads", "display_priority": 90},
+        {"logo_path": "/tubi.jpg", "provider_id": 73, "provider_name": "Tubi TV", "display_priority": 11}
+      ],
+      "rent": [
+        {"logo_path": "/apple.jpg", "provider_id": 2, "provider_name": "Apple TV", "display_priority": 6}
+      ],
+      "buy": [
+        {"logo_path": "/apple.jpg", "provider_id": 2, "provider_name": "Apple TV", "display_priority": 6}
+      ]
+    }
+  }
+}

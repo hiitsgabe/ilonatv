@@ -1,0 +1,70 @@
+{
+  "result": {
+    "addons": [
+      {
+        "transportUrl": "https://v3-cinemeta.strem.io/manifest.json",
+        "manifest": {
+          "id": "com.linvo.cinemeta",
+          "catalogs": [
+            {
+              "type": "movie",
+              "id": "top",
+              "name": "Popular"
+            },
+            {
+              "type": "series",
+              "id": "top",
+              "name": "Popular"
+            }
+          ]
+        }
+      },
+      {
+        "transportUrl": "https://sports.example/u1/manifest.json",
+        "manifest": {
+          "id": "example.sports",
+          "catalogs": [
+            {
+              "type": "tv",
+              "id": "live_now",
+              "name": "Live Now"
+            },
+            {
+              "type": "events",
+              "id": "football br",
+              "name": "Futebol"
+            },
+            {
+              "type": "tv",
+              "id": "search",
+              "name": "Search",
+              "extra": [
+                {
+                  "name": "search",
+                  "isRequired": true
+                }
+              ]
+            },
+            {
+              "type": "tv",
+              "id": "by_genre",
+              "name": "Genres",
+              "extraRequired": [
+                "genre"
+              ]
+            },
+            {
+              "type": "movie",
+              "id": "replays",
+              "name": "Replays"
+            }
+          ]
+        }
+      },
+      {
+        "transportUrl": "https://broken.example/manifest.json"
+      }
+    ],
+    "lastModified": "2026-11-01T12:00:00.000Z"
+  }
+}

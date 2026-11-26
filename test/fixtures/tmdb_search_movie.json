@@ -1,0 +1,37 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "backdrop_path": "/sAtoMqDVhNDQBc3QJL3RF6hlhGq.jpg",
+      "genre_ids": [878, 18],
+      "id": 335984,
+      "original_language": "en",
+      "original_title": "Blade Runner 2049",
+      "overview": "Fixture synopsis of Blade Runner 2049.",
+      "popularity": 52.1,
+      "poster_path": "/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
+      "release_date": "2017-10-04",
+      "title": "Blade Runner 2049",
+      "vote_average": 7.6,
+      "vote_count": 14000
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/eIi3klFf7mp3oL5EEF4mLIDs26r.jpg",
+      "genre_ids": [878, 18, 53],
+      "id": 78,
+      "original_language": "en",
+      "original_title": "Blade Runner",
+      "overview": "Fixture synopsis of Blade Runner.",
+      "popularity": 40.3,
+      "poster_path": "/63N9uy8nd9j7Eog2axPQ8lbr3Wj.jpg",
+      "release_date": "1982-06-25",
+      "title": "Blade Runner",
+      "vote_average": 7.9,
+      "vote_count": 13500
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 2
+}

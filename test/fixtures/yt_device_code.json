@@ -1,0 +1,7 @@
+{
+  "device_code": "DEVICE",
+  "expires_in": 1800,
+  "interval": 5,
+  "user_code": "ABC-DEF-GHIJ",
+  "verification_url": "https://www.google.com/device"
+}

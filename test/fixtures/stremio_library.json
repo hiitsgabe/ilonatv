@@ -1,0 +1,143 @@
+{
+  "result": [
+    {
+      "_id": "tt3",
+      "name": "Removed",
+      "type": "movie",
+      "poster": "https://images.example/tt3.jpg",
+      "posterShape": "poster",
+      "removed": true,
+      "temp": false,
+      "_ctime": "2026-08-01T10:00:00.000Z",
+      "_mtime": "2026-10-30T09:00:00.000Z",
+      "state": {
+        "timeWatched": 600000,
+        "timeOffset": 600000,
+        "duration": 7200000,
+        "video_id": "tt3"
+      }
+    },
+    {
+      "_id": "tt8",
+      "name": "Oldest",
+      "type": "movie",
+      "poster": "https://images.example/tt8.jpg",
+      "posterShape": "poster",
+      "removed": false,
+      "temp": false,
+      "_ctime": "2026-08-01T10:00:00.000Z",
+      "_mtime": "2026-09-01T21:00:00.000Z",
+      "state": {
+        "timeWatched": 1200000,
+        "timeOffset": 1200000,
+        "duration": 6000000,
+        "video_id": ""
+      }
+    },
+    {
+      "_id": "tt6",
+      "name": "Never Played",
+      "type": "movie",
+      "poster": "https://images.example/tt6.jpg",
+      "posterShape": "poster",
+      "removed": false,
+      "temp": false,
+      "_ctime": "2026-10-29T08:00:00.000Z",
+      "_mtime": "2026-10-29T08:00:00.000Z",
+      "state": {
+        "timeWatched": 0,
+        "timeOffset": 0,
+        "duration": 0,
+        "video_id": null
+      }
+    },
+    {
+      "_id": "tt2",
+      "name": "In Progress Series",
+      "type": "series",
+      "poster": "https://images.example/tt2.jpg",
+      "posterShape": "poster",
+      "removed": false,
+      "temp": false,
+      "_ctime": "2026-07-01T10:00:00.000Z",
+      "_mtime": "2026-10-29T21:30:00.000Z",
+      "state": {
+        "timeWatched": 900000,
+        "timeOffset": 900000,
+        "duration": 2700000,
+        "video_id": "tt2:2:5"
+      }
+    },
+    {
+      "_id": "tt5",
+      "name": "Other Type",
+      "type": "other",
+      "poster": "https://images.example/tt5.jpg",
+      "posterShape": "poster",
+      "removed": false,
+      "temp": false,
+      "_ctime": "2026-10-01T10:00:00.000Z",
+      "_mtime": "2026-10-30T18:00:00.000Z",
+      "state": {
+        "timeWatched": 300000,
+        "timeOffset": 300000,
+        "duration": 3600000,
+        "video_id": "tt5"
+      }
+    },
+    {
+      "_id": "tt1",
+      "name": "In Progress Movie",
+      "type": "movie",
+      "poster": "https://images.example/tt1.jpg",
+      "posterShape": "poster",
+      "removed": false,
+      "temp": false,
+      "_ctime": "2026-10-01T10:00:00.000Z",
+      "_mtime": "2026-10-30T20:15:00.000Z",
+      "state": {
+        "timeWatched": 3600000,
+        "timeOffset": 3600000,
+        "duration": 8160000,
+        "video_id": "tt1"
+      }
+    },
+    {
+      "_id": "tt7",
+      "name": "No Poster",
+      "type": "movie",
+      "poster": "",
+      "posterShape": "poster",
+      "removed": false,
+      "temp": false,
+      "_ctime": "2026-10-20T10:00:00.000Z",
+      "_mtime": "2026-10-26T19:00:00.000Z",
+      "state": {
+        "timeWatched": 2400000,
+        "timeOffset": 2400000,
+        "duration": 5400000,
+        "video_id": null
+      }
+    },
+    {
+      "_id": "tt4",
+      "name": "Removed But Temp",
+      "type": "movie",
+      "poster": "https://images.example/tt4.jpg",
+      "posterShape": "poster",
+      "removed": true,
+      "temp": true,
+      "_ctime": "2026-10-28T20:00:00.000Z",
+      "_mtime": "2026-10-28T22:00:00.000Z",
+      "state": {
+        "timeWatched": 1800000,
+        "timeOffset": 1800000,
+        "duration": 7000000,
+        "video_id": "tt4"
+      }
+    },
+    {
+      "_id": 42
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": 550,
+  "results": [
+    {
+      "iso_639_1": "en",
+      "iso_3166_1": "US",
+      "name": "Fixture Vimeo trailer",
+      "key": "VIMEO",
+      "site": "Vimeo",
+      "size": 1080,
+      "type": "Trailer",
+      "official": true,
+      "id": "v1"
+    },
+    {
+      "iso_639_1": "en",
+      "iso_3166_1": "US",
+      "name": "Fixture teaser",
+      "key": "TEASER",
+      "site": "YouTube",
+      "size": 1080,
+      "type": "Teaser",
+      "official": true,
+      "id": "v2"
+    },
+    {
+      "iso_639_1": "en",
+      "iso_3166_1": "US",
+      "name": "Fixture trailer",
+      "key": "TRAILER",
+      "site": "YouTube",
+      "size": 1080,
+      "type": "Trailer",
+      "official": true,
+      "id": "v3"
+    }
+  ]
+}

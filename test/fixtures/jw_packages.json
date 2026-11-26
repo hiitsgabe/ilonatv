@@ -1,0 +1,124 @@
+{
+  "data": {
+    "packages": [
+      {
+        "packageId": 350,
+        "clearName": "Apple TV",
+        "shortName": "atp",
+        "monetizationTypes": [
+          "FLATRATE",
+          "FREE"
+        ],
+        "icon": "/icon/357333613/s100/appletvplus.png"
+      },
+      {
+        "packageId": 119,
+        "clearName": "Amazon Prime Video",
+        "shortName": "prv",
+        "monetizationTypes": [
+          "FLATRATE",
+          "FREE"
+        ],
+        "icon": "/icon/322992749/s100/amazonprimevideo.png"
+      },
+      {
+        "packageId": 337,
+        "clearName": "Disney Plus",
+        "shortName": "dnp",
+        "monetizationTypes": [
+          "FLATRATE"
+        ],
+        "icon": "/icon/313118777/s100/disneyplus.png"
+      },
+      {
+        "packageId": 8,
+        "clearName": "Netflix",
+        "shortName": "nfx",
+        "monetizationTypes": [
+          "FLATRATE"
+        ],
+        "icon": "/icon/207360008/s100/netflix.png"
+      },
+      {
+        "packageId": 2285,
+        "clearName": "JustWatch TV Free",
+        "shortName": "jwt",
+        "monetizationTypes": [
+          "FREE"
+        ],
+        "icon": "/icon/355713150/s100/justwatchtv.png"
+      },
+      {
+        "packageId": 2,
+        "clearName": "Apple TV Store",
+        "shortName": "itu",
+        "monetizationTypes": [
+          "BUY",
+          "FLATRATE",
+          "FREE",
+          "RENT"
+        ],
+        "icon": "/icon/338253243/s100/itunes.png"
+      },
+      {
+        "packageId": 531,
+        "clearName": "Paramount Plus",
+        "shortName": "pmp",
+        "monetizationTypes": [
+          "FLATRATE",
+          "FREE"
+        ],
+        "icon": "/icon/242706661/s100/paramountplus.png"
+      },
+      {
+        "packageId": 230,
+        "clearName": "Crave",
+        "shortName": "crv",
+        "monetizationTypes": [
+          "FLATRATE",
+          "FREE"
+        ],
+        "icon": "/icon/92692011/s100/crave.png"
+      },
+      {
+        "packageId": 73,
+        "clearName": "Tubi TV",
+        "shortName": "tbv",
+        "monetizationTypes": [
+          "ADS",
+          "FLATRATE",
+          "FREE"
+        ],
+        "icon": "/icon/313528601/s100/tubitv.png"
+      },
+      {
+        "packageId": 11,
+        "clearName": "MUBI",
+        "shortName": "mbi",
+        "monetizationTypes": [
+          "FLATRATE"
+        ],
+        "icon": "/icon/164970114/s100/mubi.png"
+      },
+      {
+        "packageId": 283,
+        "clearName": "Crunchyroll",
+        "shortName": "cru",
+        "monetizationTypes": [
+          "ADS",
+          "FLATRATE"
+        ],
+        "icon": "/icon/324213205/s100/crunchyroll.png"
+      },
+      {
+        "packageId": 175,
+        "clearName": "Netflix Kids",
+        "shortName": "nfk",
+        "monetizationTypes": [
+          "FLATRATE"
+        ],
+        "icon": "/icon/14385750/s100/netflixkids.png"
+      }
+    ]
+  }
+}

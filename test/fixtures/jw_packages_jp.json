@@ -1,0 +1,125 @@
+{
+ "data": {
+  "packages": [
+   {
+    "packageId": 8,
+    "clearName": "Netflix",
+    "shortName": "nfx",
+    "icon": "/icon/207360008/s100/netflix.png",
+    "monetizationTypes": [
+     "FLATRATE"
+    ]
+   },
+   {
+    "packageId": 9,
+    "clearName": "Amazon Prime Video",
+    "shortName": "amp",
+    "icon": "/icon/322992749/s100/amazonprime.png",
+    "monetizationTypes": [
+     "ADS",
+     "BUY",
+     "FLATRATE",
+     "FREE",
+     "RENT"
+    ]
+   },
+   {
+    "packageId": 350,
+    "clearName": "Apple TV",
+    "shortName": "atp",
+    "icon": "/icon/357333613/s100/appletvplus.png",
+    "monetizationTypes": [
+     "FLATRATE",
+     "FREE"
+    ]
+   },
+   {
+    "packageId": 337,
+    "clearName": "Disney Plus",
+    "shortName": "dnp",
+    "icon": "/icon/313118777/s100/disneyplus.png",
+    "monetizationTypes": [
+     "FLATRATE"
+    ]
+   },
+   {
+    "packageId": 2791,
+    "clearName": "JustWatch TV Beta",
+    "shortName": "jfb",
+    "icon": "/icon/356351546/s100/justwatchtvbeta.png",
+    "monetizationTypes": [
+     "FREE"
+    ]
+   },
+   {
+    "packageId": 15,
+    "clearName": "Hulu",
+    "shortName": "hlu",
+    "icon": "/icon/116305230/s100/hulu.png",
+    "monetizationTypes": [
+     "FLATRATE"
+    ]
+   },
+   {
+    "packageId": 84,
+    "clearName": "U-NEXT",
+    "shortName": "unx",
+    "icon": "/icon/304760702/s100/unext.png",
+    "monetizationTypes": [
+     "FLATRATE",
+     "RENT"
+    ]
+   },
+   {
+    "packageId": 10,
+    "clearName": "Amazon Video",
+    "shortName": "amz",
+    "icon": "/icon/340823436/s100/amazon.png",
+    "monetizationTypes": [
+     "BUY",
+     "RENT"
+    ]
+   },
+   {
+    "packageId": 2,
+    "clearName": "Apple TV Store",
+    "shortName": "itu",
+    "icon": "/icon/338253243/s100/itunes.png",
+    "monetizationTypes": [
+     "BUY",
+     "FLATRATE",
+     "FREE",
+     "RENT"
+    ]
+   },
+   {
+    "packageId": 190,
+    "clearName": "Curiosity Stream",
+    "shortName": "cts",
+    "icon": "/icon/48600036/s100/curiositystream.png",
+    "monetizationTypes": [
+     "FLATRATE"
+    ]
+   },
+   {
+    "packageId": 475,
+    "clearName": "DOCSVILLE",
+    "shortName": "dsv",
+    "icon": "/icon/208148387/s100/docsville.png",
+    "monetizationTypes": [
+     "FLATRATE"
+    ]
+   },
+   {
+    "packageId": 546,
+    "clearName": "WOW Presents Plus",
+    "shortName": "wow",
+    "icon": "/icon/243229654/s100/wowpresentsplus.png",
+    "monetizationTypes": [
+     "FLATRATE",
+     "FREE"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,139 @@
+{
+  "sports": [
+    {
+      "id": "40",
+      "leagues": [
+        {
+          "abbreviation": "NBA",
+          "id": "46",
+          "name": "National Basketball Association",
+          "season": {
+            "displayName": "2026-27",
+            "year": 2027
+          },
+          "shortName": "NBA",
+          "slug": "nba",
+          "teams": [
+            {
+              "team": {
+                "id": "2",
+                "uid": "s:40~l:46~t:2",
+                "slug": "boston-celtics",
+                "abbreviation": "BOS",
+                "displayName": "Boston Celtics",
+                "shortDisplayName": "Celtics",
+                "name": "Celtics",
+                "nickname": "Boston",
+                "location": "Boston",
+                "color": "008348",
+                "alternateColor": "ffffff",
+                "isActive": true,
+                "logos": [
+                  {
+                    "alt": "",
+                    "height": 500,
+                    "href": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
+                    "rel": [
+                      "full",
+                      "default"
+                    ],
+                    "width": 500
+                  }
+                ]
+              }
+            },
+            {
+              "team": {
+                "id": "17",
+                "uid": "s:40~l:46~t:17",
+                "slug": "brooklyn-nets",
+                "abbreviation": "BKN",
+                "displayName": "Brooklyn Nets",
+                "shortDisplayName": "Nets",
+                "name": "Nets",
+                "nickname": "Brooklyn",
+                "location": "Brooklyn",
+                "color": "000000",
+                "alternateColor": "ffffff",
+                "isActive": true,
+                "logos": [
+                  {
+                    "alt": "",
+                    "height": 500,
+                    "href": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png",
+                    "rel": [
+                      "full",
+                      "default"
+                    ],
+                    "width": 500
+                  }
+                ]
+              }
+            },
+            {
+              "team": {
+                "id": "13",
+                "uid": "s:40~l:46~t:13",
+                "slug": "los-angeles-lakers",
+                "abbreviation": "LAL",
+                "displayName": "Los Angeles Lakers",
+                "shortDisplayName": "Lakers",
+                "name": "Lakers",
+                "nickname": "Los Angeles",
+                "location": "Los Angeles",
+                "color": "552583",
+                "alternateColor": "fdb927",
+                "isActive": true,
+                "logos": [
+                  {
+                    "alt": "",
+                    "height": 500,
+                    "href": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
+                    "rel": [
+                      "full",
+                      "default"
+                    ],
+                    "width": 500
+                  }
+                ]
+              }
+            },
+            {
+              "team": {
+                "id": "19",
+                "uid": "s:40~l:46~t:19",
+                "slug": "orlando-magic",
+                "abbreviation": "ORL",
+                "displayName": "Orlando Magic",
+                "shortDisplayName": "Magic",
+                "name": "Magic",
+                "nickname": "Orlando",
+                "location": "Orlando",
+                "color": "0150b5",
+                "alternateColor": "9ca0a3",
+                "isActive": true,
+                "logos": [
+                  {
+                    "alt": "",
+                    "height": 500,
+                    "href": "https://a.espncdn.com/i/teamlogos/nba/500/orl.png",
+                    "rel": [
+                      "full",
+                      "default"
+                    ],
+                    "width": 500
+                  }
+                ]
+              }
+            }
+          ],
+          "uid": "s:40~l:46",
+          "year": 2027
+        }
+      ],
+      "name": "Basketball",
+      "slug": "basketball",
+      "uid": "s:40"
+    }
+  ]
+}

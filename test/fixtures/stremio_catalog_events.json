@@ -1,0 +1,6 @@
+{
+  "metas": [
+    {"id": "ev:pal-vas", "type": "events", "name": "Palmeiras vs Vasco", "description": "Brasileirão"},
+    {"id": "ev:gre-cam", "type": "events", "name": "GREMIO x ATLETICO MINEIRO", "description": "Brasileirão Série A · 21:30"}
+  ]
+}

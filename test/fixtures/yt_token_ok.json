@@ -1,0 +1,7 @@
+{
+  "access_token": "ACCESS",
+  "expires_in": 3599,
+  "refresh_token": "REFRESH",
+  "scope": "https://www.googleapis.com/auth/youtube-paid-content http://gdata.youtube.com",
+  "token_type": "Bearer"
+}

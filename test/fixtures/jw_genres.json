@@ -1,0 +1,82 @@
+{
+  "data": {
+    "genres": [
+      {
+        "shortName": "cmy",
+        "translation": "Comedy"
+      },
+      {
+        "shortName": "crm",
+        "translation": "Crime"
+      },
+      {
+        "shortName": "fnt",
+        "translation": "Fantasy"
+      },
+      {
+        "shortName": "hst",
+        "translation": "History"
+      },
+      {
+        "shortName": "spt",
+        "translation": "Sport"
+      },
+      {
+        "shortName": "war",
+        "translation": "War & Military"
+      },
+      {
+        "shortName": "hrr",
+        "translation": "Horror"
+      },
+      {
+        "shortName": "fml",
+        "translation": "Kids & Family"
+      },
+      {
+        "shortName": "wsn",
+        "translation": "Western"
+      },
+      {
+        "shortName": "rly",
+        "translation": "Reality TV"
+      },
+      {
+        "shortName": "scf",
+        "translation": "Science-Fiction"
+      },
+      {
+        "shortName": "act",
+        "translation": "Action & Adventure"
+      },
+      {
+        "shortName": "msc",
+        "translation": "Music & Musical"
+      },
+      {
+        "shortName": "trl",
+        "translation": "Mystery & Thriller"
+      },
+      {
+        "shortName": "rma",
+        "translation": "Romance"
+      },
+      {
+        "shortName": "ani",
+        "translation": "Animation"
+      },
+      {
+        "shortName": "doc",
+        "translation": "Documentary"
+      },
+      {
+        "shortName": "drm",
+        "translation": "Drama"
+      },
+      {
+        "shortName": "eur",
+        "translation": "Made in Europe"
+      }
+    ]
+  }
+}

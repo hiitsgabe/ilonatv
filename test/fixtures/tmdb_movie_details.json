@@ -1,0 +1,15 @@
+{
+  "id": 940721,
+  "title": "Godzilla Minus One (TMDB)",
+  "release_date": "2023-11-03",
+  "vote_average": 7.6,
+  "overview": "From TMDB too.",
+  "poster_path": "/g-poster.jpg",
+  "backdrop_path": "/g-backdrop.jpg",
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    }
+  ]
+}

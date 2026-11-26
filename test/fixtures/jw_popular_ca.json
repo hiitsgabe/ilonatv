@@ -1,0 +1,269 @@
+{
+  "data": {
+    "popularTitles": {
+      "edges": [
+        {
+          "node": {
+            "objectType": "SHOW",
+            "content": {
+              "title": "MobLand",
+              "originalReleaseYear": 2025,
+              "shortDescription": "Two mob families clash in a war that threatens to topple empires and lives.",
+              "genres": [
+                {
+                  "shortName": "crm"
+                },
+                {
+                  "shortName": "drm"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "247718"
+              },
+              "posterUrl": "/poster/354739547/s332/mobland.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/328945489/s1440/mobland.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 8.667
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "objectType": "SHOW",
+            "content": {
+              "title": "Nocturne",
+              "originalReleaseYear": 2026,
+              "shortDescription": "When a victim of serial killer Jurek Walter turns up alive, detective Jonah Lynn races to find the one person still missing, while his prot\u00e9g\u00e9 Saga Bauer goes undercover for answers from the killer himself. Based on the bestselling novel by Lars Kepler.",
+              "genres": [
+                {
+                  "shortName": "crm"
+                },
+                {
+                  "shortName": "drm"
+                },
+                {
+                  "shortName": "trl"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "292741"
+              },
+              "posterUrl": "/poster/354518072/s332/nocturne.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/347189906/s1440/nocturne.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 7.54
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "objectType": "SHOW",
+            "content": {
+              "title": "VisionQuest",
+              "originalReleaseYear": 2026,
+              "shortDescription": "With a bounty on his head, Vision must confront his nature and resist Ultron's influence to survive.",
+              "genres": [
+                {
+                  "shortName": "act"
+                },
+                {
+                  "shortName": "drm"
+                },
+                {
+                  "shortName": "scf"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "213375"
+              },
+              "posterUrl": "/poster/348281318/s332/visionquest.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/350446611/s1440/visionquest.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/348296886/s1440/visionquest.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/348296885/s1440/visionquest.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/348296884/s1440/visionquest.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/356336860/s1440/visionquest.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 8.3
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "objectType": "SHOW",
+            "content": {
+              "title": "Black Doves",
+              "originalReleaseYear": 2024,
+              "shortDescription": "When a spy posing as a politician's wife learns her lover has been murdered, an old assassin friend joins her on a quest for truth \u2014 and vengeance.",
+              "genres": [
+                {
+                  "shortName": "act"
+                },
+                {
+                  "shortName": "crm"
+                },
+                {
+                  "shortName": "drm"
+                },
+                {
+                  "shortName": "trl"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "225385"
+              },
+              "posterUrl": "/poster/323408766/s332/black-doves.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/357114533/s1440/black-doves.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/323408781/s1440/black-doves.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/322629154/s1440/black-doves.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/357114535/s1440/black-doves.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/356487885/s1440/black-doves.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 7.055
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "objectType": "SHOW",
+            "content": {
+              "title": "Crystal Lake",
+              "originalReleaseYear": 2026,
+              "shortDescription": "Single mother Pam Voorhees has been unable to shake her grief after her young, sickly son Jason tragically drowned in the town lake almost a year before. When two strangers arrive at Pam's door digging into her past, a disturbing chain of events is set into motion, leaving the townspeople of Crystal Lake wondering: just who is Pam Voorhees?",
+              "genres": [
+                {
+                  "shortName": "drm"
+                },
+                {
+                  "shortName": "hrr"
+                },
+                {
+                  "shortName": "trl"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "213562"
+              },
+              "posterUrl": "/poster/354826679/s332/crystal-lake.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/350942357/s1440/crystal-lake.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 8.622
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "objectType": "SHOW",
+            "content": {
+              "title": "Nathan for You",
+              "originalReleaseYear": 2013,
+              "shortDescription": "Nathan Fielder uses his business degree and life experiences to help real small businesses turn a profit.",
+              "genres": [
+                {
+                  "shortName": "cmy"
+                },
+                {
+                  "shortName": "doc"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "58957"
+              },
+              "posterUrl": "/poster/83158897/s332/nathan-for-you.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/253354177/s1440/nathan-for-you.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/309916255/s1440/nathan-for-you.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/300988228/s1440/nathan-for-you.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/309916254/s1440/nathan-for-you.jpg"
+                },
+                {
+                  "backdropUrl": "/backdrop/297049079/s1440/nathan-for-you.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 8.2
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "objectType": "MOVIE",
+            "content": {
+              "title": "A Film",
+              "originalReleaseYear": 2025,
+              "shortDescription": "Two mob families clash in a war that threatens to topple empires and lives.",
+              "genres": [
+                {
+                  "shortName": "crm"
+                },
+                {
+                  "shortName": "drm"
+                }
+              ],
+              "externalIds": {
+                "tmdbId": "940721"
+              },
+              "posterUrl": "/poster/354739547/s332/mobland.jpg",
+              "backdrops": [
+                {
+                  "backdropUrl": "/backdrop/328945489/s1440/mobland.jpg"
+                }
+              ],
+              "scoring": {
+                "tmdbScore": 8.667
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

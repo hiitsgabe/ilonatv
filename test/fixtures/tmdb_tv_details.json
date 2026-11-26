@@ -1,0 +1,19 @@
+{
+  "id": 225385,
+  "name": "Black Doves (TMDB)",
+  "first_air_date": "2024-12-05",
+  "vote_average": 7.6,
+  "overview": "From TMDB.",
+  "poster_path": "/tmdb-poster.jpg",
+  "backdrop_path": "/tmdb-backdrop.jpg",
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 10759,
+      "name": "Action & Adventure"
+    }
+  ]
+}

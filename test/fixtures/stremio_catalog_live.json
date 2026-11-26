@@ -1,0 +1,7 @@
+{
+  "metas": [
+    {"id": "ch5", "type": "tv", "name": "Sports 5", "description": "Basketball", "poster": "https://sports.example/ch5.png"},
+    {"id": "ch1", "type": "tv", "name": "Sports 1", "description": "NBA: Boston Celtics @ Toronto Raptors", "poster": "https://sports.example/ch1.png"},
+    {"type": "tv", "name": "no id"}
+  ]
+}

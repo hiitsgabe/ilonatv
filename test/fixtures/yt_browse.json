@@ -1,0 +1,121 @@
+{
+  "responseContext": {"visitorData": "VISITOR"},
+  "contents": {
+    "tvBrowseRenderer": {
+      "content": {
+        "tvSurfaceContentRenderer": {
+          "content": {
+            "sectionListRenderer": {
+              "contents": [
+                {"searchBarRenderer": {"trackingParams": "T"}},
+                {
+                  "shelfRenderer": {
+                    "title": {"runs": [{"text": "Recommended"}]},
+                    "content": {
+                      "horizontalListRenderer": {
+                        "items": [
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_DEFAULT",
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "contentId": "VIDEO000001",
+                              "header": {"tileHeaderRenderer": {"thumbnail": {"thumbnails": [
+                                {"url": "https://i.ytimg.com/vi/VIDEO000001/default.jpg"},
+                                {"url": "https://i.ytimg.com/vi/VIDEO000001/mqdefault.jpg"},
+                                {"url": "https://i.ytimg.com/vi/VIDEO000001/hqdefault.jpg"},
+                                {"url": "//i.ytimg.com/vi/VIDEO000001/hq720.jpg"},
+                                {"url": "https://i.ytimg.com/vi/VIDEO000001/maxres.jpg"}
+                              ]}}},
+                              "metadata": {"tileMetadataRenderer": {
+                                "title": {"runs": [{"text": "First "}, {"text": "video"}]},
+                                "lines": [
+                                  {"lineRenderer": {"items": [{"lineItemRenderer": {"text": {"runs": [{"text": "Channel One"}]}}}]}},
+                                  {"lineRenderer": {"items": [{"lineItemRenderer": {"text": {"simpleText": "1M views"}}}]}}
+                                ]
+                              }},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "VIDEO000001"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_SHORTS",
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "contentId": "SHORT000001",
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "A Short"}}},
+                              "onSelectCommand": {"reelWatchEndpoint": {"videoId": "SHORT000001"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "contentId": "SHORT000002",
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "A Short without the style"}}},
+                              "onSelectCommand": {"reelWatchEndpoint": {"videoId": "SHORT000002"}}
+                            }
+                          },
+                          {"lockupViewModel": {"contentId": "LOCKUP00001", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO"}},
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_ROUND",
+                              "contentType": "TILE_CONTENT_TYPE_CHANNEL",
+                              "contentId": "UCCHANNEL0000000000000001",
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "A channel"}}},
+                              "onSelectCommand": {"browseEndpoint": {"browseId": "UCCHANNEL0000000000000001"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_DEFAULT",
+                              "contentType": "TILE_CONTENT_TYPE_PLAYLIST",
+                              "contentId": "PLPLAYLIST1",
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "A playlist"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "PLAYLISTV01", "playlistId": "PLPLAYLIST1"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_DEFAULT",
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "contentId": "VIDEO000002",
+                              "header": {"tileHeaderRenderer": {"thumbnail": {"thumbnails": [
+                                {"url": "https://i.ytimg.com/vi/VIDEO000002/hq720.jpg"}
+                              ]}}},
+                              "metadata": {"tileMetadataRenderer": {
+                                "title": {"simpleText": "Second video"},
+                                "lines": [
+                                  {"lineRenderer": {"items": [{"lineItemRenderer": {"text": {"simpleText": "Channel Two"}}}]}}
+                                ]
+                              }}
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {"promoShelfRenderer": {"title": {"simpleText": "Promo"}}},
+                {
+                  "shelfRenderer": {
+                    "content": {
+                      "horizontalListRenderer": {
+                        "items": [
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "Third video"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "VIDEO000003"}}
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

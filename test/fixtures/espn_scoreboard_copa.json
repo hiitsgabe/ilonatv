@@ -1,0 +1,125 @@
+{
+ "leagues": [
+  {
+   "id": "8306",
+   "name": "Copa do Brasil",
+   "slug": "bra.copa_do_brazil"
+  }
+ ],
+ "events": [
+  {
+   "id": "401913105",
+   "date": "2026-11-01T19:00Z",
+   "name": "Vasco da Gama at Palmeiras",
+   "shortName": "VAS @ PAL",
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0'",
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Sun, November 1st at 2:00 PM EST",
+     "shortDetail": "Scheduled"
+    }
+   },
+   "competitions": [
+    {
+     "id": "401913105",
+     "date": "2026-11-01T19:00Z",
+     "competitors": [
+      {
+       "id": "2029",
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "2029",
+        "abbreviation": "PAL",
+        "displayName": "Palmeiras",
+        "shortDisplayName": "Palmeiras",
+        "name": "Palmeiras",
+        "color": "417505",
+        "alternateColor": "fafafc",
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/2029.png"
+       }
+      },
+      {
+       "id": "3454",
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "3454",
+        "abbreviation": "VAS",
+        "displayName": "Vasco da Gama",
+        "shortDisplayName": "Vasco",
+        "name": "Vasco da Gama",
+        "color": "000000",
+        "alternateColor": "fafafc",
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/3454.png"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401913109",
+   "date": "2026-11-01T21:30Z",
+   "name": "Atlético-MG at Grêmio",
+   "shortName": "CAM @ GRE",
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0'",
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Sun, November 1st at 4:30 PM EST",
+     "shortDetail": "Scheduled"
+    }
+   },
+   "competitions": [
+    {
+     "id": "401913109",
+     "date": "2026-11-01T21:30Z",
+     "competitors": [
+      {
+       "id": "6273",
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "6273",
+        "abbreviation": "GRE",
+        "displayName": "Grêmio",
+        "shortDisplayName": "Grêmio",
+        "name": "Grêmio",
+        "color": "0093EC",
+        "alternateColor": "000000",
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/6273.png"
+       }
+      },
+      {
+       "id": "7632",
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "7632",
+        "abbreviation": "CAM",
+        "displayName": "Atlético-MG",
+        "shortDisplayName": "Atlético-MG",
+        "name": "Atlético-MG",
+        "color": "000000",
+        "alternateColor": "fafafc",
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/7632.png"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

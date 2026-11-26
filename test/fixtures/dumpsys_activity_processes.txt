@@ -1,0 +1,197 @@
+ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)
+  All known processes:
+  *PERS* UID 10155 ProcessRecord{92e2eda 6126:com.amazon.tv.fss/u0a155}
+    adjSeq=96111 lruSeq=0 lastPss=5.1MB lastSwapPss=1.2MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10157 ProcessRecord{89b6621 5085:com.amazon.tv.ime/u0a157}
+    adjSeq=96111 lruSeq=0 lastPss=25MB lastSwapPss=9.0MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=200 setRaw=200 cur=200 set=200
+  *APP* UID 10050 ProcessRecord{ea4af6d 6719:com.amazon.device.rdmapplication/u0a50}
+    adjSeq=96111 lruSeq=0 lastPss=3.5MB lastSwapPss=2.5MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10174 ProcessRecord{55fb723 2058:com.amazon.venezia/u0a174}
+    adjSeq=96111 lruSeq=0 lastPss=18MB lastSwapPss=1.1MB lastCachedPss=18MB lastCachedSwapPss=1.1MB
+    oom: max=1001 curRaw=902 setRaw=902 cur=902 set=902
+  *PERS* UID 10175 ProcessRecord{a37a3ce 6142:com.amazon.vizzini/u0a175}
+    adjSeq=96111 lruSeq=0 lastPss=27MB lastSwapPss=2.1MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10013 ProcessRecord{9cc869d 6447:com.amazon.connectivitycontroller/u0a13}
+    adjSeq=96111 lruSeq=0 lastPss=3.9MB lastSwapPss=2.2MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=200 set=200
+  *APP* UID 10231 ProcessRecord{3d27f27 4664:com.example.recorder/u0a231}
+    adjSeq=96111 lruSeq=0 lastPss=130MB lastSwapPss=64KB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=0 setRaw=0 cur=0 set=0
+  *APP* UID 10084 ProcessRecord{43ef45a 676:com.amazon.ceviche/u0a84}
+    adjSeq=96111 lruSeq=0 lastPss=13MB lastSwapPss=87KB lastCachedPss=13MB lastCachedSwapPss=87KB
+    oom: max=1001 curRaw=902 setRaw=902 cur=902 set=902
+  *APP* UID 10202 ProcessRecord{2eb0381 4849:com.amazon.webview.chromium:AWVMetricsProcess/u0a202}
+    adjSeq=96111 lruSeq=0 lastPss=3.5MB lastSwapPss=107KB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 1000 ProcessRecord{b852a04 6090:com.mediatek.tvinput/1000}
+    adjSeq=96111 lruSeq=0 lastPss=5.0MB lastSwapPss=3.0MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10180 ProcessRecord{39a3868 11712:com.amazon.airplaydaemon/u0a180}
+    adjSeq=96111 lruSeq=0 lastPss=5.1MB lastSwapPss=2.3MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=200 setRaw=200 cur=200 set=200
+  *APP* UID 1000 ProcessRecord{20fcf1 9077:com.amazon.tv.settings.mediatek/1000}
+    adjSeq=96111 lruSeq=0 lastPss=5.4MB lastSwapPss=1.2MB lastCachedPss=8.3MB lastCachedSwapPss=2.0KB
+    oom: max=1001 curRaw=1 setRaw=1 cur=1 set=1
+  *PERS* UID 1000 ProcessRecord{ae9e7c7 3242:system/1000}
+    adjSeq=96111 lruSeq=0 lastPss=83MB lastSwapPss=8.3MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-900 curRaw=-900 setRaw=-900 cur=-900 set=-900
+  *APP* UID 10072 ProcessRecord{58a03b2 4441:com.amazon.aca/u0a72}
+    adjSeq=96111 lruSeq=0 lastPss=9.0MB lastSwapPss=85KB lastCachedPss=9.0MB lastCachedSwapPss=85KB
+    oom: max=1001 curRaw=904 setRaw=904 cur=903 set=903
+  *PERS* UID 10115 ProcessRecord{46949fc 5267:com.amazon.imp/u0a115}
+    adjSeq=96111 lruSeq=0 lastPss=9.2MB lastSwapPss=2.9MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10171 ProcessRecord{7d89c1d 32683:com.amazon.tv.settings.v2/u0a171}
+    adjSeq=96111 lruSeq=0 lastPss=25MB lastSwapPss=14MB lastCachedPss=25MB lastCachedSwapPss=14MB
+    oom: max=1001 curRaw=1 setRaw=1 cur=1 set=1
+  *APP* UID 10097 ProcessRecord{eb34431 4533:com.amazon.diode/u0a97}
+    adjSeq=96111 lruSeq=0 lastPss=4.1MB lastSwapPss=92KB lastCachedPss=4.1MB lastCachedSwapPss=92KB
+    oom: max=1001 curRaw=900 setRaw=900 cur=901 set=901
+  *PERS* UID 10140 ProcessRecord{3b84340 5218:com.amazon.tcomm/u0a140}
+    adjSeq=96111 lruSeq=0 lastPss=11MB lastSwapPss=1.1MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10208 ProcessRecord{aa7165 13636:com.amazon.ftve.audioprovider/u0a208}
+    adjSeq=96111 lruSeq=0 lastPss=3.0MB lastSwapPss=2.2MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=1 setRaw=1 cur=1 set=1
+  *APP* UID 10243 ProcessRecord{1d324f0 1604:app.elimor.app/u0a243}
+    adjSeq=96111 lruSeq=0 lastPss=120MB lastSwapPss=19MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10229 ProcessRecord{927a7ba 3960:com.example.vpn/u0a229}
+    adjSeq=96111 lruSeq=0 lastPss=167MB lastSwapPss=27MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *PERS* UID 1068 ProcessRecord{5897674 6164:com.android.se/1068}
+    adjSeq=96111 lruSeq=0 lastPss=2.0MB lastSwapPss=1.5MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10023 ProcessRecord{27987c8 5535:com.amazon.device.messaging/u0a23}
+    adjSeq=96111 lruSeq=0 lastPss=9.0MB lastSwapPss=4.1MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10199 ProcessRecord{eb7d28c 13648:com.amazon.ftve.audioeffectsprovider/u0a199}
+    adjSeq=96111 lruSeq=0 lastPss=2.9MB lastSwapPss=1.3MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=1 setRaw=1 cur=1 set=1
+  *PERS* UID 10150 ProcessRecord{aa4614 6181:com.amazon.tv.devicecontrol/u0a150}
+    adjSeq=96111 lruSeq=0 lastPss=13MB lastSwapPss=1.8MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10204 ProcessRecord{40699d1 9816:com.amazon.systemnotices/u0a204}
+    adjSeq=96111 lruSeq=0 lastPss=2.0MB lastSwapPss=1.5MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *PERS* UID 10169 ProcessRecord{7c953da 5779:com.amazon.tv.quicksettings/u0a169}
+    adjSeq=96111 lruSeq=0 lastPss=15MB lastSwapPss=2.0MB lastCachedPss=19MB lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10027 ProcessRecord{3b164a4 5520:android.ext.services/u0a27}
+    adjSeq=96111 lruSeq=0 lastPss=3.4MB lastSwapPss=2.0MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10009 ProcessRecord{5f105c2 6463:com.amazon.accessoryconfigservice/u0a9}
+    adjSeq=96111 lruSeq=0 lastPss=2.3MB lastSwapPss=676KB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10091 ProcessRecord{9f22710 19461:com.amazon.device.blepa/u0a91}
+    adjSeq=96111 lruSeq=0 lastPss=3.0MB lastSwapPss=2.1MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10026 ProcessRecord{950e296 6488:com.amazon.device.software.ota/u0a26}
+    adjSeq=96111 lruSeq=0 lastPss=5.7MB lastSwapPss=4.7MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *APP* UID 10063 ProcessRecord{af96cc2 10564:com.amazon.whisperlink.core.android/u0a63}
+    adjSeq=96111 lruSeq=0 lastPss=7.2MB lastSwapPss=1.4MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=800 setRaw=800 cur=800 set=800
+  *APP* UID 10144 ProcessRecord{5e8989e 4164:com.amazon.tv.alexaalerts/u0a144}
+    adjSeq=96111 lruSeq=0 lastPss=4.0MB lastSwapPss=629KB lastCachedPss=4.0MB lastCachedSwapPss=629KB
+    oom: max=1001 curRaw=904 setRaw=904 cur=903 set=903
+  *APP* UID 99012 ProcessRecord{e7e0c27 4872:com.amazon.webview.chromium:sandboxed_process0/u0a231i12}
+    adjSeq=96111 lruSeq=0 lastPss=85MB lastSwapPss=763KB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=0 setRaw=0 cur=0 set=0
+  *APP* UID 10006 ProcessRecord{78c887d 6246:com.mediatek.tvinputservice.arbitratorservice/u0a6}
+    adjSeq=96111 lruSeq=0 lastPss=2.1MB lastSwapPss=1.5MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *PERS* UID 1000 ProcessRecord{fb543c3 5236:com.amazon.firetvledservice/1000}
+    adjSeq=96111 lruSeq=0 lastPss=2.3MB lastSwapPss=1.7MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10178 ProcessRecord{ffe6d3f 9489:com.amazon.whisperjoin.middleware.np/u0a178}
+    adjSeq=96111 lruSeq=0 lastPss=5.3MB lastSwapPss=2.4MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=800 setRaw=800 cur=800 set=800
+  *APP* UID 10159 ProcessRecord{70fb724 7112:com.amazon.tv.launcher/u0a159}
+    adjSeq=96111 lruSeq=0 lastPss=85MB lastSwapPss=7.7MB lastCachedPss=85MB lastCachedSwapPss=7.7MB
+    oom: max=600 curRaw=600 setRaw=600 cur=600 set=600
+  *APP* UID 10158 ProcessRecord{8752096 6509:com.amazon.tv.inputpreference.service/u0a158}
+    adjSeq=96111 lruSeq=0 lastPss=6.2MB lastSwapPss=5.2MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+  *PERS* UID 1000 ProcessRecord{5ee8d22 5171:com.mediatek.tv.agent/1000}
+    adjSeq=96111 lruSeq=0 lastPss=5.6MB lastSwapPss=3.6MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10071 ProcessRecord{1ece8e9 5058:com.amazon.adep/u0a71}
+    adjSeq=96111 lruSeq=0 lastPss=9.9MB lastSwapPss=86KB lastCachedPss=9.9MB lastCachedSwapPss=86KB
+    oom: max=1001 curRaw=900 setRaw=900 cur=901 set=901
+  *PERS* UID 10190 ProcessRecord{4f4d4fc 6192:com.amazon.whad/u0a190}
+    adjSeq=96111 lruSeq=0 lastPss=18MB lastSwapPss=2.8MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 10181 ProcessRecord{2289e7a 13280:com.fireos.sdk.ftve.addp/u0a181}
+    adjSeq=96111 lruSeq=0 lastPss=3.2MB lastSwapPss=2.5MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=200 setRaw=200 cur=200 set=200
+  *APP* UID 10202 ProcessRecord{30e7a88 4770:com.amazon.webview.chromium:AWVArcusServiceProcess/u0a202}
+    adjSeq=96111 lruSeq=0 lastPss=3.9MB lastSwapPss=102KB lastCachedPss=3.9MB lastCachedSwapPss=102KB
+    oom: max=1001 curRaw=902 setRaw=902 cur=902 set=902
+  *APP* UID 10076 ProcessRecord{bfd9490 4390:com.amazon.alexa.externalmediaplayer.fireos/u0a76}
+    adjSeq=96111 lruSeq=0 lastPss=10MB lastSwapPss=90KB lastCachedPss=10MB lastCachedSwapPss=90KB
+    oom: max=1001 curRaw=900 setRaw=900 cur=901 set=901
+  *PERS* UID 1000 ProcessRecord{da99117 5118:com.amazon.device.services/1000}
+    adjSeq=96111 lruSeq=0 lastPss=23MB lastSwapPss=5.1MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+  *APP* UID 1002 ProcessRecord{8da3ae0 5072:com.android.bluetooth/1002}
+    adjSeq=96111 lruSeq=0 lastPss=6.2MB lastSwapPss=4.0MB lastCachedPss=0.00 lastCachedSwapPss=0.00
+    oom: max=1001 curRaw=-700 setRaw=-700 cur=-700 set=-700
+  *APP* UID 10202 ProcessRecord{377fa1e 4814:com.amazon.webview.chromium/u0a202}
+    adjSeq=96111 lruSeq=0 lastPss=2.9MB lastSwapPss=108KB lastCachedPss=2.9MB lastCachedSwapPss=108KB
+    oom: max=1001 curRaw=904 setRaw=904 cur=903 set=903
+    Isolated #0: ProcessRecord{e7e0c27 4872:com.amazon.webview.chromium:sandboxed_process0/u0a231i12}
+    PID #676: ProcessRecord{43ef45a 676:com.amazon.ceviche/u0a84}
+    PID #1604: ProcessRecord{1d324f0 1604:app.elimor.app/u0a243}
+    PID #2058: ProcessRecord{55fb723 2058:com.amazon.venezia/u0a174}
+    PID #3242: ProcessRecord{ae9e7c7 3242:system/1000}
+    PID #3960: ProcessRecord{927a7ba 3960:com.example.vpn/u0a229}
+    PID #4164: ProcessRecord{5e8989e 4164:com.amazon.tv.alexaalerts/u0a144}
+    PID #4390: ProcessRecord{bfd9490 4390:com.amazon.alexa.externalmediaplayer.fireos/u0a76}
+    PID #4441: ProcessRecord{58a03b2 4441:com.amazon.aca/u0a72}
+    PID #4533: ProcessRecord{eb34431 4533:com.amazon.diode/u0a97}
+    PID #4664: ProcessRecord{3d27f27 4664:com.example.recorder/u0a231}
+    PID #4770: ProcessRecord{30e7a88 4770:com.amazon.webview.chromium:AWVArcusServiceProcess/u0a202}
+    PID #4814: ProcessRecord{377fa1e 4814:com.amazon.webview.chromium/u0a202}
+    PID #4849: ProcessRecord{2eb0381 4849:com.amazon.webview.chromium:AWVMetricsProcess/u0a202}
+    PID #4872: ProcessRecord{e7e0c27 4872:com.amazon.webview.chromium:sandboxed_process0/u0a231i12}
+    PID #5058: ProcessRecord{1ece8e9 5058:com.amazon.adep/u0a71}
+    PID #5072: ProcessRecord{8da3ae0 5072:com.android.bluetooth/1002}
+    PID #5085: ProcessRecord{89b6621 5085:com.amazon.tv.ime/u0a157}
+    PID #5118: ProcessRecord{da99117 5118:com.amazon.device.services/1000}
+    PID #5171: ProcessRecord{5ee8d22 5171:com.mediatek.tv.agent/1000}
+    PID #5218: ProcessRecord{3b84340 5218:com.amazon.tcomm/u0a140}
+    PID #5236: ProcessRecord{fb543c3 5236:com.amazon.firetvledservice/1000}
+    PID #5267: ProcessRecord{46949fc 5267:com.amazon.imp/u0a115}
+    PID #5520: ProcessRecord{3b164a4 5520:android.ext.services/u0a27}
+    PID #5535: ProcessRecord{27987c8 5535:com.amazon.device.messaging/u0a23}
+    PID #5779: ProcessRecord{7c953da 5779:com.amazon.tv.quicksettings/u0a169}
+    PID #6090: ProcessRecord{b852a04 6090:com.mediatek.tvinput/1000}
+    PID #6126: ProcessRecord{92e2eda 6126:com.amazon.tv.fss/u0a155}
+    PID #6142: ProcessRecord{a37a3ce 6142:com.amazon.vizzini/u0a175}
+    PID #6164: ProcessRecord{5897674 6164:com.android.se/1068}
+    PID #6181: ProcessRecord{aa4614 6181:com.amazon.tv.devicecontrol/u0a150}
+    PID #6192: ProcessRecord{4f4d4fc 6192:com.amazon.whad/u0a190}
+    PID #6246: ProcessRecord{78c887d 6246:com.mediatek.tvinputservice.arbitratorservice/u0a6}
+    PID #6447: ProcessRecord{9cc869d 6447:com.amazon.connectivitycontroller/u0a13}
+    PID #6463: ProcessRecord{5f105c2 6463:com.amazon.accessoryconfigservice/u0a9}
+    PID #6488: ProcessRecord{950e296 6488:com.amazon.device.software.ota/u0a26}
+    PID #6509: ProcessRecord{8752096 6509:com.amazon.tv.inputpreference.service/u0a158}
+    PID #6719: ProcessRecord{ea4af6d 6719:com.amazon.device.rdmapplication/u0a50}
+    PID #7112: ProcessRecord{70fb724 7112:com.amazon.tv.launcher/u0a159}
+    PID #9077: ProcessRecord{20fcf1 9077:com.amazon.tv.settings.mediatek/1000}
+    PID #9489: ProcessRecord{ffe6d3f 9489:com.amazon.whisperjoin.middleware.np/u0a178}
+    PID #9816: ProcessRecord{40699d1 9816:com.amazon.systemnotices/u0a204}
+    PID #10564: ProcessRecord{af96cc2 10564:com.amazon.whisperlink.core.android/u0a63}
+    PID #11712: ProcessRecord{39a3868 11712:com.amazon.airplaydaemon/u0a180}
+    PID #13280: ProcessRecord{2289e7a 13280:com.fireos.sdk.ftve.addp/u0a181}
+    PID #13636: ProcessRecord{aa7165 13636:com.amazon.ftve.audioprovider/u0a208}
+    PID #13648: ProcessRecord{eb7d28c 13648:com.amazon.ftve.audioeffectsprovider/u0a199}
+    PID #19461: ProcessRecord{9f22710 19461:com.amazon.device.blepa/u0a91}
+    PID #32683: ProcessRecord{7d89c1d 32683:com.amazon.tv.settings.v2/u0a171}
+  mHomeProcess: ProcessRecord{70fb724 7112:com.amazon.tv.launcher/u0a159}
+  mPreviousProcess: ProcessRecord{1d324f0 1604:app.elimor.app/u0a243}

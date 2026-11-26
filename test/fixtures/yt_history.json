@@ -1,0 +1,137 @@
+{
+  "contents": {
+    "tvBrowseRenderer": {
+      "content": {
+        "tvSurfaceContentRenderer": {
+          "content": {
+            "sectionListRenderer": {
+              "contents": [
+                {
+                  "shelfRenderer": {
+                    "title": {"simpleText": "Today"},
+                    "content": {
+                      "horizontalListRenderer": {
+                        "items": [
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_DEFAULT",
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {
+                                "thumbnail": {"thumbnails": [{"url": "https://i.ytimg.com/vi/HALFWAY0001/hq720.jpg", "width": 1280, "height": 720}]},
+                                "thumbnailOverlays": [
+                                  {"thumbnailOverlayTimeStatusRenderer": {"text": {"simpleText": "12:34"}, "style": "DEFAULT"}},
+                                  {"thumbnailOverlayResumePlaybackRenderer": {"percentDurationWatched": 37}}
+                                ]
+                              }},
+                              "metadata": {"tileMetadataRenderer": {
+                                "title": {"simpleText": "Halfway"},
+                                "lines": [{"lineRenderer": {"items": [{"lineItemRenderer": {"text": {"simpleText": "Channel One"}}}]}}]
+                              }},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "HALFWAY0001"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {"thumbnailOverlays": [
+                                {"thumbnailOverlayTimeStatusRenderer": {"text": {"simpleText": "3:00"}}}
+                              ]}},
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "No progress"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "NOPROGRESS1"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {"thumbnailOverlays": [
+                                {"thumbnailOverlayResumePlaybackRenderer": {"percentDurationWatched": 95}}
+                              ]}},
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "Nearly done"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "NEARLYDONE1"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_SHORTS",
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {"thumbnailOverlays": [
+                                {"thumbnailOverlayResumePlaybackRenderer": {"percentDurationWatched": 50}}
+                              ]}},
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "A Short"}}},
+                              "onSelectCommand": {"reelWatchEndpoint": {"videoId": "SHORT000001"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {"thumbnailOverlays": [
+                                {"thumbnailOverlayResumePlaybackRenderer": {"percentDurationWatched": 94}}
+                              ]}},
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "Last minutes"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "LASTMINUTE1"}}
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "shelfRenderer": {
+                    "title": {"simpleText": "Yesterday"},
+                    "content": {
+                      "horizontalListRenderer": {
+                        "items": [
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {"thumbnailOverlays": [
+                                {"thumbnailOverlayResumePlaybackRenderer": {"percentDurationWatched": 100}}
+                              ]}},
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "Watched"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "WATCHED0001"}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                              "header": {"tileHeaderRenderer": {"thumbnailOverlays": [
+                                {"thumbnailOverlayResumePlaybackRenderer": {"percentDurationWatched": 1}}
+                              ]}},
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "Just started"}}},
+                              "onSelectCommand": {"watchEndpoint": {"videoId": "JUSTSTART01"}}
+                            }
+                          },
+                          {
+                            "lockupViewModel": {
+                              "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                              "contentId": "LOCKUP00001",
+                              "contentImage": {"thumbnailViewModel": {
+                                "image": {"sources": [{"url": "https://i.ytimg.com/vi/LOCKUP00001/hq720.jpg"}]},
+                                "overlays": [
+                                  {"thumbnailBottomOverlayViewModel": {"progressBar": {"thumbnailOverlayProgressBarViewModel": {"startPercent": 60}}}}
+                                ]
+                              }},
+                              "metadata": {"lockupMetadataViewModel": {"title": {"content": "A lockup"}}}
+                            }
+                          },
+                          {
+                            "tileRenderer": {
+                              "style": "TILE_STYLE_YTLR_ROUND",
+                              "contentType": "TILE_CONTENT_TYPE_CHANNEL",
+                              "metadata": {"tileMetadataRenderer": {"title": {"simpleText": "A channel"}}}
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

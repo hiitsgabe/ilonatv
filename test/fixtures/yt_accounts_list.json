@@ -1,0 +1,70 @@
+{
+  "responseContext": {"visitorData": "VISITOR"},
+  "contents": [
+    {
+      "accountSectionListRenderer": {
+        "contents": [
+          {
+            "accountItemSectionRenderer": {
+              "contents": [
+                {
+                  "accountItem": {
+                    "accountName": {"runs": [{"text": "Alex"}]},
+                    "accountPhoto": {
+                      "thumbnails": [
+                        {"url": "//yt3.ggpht.com/owner=s48", "width": 48, "height": 48},
+                        {"url": "//yt3.ggpht.com/owner=s88", "width": 88, "height": 88},
+                        {"url": "//yt3.ggpht.com/owner=s176", "width": 176, "height": 176},
+                        {"url": "//yt3.ggpht.com/owner=s240", "width": 240, "height": 240},
+                        {"url": "//yt3.ggpht.com/owner=s800", "width": 800, "height": 800}
+                      ]
+                    },
+                    "isSelected": true,
+                    "isDisabled": false,
+                    "hasChannel": true,
+                    "serviceEndpoint": {
+                      "selectActiveIdentityEndpoint": {
+                        "supportedTokens": [
+                          {"accountStateToken": {"hasChannel": true, "isMerged": false, "obfuscatedGaiaId": "GAIA"}},
+                          {"offlineCacheKeyToken": {"clientCacheKey": "KEY"}}
+                        ]
+                      }
+                    },
+                    "accountByline": {"simpleText": "alex@example.com"},
+                    "channelHandle": {"simpleText": "@alex"}
+                  }
+                },
+                {
+                  "accountItem": {
+                    "accountName": {"simpleText": "Alex Kids"},
+                    "accountPhoto": {
+                      "thumbnails": [
+                        {"url": "https://yt3.ggpht.com/kids=s48", "width": 48, "height": 48},
+                        {"url": "https://yt3.ggpht.com/kids=s88", "width": 88, "height": 88}
+                      ]
+                    },
+                    "isSelected": false,
+                    "isDisabled": false,
+                    "hasChannel": true,
+                    "serviceEndpoint": {
+                      "selectActiveIdentityEndpoint": {
+                        "supportedTokens": [
+                          {"accountStateToken": {"hasChannel": true, "isMerged": false, "obfuscatedGaiaId": "GAIA2"}},
+                          {"pageIdToken": {"pageId": "PAGE_KIDS"}},
+                          {"offlineCacheKeyToken": {"clientCacheKey": "KEY2"}}
+                        ]
+                      }
+                    },
+                    "accountByline": {"simpleText": "alex@example.com"}
+                  }
+                },
+                {"accountItem": {"accountPhoto": {"thumbnails": []}}},
+                {"compactLinkRenderer": {"title": {"simpleText": "Add account"}}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

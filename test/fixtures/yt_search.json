@@ -1,0 +1,318 @@
+{
+  "responseContext": {},
+  "estimatedResults": "1000",
+  "contents": {
+    "sectionListRenderer": {
+      "contents": [
+        {
+          "shelfRenderer": {
+            "content": {
+              "horizontalListRenderer": {
+                "items": [
+                  {
+                    "lockupViewModel": {
+                      "contentImage": {
+                        "collectionThumbnailViewModel": {
+                          "primaryThumbnail": {
+                            "thumbnailViewModel": {
+                              "image": {
+                                "sources": [
+                                  {
+                                    "url": "https://i.ytimg.com/vi/VIDEO000009/hqdefault.jpg",
+                                    "width": 480,
+                                    "height": 270
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "lockupMetadataViewModel": {
+                          "metadata": {
+                            "contentMetadataViewModel": {
+                              "delimiter": " • ",
+                              "metadataRows": [
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "Artist One, Artist Two, and more"
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "title": {
+                            "content": "Mix • Something"
+                          }
+                        }
+                      },
+                      "contentId": "RDMIX0000001",
+                      "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"
+                    }
+                  },
+                  {
+                    "lockupViewModel": {
+                      "contentImage": {
+                        "thumbnailViewModel": {
+                          "image": {
+                            "sources": [
+                              {
+                                "url": "https://i.ytimg.com/vi/VIDEO000001/hqdefault.jpg",
+                                "width": 480,
+                                "height": 270
+                              },
+                              {
+                                "url": "https://i.ytimg.com/vi/VIDEO000001/hq720.jpg",
+                                "width": 640,
+                                "height": 360
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "lockupMetadataViewModel": {
+                          "metadata": {
+                            "contentMetadataViewModel": {
+                              "delimiter": " • ",
+                              "metadataRows": [
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "Channel One"
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "9.7K watching"
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "title": {
+                            "content": "First result"
+                          }
+                        }
+                      },
+                      "contentId": "VIDEO000001",
+                      "contentType": "LOCKUP_CONTENT_TYPE_VIDEO"
+                    }
+                  },
+                  {
+                    "lockupViewModel": {
+                      "contentImage": {
+                        "thumbnailViewModel": {
+                          "image": {
+                            "sources": [
+                              {
+                                "url": "https://yt3.ggpht.com/AVATAR=s88",
+                                "width": 88,
+                                "height": 88
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "lockupMetadataViewModel": {
+                          "metadata": {
+                            "contentMetadataViewModel": {
+                              "delimiter": " • ",
+                              "metadataRows": [
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "@channelone"
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "15M subscribers"
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "title": {
+                            "content": "Channel One"
+                          }
+                        }
+                      },
+                      "contentId": "UCCHANNEL0000000000001",
+                      "contentType": "LOCKUP_CONTENT_TYPE_CHANNEL"
+                    }
+                  },
+                  {
+                    "lockupViewModel": {
+                      "contentImage": {
+                        "thumbnailViewModel": {
+                          "image": {
+                            "sources": [
+                              {
+                                "url": "https://i.ytimg.com/vi/VIDEO000002/hq720.jpg",
+                                "width": 640,
+                                "height": 360
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "lockupMetadataViewModel": {
+                          "metadata": {
+                            "contentMetadataViewModel": {
+                              "delimiter": " • ",
+                              "metadataRows": [
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "Channel Two"
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "metadataParts": [
+                                    {
+                                      "text": {
+                                        "content": "58M views"
+                                      }
+                                    },
+                                    {
+                                      "text": {
+                                        "content": "4 years ago"
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "title": {
+                            "content": "Second result"
+                          }
+                        }
+                      },
+                      "contentId": "VIDEO000002",
+                      "contentType": "LOCKUP_CONTENT_TYPE_MUSIC"
+                    }
+                  },
+                  {
+                    "continuationItemRenderer": {}
+                  },
+                  {
+                    "tileRenderer": {
+                      "contentType": "TILE_CONTENT_TYPE_VIDEO",
+                      "onSelectCommand": {
+                        "watchEndpoint": {
+                          "videoId": "VIDEO000003"
+                        }
+                      },
+                      "metadata": {
+                        "tileMetadataRenderer": {
+                          "title": {
+                            "simpleText": "Third result"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "lockupViewModel": {
+                      "contentImage": {
+                        "thumbnailViewModel": {
+                          "image": {
+                            "sources": []
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "lockupMetadataViewModel": {
+                          "metadata": {
+                            "contentMetadataViewModel": {
+                              "delimiter": " • "
+                            }
+                          }
+                        }
+                      },
+                      "contentId": "VIDEO000004",
+                      "contentType": "LOCKUP_CONTENT_TYPE_VIDEO"
+                    }
+                  }
+                ]
+              }
+            },
+            "headerRenderer": {
+              "shelfHeaderRenderer": {}
+            }
+          }
+        },
+        {
+          "shelfRenderer": {
+            "content": {
+              "horizontalListRenderer": {
+                "items": [
+                  {
+                    "lockupViewModel": {
+                      "contentImage": {
+                        "thumbnailViewModel": {
+                          "image": {
+                            "sources": [
+                              {
+                                "url": "https://i.ytimg.com/vi/SHORT000001/oar2.jpg",
+                                "width": 203,
+                                "height": 360
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "lockupMetadataViewModel": {
+                          "metadata": {
+                            "contentMetadataViewModel": {
+                              "delimiter": " • "
+                            }
+                          },
+                          "title": {
+                            "content": "A short"
+                          }
+                        }
+                      },
+                      "contentId": "SHORT000001",
+                      "contentType": "LOCKUP_CONTENT_TYPE_SHORT"
+                    }
+                  }
+                ]
+              }
+            },
+            "headerRenderer": {
+              "shelfHeaderRenderer": {}
+            }
+          }
+        }
+      ]
+    }
+  }
+}
