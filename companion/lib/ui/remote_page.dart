@@ -31,6 +31,10 @@ class _RemotePageState extends State<RemotePage> {
   TvInfo? _info;
   bool _unreachable = false;
   bool? _notInFront;
+  int _fails = 0;
+  bool _forgetting = false;
+  final _queue = <RemoteKey>[];
+  bool _sending = false;
 
   @override
   void initState() {
@@ -53,6 +57,7 @@ class _RemotePageState extends State<RemotePage> {
       setState(() {
         _info = i;
         _unreachable = false;
+        _fails = 0;
       });
     }, onDone: _ended);
   }
@@ -65,6 +70,10 @@ class _RemotePageState extends State<RemotePage> {
       case Unpaired():
         await _forgotten();
       case Ok(:final value):
+        if (++_fails >= 3) {
+          setState(() => _unreachable = true);
+          return;
+        }
         setState(() {
           _info = value;
           _unreachable = false;
@@ -76,6 +85,8 @@ class _RemotePageState extends State<RemotePage> {
   }
 
   Future<void> _forgotten() async {
+    if (_forgetting) return;
+    _forgetting = true;
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
     await widget.tvs.forget(widget.tv.host);
@@ -100,10 +111,18 @@ class _RemotePageState extends State<RemotePage> {
 
   Future<void> _press(RemoteKey k) async {
     HapticFeedback.lightImpact();
-    await _handle(await widget.client.key(k));
+    if (_queue.length >= 3) return;
+    _queue.add(k);
+    if (_sending) return;
+    _sending = true;
+    while (_queue.isNotEmpty && mounted) {
+      await _handle(await widget.client.key(_queue.removeAt(0)));
+    }
+    _sending = false;
   }
 
   void _retryNow() {
+    _fails = 0;
     setState(() => _unreachable = false);
     _connect();
   }
@@ -144,23 +163,33 @@ class _RemotePageState extends State<RemotePage> {
               child: TabBarView(
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Column(
-                    children: [
-                      if (setup)
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: step == 'tmdb'
-                              ? _TmdbCard(
-                                  client: widget.client,
-                                  onResult: _handle,
-                                )
-                              : _CityCard(
-                                  client: widget.client,
-                                  onResult: _handle,
-                                ),
-                        ),
-                      Expanded(child: _Pad(onKey: _press)),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, c) => SingleChildScrollView(
+                      physics: setup
+                          ? const ClampingScrollPhysics()
+                          : const NeverScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          if (setup)
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: step == 'tmdb'
+                                  ? _TmdbCard(
+                                      client: widget.client,
+                                      onResult: _handle,
+                                    )
+                                  : _CityCard(
+                                      client: widget.client,
+                                      onResult: _handle,
+                                    ),
+                            ),
+                          SizedBox(
+                            height: c.maxHeight < 420 ? 420 : c.maxHeight,
+                            child: _Pad(onKey: _press),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   SearchTab(client: widget.client, onResult: _handle),
                   BrowseTab(client: widget.client, onResult: _handle),
@@ -219,6 +248,7 @@ class _TmdbCardState extends State<_TmdbCard> {
   final _key = TextEditingController();
   String? _message;
   bool _busy = false;
+  bool _hidden = true;
 
   @override
   void dispose() {
@@ -236,7 +266,8 @@ class _TmdbCardState extends State<_TmdbCard> {
       _busy = false;
       _message = switch (r) {
         Ok(:final value) => t(value),
-        _ => t('networkError'),
+        Unreachable() || Refused() => t('networkError'),
+        _ => null,
       };
     });
     if (r is! Ok) await widget.onResult(r);
@@ -253,7 +284,14 @@ class _TmdbCardState extends State<_TmdbCard> {
             controller: _key,
             autocorrect: false,
             enableSuggestions: false,
-            decoration: InputDecoration(labelText: t('tmdbKey')),
+            obscureText: _hidden,
+            decoration: InputDecoration(
+              labelText: t('tmdbKey'),
+              suffixIcon: IconButton(
+                icon: Icon(_hidden ? Icons.visibility : Icons.visibility_off),
+                onPressed: () => setState(() => _hidden = !_hidden),
+              ),
+            ),
           ),
           if (_message != null)
             Padding(

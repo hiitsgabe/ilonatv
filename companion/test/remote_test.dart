@@ -13,6 +13,8 @@ class Fake extends TvClient {
   Fake() : super('1.2.3.4');
   final keys = <RemoteKey>[];
   TvResult<void> keyResult = const Ok(null);
+  Completer<void>? gate;
+  int infoCalls = 0;
   TvResult<TvInfo> infoResult = const Unpaired();
   final events$ = StreamController<TvInfo>();
   (String, bool)? tmdb;
@@ -21,14 +23,19 @@ class Fake extends TvClient {
   @override
   Future<TvResult<void>> key(RemoteKey k) async {
     keys.add(k);
+    if (gate != null) await gate!.future;
     return keyResult;
   }
 
   @override
-  Future<TvResult<TvInfo>> info() async => infoResult;
+  Future<TvResult<TvInfo>> info() async {
+    infoCalls++;
+    return infoResult;
+  }
 
+  bool endNow = false;
   @override
-  Stream<TvInfo> events() => events$.stream;
+  Stream<TvInfo> events() => endNow ? const Stream.empty() : events$.stream;
 
   @override
   Future<TvResult<String>> setupTmdb(String key, {bool save = true}) async {
@@ -147,6 +154,64 @@ void main() {
     await client.events$.close();
     await t.pumpAndSettle();
     expect(find.text('go'), findsOneWidget);
+  });
+
+  testWidgets('rapid taps: one in flight, at most 3 queued, in order', (
+    t,
+  ) async {
+    await open(t);
+    client.gate = Completer();
+    final c = t.getCenter(find.byKey(const Key('pad')));
+    final r = t.getSize(find.byKey(const Key('pad'))).width / 2;
+    for (final o in [
+      Offset(r * .8, 0),
+      Offset(-r * .8, 0),
+      Offset(0, r * .8),
+      Offset(0, -r * .8),
+      Offset.zero,
+    ]) {
+      await t.tapAt(c + o);
+    }
+    expect(client.keys, [RemoteKey.right]);
+    final g = client.gate!;
+    client.gate = null;
+    g.complete();
+    await t.pumpAndSettle();
+    expect(client.keys, [
+      RemoteKey.right,
+      RemoteKey.left,
+      RemoteKey.down,
+      RemoteKey.up,
+    ]);
+  });
+
+  testWidgets('the tmdb key field is obscured', (t) async {
+    await open(t);
+    client.events$.add(info('tmdb'));
+    await t.pumpAndSettle();
+    expect(t.widget<TextField>(find.byType(TextField)).obscureText, isTrue);
+  });
+
+  testWidgets('three failed reconnects show Cant reach', (t) async {
+    await open(t);
+    client.infoResult = Ok(info(null));
+    client.endNow = true;
+    await client.events$.close();
+    await t.pump();
+    for (var i = 0; i < 4; i++) {
+      await t.pump(const Duration(seconds: 3));
+    }
+    expect(find.text("Can't reach IlonaTv"), findsOneWidget);
+    expect(client.infoCalls, 3);
+  });
+
+  testWidgets('small screen with the card does not overflow', (t) async {
+    t.view.physicalSize = const Size(360, 480);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    await open(t);
+    client.events$.add(info('tmdb'));
+    await t.pumpAndSettle();
   });
 
   testWidgets('step tmdb shows the key card; Save saves', (t) async {
