@@ -37,7 +37,7 @@ const kRequestTimeout = Duration(seconds: 15);
 final _client = HttpClient()
   ..connectionTimeout = const Duration(seconds: 10)
   ..maxConnectionsPerHost = 4
-  ..userAgent = 'Elimor/0.2';
+  ..userAgent = 'IlonaTv/0.2';
 
 /// An object comes back as is, an array as `{'items': array}`. Anything else
 /// is a [FormatException].

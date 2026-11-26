@@ -292,7 +292,7 @@ class ProvidersPane extends StatefulWidget {
   State<ProvidersPane> createState() => _ProvidersPaneState();
 }
 
-const _otherApp = 'elimor:other';
+const _otherApp = 'ilonatv:other';
 
 class _ProvidersPaneState extends State<ProvidersPane> {
   // The apps that open a Stremio title and a YouTube video; null until the
@@ -816,7 +816,7 @@ class AccountsPane extends StatelessWidget {
             () => TmdbPane(s, sources.tmdb),
           ),
         ),
-        // The voice assistant's brain; only useful where the mic button opens Elimor.
+        // The voice assistant's brain; only useful where the mic button opens IlonaTv.
         if (s.alexaBounce)
           SettingsRow(
             title: 'Gemini',

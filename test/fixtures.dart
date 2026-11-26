@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:elimor/net.dart';
-import 'package:elimor/store.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/store.dart';
 import 'package:flutter_test/flutter_test.dart' show pumpEventQueue;
 
 /// A canned service response, read from `test/fixtures/<name>`. `flutter test`

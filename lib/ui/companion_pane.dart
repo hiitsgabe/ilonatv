@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:elimor_protocol/elimor_protocol.dart' show kCompanionPort;
+import 'package:ilonatv_protocol/ilonatv_protocol.dart' show kCompanionPort;
 import 'package:flutter/material.dart';
 
 import '../companion/pairing.dart';
@@ -8,7 +8,7 @@ import '../i18n.dart';
 import 'qr_code.dart';
 import 'settings_kit.dart';
 
-/// Settings > Companion: the QR a phone opens Elimor's page with, the code
+/// Settings > Companion: the QR a phone opens IlonaTv's page with, the code
 /// the Companion app pairs with, and the paired devices. [compact] is the
 /// setup's welcome step: the QR and the code only. The code pairs only while
 /// one of these is on screen.

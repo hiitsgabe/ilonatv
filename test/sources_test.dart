@@ -1,14 +1,14 @@
 import 'dart:io';
 
-import 'package:elimor/data/sports.dart';
-import 'package:elimor/data/stremio.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/data/weather.dart';
-import 'package:elimor/data/youtube.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/net.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/sources.dart';
+import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/data/stremio.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/data/weather.dart';
+import 'package:ilonatv/data/youtube.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/sources.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

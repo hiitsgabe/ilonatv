@@ -1,7 +1,7 @@
-import 'package:elimor/data/media.dart';
-import 'package:elimor/host.dart';
-import 'package:elimor/ui/apps_screen.dart';
-import 'package:elimor/ui/backdrop.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/ui/apps_screen.dart';
+import 'package:ilonatv/ui/backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,7 +80,7 @@ void main() {
   testWidgets('leaving the Apps grid drops its icons, not the others', (
     tester,
   ) async {
-    const channel = MethodChannel('app.elimor/host');
+    const channel = MethodChannel('tv.ilona/host');
     final messenger = tester.binding.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (_) async => _png);
     addTearDown(() => messenger.setMockMethodCallHandler(channel, null));

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:elimor/host.dart';
-import 'package:elimor/providers.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/ui/settings_kit.dart';
-import 'package:elimor/ui/settings_panes.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/providers.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/ui/settings_kit.dart';
+import 'package:ilonatv/ui/settings_panes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,7 +57,7 @@ Future<Settings> _open(
     ..country = 'US'
     ..serviceApps = {...serviceApps};
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+      .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
         call,
       ) async {
         if (call.method != 'appsFor') return null;

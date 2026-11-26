@@ -1,4 +1,4 @@
-package app.elimor.app
+package tv.ilona.app
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,10 +9,10 @@ import android.util.Log
  * Debug builds only (HomeWatcher registers it at run time in a debuggable build): opens the assistant overlay with
  * canned results of one kind, so its cards can be looked at on the emulator without a microphone.
  *
- *   adb shell am broadcast -a app.elimor.ASSIST_PREVIEW --es kind posters|videos|games
+ *   adb shell am broadcast -a tv.ilona.ASSIST_PREVIEW --es kind posters|videos|games
  */
 object AssistantPreview : BroadcastReceiver() {
-    const val ACTION = "app.elimor.ASSIST_PREVIEW"
+    const val ACTION = "tv.ilona.ASSIST_PREVIEW"
 
     private const val TMDB = "https://image.tmdb.org/t/p/w342"
     private const val YT = "https://i.ytimg.com/vi"

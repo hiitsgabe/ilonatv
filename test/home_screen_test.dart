@@ -2,26 +2,26 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/companion/pairing.dart';
-import 'package:elimor/data/inputs.dart';
-import 'package:elimor/data/media.dart';
-import 'package:elimor/data/sports.dart';
-import 'package:elimor/data/stremio.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/data/weather.dart';
-import 'package:elimor/data/youtube.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/net.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/host.dart';
-import 'package:elimor/sources.dart';
-import 'package:elimor/ui/app_row.dart';
-import 'package:elimor/ui/backdrop.dart';
-import 'package:elimor/ui/content_row.dart';
-import 'package:elimor/ui/glass.dart';
-import 'package:elimor/ui/home_screen.dart';
-import 'package:elimor/ui/tile.dart';
+import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/data/inputs.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/data/stremio.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/data/weather.dart';
+import 'package:ilonatv/data/youtube.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/sources.dart';
+import 'package:ilonatv/ui/app_row.dart';
+import 'package:ilonatv/ui/backdrop.dart';
+import 'package:ilonatv/ui/content_row.dart';
+import 'package:ilonatv/ui/glass.dart';
+import 'package:ilonatv/ui/home_screen.dart';
+import 'package:ilonatv/ui/tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -58,7 +58,7 @@ Future<Settings> _open(
   addTearDown(tester.view.reset);
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
-        const MethodChannel('app.elimor/host'),
+        const MethodChannel('tv.ilona/host'),
         (call) async => switch (call.method) {
           'listApps' => [
             for (final p in [_videos, 'com.example.tv', kStremioPackage])
@@ -74,7 +74,7 @@ Future<Settings> _open(
       const AppTile(_videos, 'youtube').toJson(),
       const AppTile('com.example.tv', 'tv').toJson(),
       const AppTile(kStremioPackage, 'app').toJson(),
-      const AppTile('elimor:apps', 'apps').toJson(),
+      const AppTile('ilonatv:apps', 'apps').toJson(),
     ]),
   });
   final settings = await Settings.load()
@@ -277,7 +277,7 @@ void main() {
     inputs.clear();
     await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .handlePlatformMessage(
-          'app.elimor/host',
+          'tv.ilona/host',
           const StandardMethodCodec().encodeMethodCall(
             const MethodCall('inputsChanged'),
           ),
@@ -305,7 +305,7 @@ void main() {
     Future<void> home() async {
       await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
-            'app.elimor/host',
+            'tv.ilona/host',
             const StandardMethodCodec().encodeMethodCall(
               const MethodCall('goHome'),
             ),
@@ -365,7 +365,7 @@ void main() {
     final listed = Completer<List<Object?>>();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-          const MethodChannel('app.elimor/host'),
+          const MethodChannel('tv.ilona/host'),
           (call) async => switch (call.method) {
             'listApps' => await listed.future,
             'appIcon' => newPng,
@@ -375,7 +375,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'tiles': jsonEncode([
         const AppTile(_videos, 'app').toJson(),
-        const AppTile('elimor:apps', 'apps').toJson(),
+        const AppTile('ilonatv:apps', 'apps').toJson(),
       ]),
     });
     final settings = await Settings.load();
@@ -687,7 +687,7 @@ void main() {
     );
     await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .handlePlatformMessage(
-          'app.elimor/host',
+          'tv.ilona/host',
           const StandardMethodCodec().encodeMethodCall(
             const MethodCall('goHome'),
           ),

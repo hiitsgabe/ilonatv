@@ -1,4 +1,4 @@
-import 'package:elimor/data/inputs.dart';
+import 'package:ilonatv/data/inputs.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -28,7 +28,7 @@ const _hw = 'com.mediatek.tvinput/.hdmi.HDMIInputService/HW';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('app.elimor/host');
+  const channel = MethodChannel('tv.ilona/host');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));

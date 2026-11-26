@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/data/media.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/locale.dart';
-import 'package:elimor/settings.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/locale.dart';
+import 'package:ilonatv/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Transitive, via shared_preferences: the raw store, prefix included.
@@ -25,7 +25,7 @@ void main() {
       {'package': 'com.example.videos', 'icon': 'youtube'},
       {'package': 'com.example.tv', 'icon': 'tv'},
       {'package': 'com.stremio.one', 'icon': 'app'},
-      {'package': 'elimor:apps', 'icon': 'apps'},
+      {'package': 'ilonatv:apps', 'icon': 'apps'},
     ]),
   });
 
@@ -47,7 +47,7 @@ void main() {
   test('defaults when nothing stored', () async {
     final s = await Settings.load();
     expect(s.tiles.map((t) => t.toJson()), [
-      {'package': 'elimor:apps', 'icon': 'apps'},
+      {'package': 'ilonatv:apps', 'icon': 'apps'},
     ]);
     expect(s.fireTvMode, isFalse);
     expect(s.setupDone, isFalse);
@@ -141,7 +141,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'tiles': jsonEncode([
         {'package': 'com.example.videos', 'icon': 'youtube'},
-        {'package': 'elimor:settings', 'icon': 'settings'},
+        {'package': 'ilonatv:settings', 'icon': 'settings'},
       ]),
     });
     expect((await Settings.load()).tiles.map((t) => t.package), [
@@ -154,11 +154,11 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'settingsTileDropped': true,
       'tiles': jsonEncode([
-        {'package': 'elimor:settings', 'icon': 'settings'},
+        {'package': 'ilonatv:settings', 'icon': 'settings'},
       ]),
     });
     expect((await Settings.load()).tiles.map((t) => t.package), [
-      'elimor:settings',
+      'ilonatv:settings',
     ]);
   });
 
@@ -179,7 +179,7 @@ void main() {
     expect(r.tiles.map((t) => t.toJson()), [
       {'package': 'com.example.videos', 'icon': 'app'},
       {'package': 'com.stremio.one', 'icon': 'app'},
-      {'package': 'elimor:apps', 'icon': 'apps'},
+      {'package': 'ilonatv:apps', 'icon': 'apps'},
       {'package': 'com.example.player', 'icon': 'plex'},
     ]);
     expect(r.fireTvMode, isTrue);
@@ -205,14 +205,14 @@ void main() {
     );
     SharedPreferences.setMockInitialValues({
       'tiles': jsonEncode([
-        {'package': 'elimor:apps', 'icon': 'apps', 'later': 1},
+        {'package': 'ilonatv:apps', 'icon': 'apps', 'later': 1},
         fill,
         centered,
         glass,
       ]),
     });
     final s = await Settings.load();
-    expect(s.tiles.first.toJson(), {'package': 'elimor:apps', 'icon': 'apps'});
+    expect(s.tiles.first.toJson(), {'package': 'ilonatv:apps', 'icon': 'apps'});
     expect(s.tiles[1].toJson(), {
       'package': 'com.example.tv',
       'icon': 'tv',
@@ -440,7 +440,7 @@ void main() {
       savedTiles();
       final s = await Settings.load();
       final v = s.visibleTiles({'com.example.videos'});
-      expect(v.map((t) => t.package), ['com.example.videos', 'elimor:apps']);
+      expect(v.map((t) => t.package), ['com.example.videos', 'ilonatv:apps']);
       expect(s.tiles.length, 4);
     },
   );
@@ -448,37 +448,37 @@ void main() {
   test('moveTile and removeTileAt', () async {
     savedTiles();
     final s = await Settings.load();
-    s.addTile(const AppTile('elimor:settings', 'settings'));
+    s.addTile(const AppTile('ilonatv:settings', 'settings'));
 
     s.moveTile(0, 2);
     expect(packages(s), [
       'com.example.tv',
       'com.stremio.one',
       'com.example.videos',
-      'elimor:apps',
-      'elimor:settings',
+      'ilonatv:apps',
+      'ilonatv:settings',
     ]);
 
     s.removeTileAt(1);
     expect(packages(s), [
       'com.example.tv',
       'com.example.videos',
-      'elimor:apps',
-      'elimor:settings',
+      'ilonatv:apps',
+      'ilonatv:settings',
     ]);
   });
 
   test('moveTile reaches the last slot, ignores bad indices', () async {
     savedTiles();
     final s = await Settings.load();
-    s.addTile(const AppTile('elimor:settings', 'settings'));
+    s.addTile(const AppTile('ilonatv:settings', 'settings'));
 
     s.moveTile(0, 4);
     final moved = [
       'com.example.tv',
       'com.stremio.one',
-      'elimor:apps',
-      'elimor:settings',
+      'ilonatv:apps',
+      'ilonatv:settings',
       'com.example.videos',
     ];
     expect(packages(s), moved);

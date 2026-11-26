@@ -1,4 +1,4 @@
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/foundation.dart';
 
 class CompanionState extends ChangeNotifier {

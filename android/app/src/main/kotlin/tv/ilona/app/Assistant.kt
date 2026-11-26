@@ -1,4 +1,4 @@
-package app.elimor.app
+package tv.ilona.app
 
 import android.Manifest
 import android.accessibilityservice.AccessibilityService
@@ -46,7 +46,7 @@ import java.nio.ByteOrder
 
 /**
  * The voice assistant as an accessibility overlay: it draws above every app and above Alexa's own chrome, so the app
- * behind keeps playing. One [accent] colour builds the whole gradient (orb and text), set from Elimor's settings. The
+ * behind keeps playing. One [accent] colour builds the whole gradient (orb and text), set from IlonaTv's settings. The
  * mic-button bounce shows it (HomeWatcher.onAlexa); Back or a lull hides it. Main thread only.
  */
 object Assistant {
@@ -148,7 +148,7 @@ object Assistant {
                 }
                 val noEngine = {
                     processing = false
-                    (root as? Scrim)?.answer(if (pt) "Abre o Elimor primeiro." else "Open Elimor first.")
+                    (root as? Scrim)?.answer(if (pt) "Abre o IlonaTv primeiro." else "Open IlonaTv first.")
                     armAutoHide()
                 }
                 when (search.type) {
@@ -243,7 +243,7 @@ object Assistant {
             return
         }
         if (!HostChannel.hasEngine) {
-            (root as? Scrim)?.answer(if (lang(ctx) == "pt") "Abre o Elimor primeiro." else "Open Elimor first.")
+            (root as? Scrim)?.answer(if (lang(ctx) == "pt") "Abre o IlonaTv primeiro." else "Open IlonaTv first.")
             armAutoHide()
             return
         }
@@ -343,7 +343,7 @@ object Assistant {
             textSize = 30f
             visibility = GONE
         }
-        // Match Elimor's content row: card = 0.092 of the screen wide, 2:3, gap 0.014, left pad 0.04.
+        // Match IlonaTv's content row: card = 0.092 of the screen wide, 2:3, gap 0.014, left pad 0.04.
         private val screenW = resources.displayMetrics.widthPixels
         private val cardW = (screenW * 0.092f).toInt()
         private val cardH = cardW * 3 / 2
@@ -413,7 +413,7 @@ object Assistant {
         /** Keep the usual answer (orb + spoken line) at the top, with the result row below it. */
         fun results(ctx: Context, query: String, say: String, list: List<SearchHit>) {
             topRow.visibility = VISIBLE
-            status.text = "Elimor"
+            status.text = "IlonaTv"
             answer.text = say.ifBlank { query }
             answer.visibility = VISIBLE
             position(centered = false)
@@ -596,7 +596,7 @@ object Assistant {
         }
 
         fun answer(text: String) {
-            status.text = "Elimor"
+            status.text = "IlonaTv"
             answer.text = text
             answer.visibility = VISIBLE
         }

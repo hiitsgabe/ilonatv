@@ -1,6 +1,6 @@
 <div align="center">
 
-# Elimor
+# IlonaTv
 
 **A calm, beautiful home screen for Fire TV and Google TV.**
 
@@ -11,13 +11,13 @@ driven by the remote alone.
 ![Fire TV and Android TV](https://img.shields.io/badge/Fire%20TV%20%C2%B7%20Android%20TV-Android%209%2B-3DDC84)
 ![Flutter](https://img.shields.io/badge/built%20with-Flutter-02569B)
 
-<img src="docs/images/setup-welcome.webp" alt="Elimor's first-run setup on a TV" width="860">
+<img src="docs/images/setup-welcome.webp" alt="IlonaTv's first-run setup on a TV" width="860">
 
 </div>
 
-## Why Elimor
+## Why IlonaTv
 
-The stock TV homes push ads and whatever their store wants you to watch. Elimor shows **your** apps and **your** things to watch, and gets out of the way.
+The stock TV homes push ads and whatever their store wants you to watch. IlonaTv shows **your** apps and **your** things to watch, and gets out of the way.
 
 - **Rows that matter.** Trending movies and series, recommendations, Continue watching from Stremio, your YouTube feed, and live games from the leagues you follow, with your teams first.
 - **Opens where you watch.** A title opens in Stremio, or in whichever of *your* streaming apps carries it in your country: Netflix, Prime Video, Disney+, Max and the rest.
@@ -25,7 +25,7 @@ The stock TV homes push ads and whatever their store wants you to watch. Elimor 
 - **Your dock, your way.** Up to five app tiles, each with a painted icon, the app's own icon or a picture of your own.
 - **Takes over the Home button**, even on Fire TV, where the Amazon home can't normally be replaced.
 - **Set up in minutes.** A first-run wizard walks you through everything. Sign-ins happen on your phone, so there's no typing passwords with a remote.
-- **Your phone as a remote, coming soon.** The Elimor Companion app will pair with the QR code in Settings > Companion, for typing searches and keys on your phone instead of the remote.
+- **Your phone as a remote, coming soon.** The IlonaTv Companion app will pair with the QR code in Settings > Companion, for typing searches and keys on your phone instead of the remote.
 - **Private.** No cloud server, no account, no analytics. Everything stays on the TV.
 
 Plus the weather, the TV's HDMI inputs with console control over HDMI-CEC (Fire TV Edition TVs), a voice assistant powered by your own Gemini key (Fire TV), and English and Portuguese.
@@ -56,16 +56,16 @@ Plus the weather, the TV's HDMI inputs with console control over HDMI-CEC (Fire 
    adb shell getprop ro.product.cpu.abilist   # arm64-v8a? use the arm64 APK; otherwise armeabi-v7a
    ```
 
-3. **Install Elimor** from the [Releases](../../releases) page. Until the first release is out, [build it](docs/development.md#build).
+3. **Install IlonaTv** from the [Releases](../../releases) page. Until the first release is out, [build it](docs/development.md#build).
 
    ```sh
    adb install -r app-armeabi-v7a-release.apk
-   adb shell am start -n app.elimor.app/.MainActivity
+   adb shell am start -n tv.ilona.app/.MainActivity
    ```
 
 4. **Follow the setup on the TV.** Every step can be skipped and changed later in Settings.
 
-To make Home always bring you back to Elimor, turn on **Launcher mode** in Settings. On Fire TV that needs one more adb command, which the screen shows you. Details are in [docs/launcher-mode.md](docs/launcher-mode.md).
+To make Home always bring you back to IlonaTv, turn on **Launcher mode** in Settings. On Fire TV that needs one more adb command, which the screen shows you. Details are in [docs/launcher-mode.md](docs/launcher-mode.md).
 
 ## How titles open
 
@@ -84,13 +84,13 @@ Streaming apps open on their own home, not at the title: the services don't publ
 <details>
 <summary><b>Do I need Stremio?</b></summary>
 
-No. Choose "My streaming apps" and Elimor works with the apps you already have. Stremio adds Continue watching, and lets games open in a sports add-on.
+No. Choose "My streaming apps" and IlonaTv works with the apps you already have. Stremio adds Continue watching, and lets games open in a sports add-on.
 </details>
 
 <details>
 <summary><b>Why does it need adb?</b></summary>
 
-To install an app that isn't in the store, and, on Fire TV, to grant the one permission Launcher mode needs. Elimor shows the exact commands on screen. After setup you can turn debugging off again.
+To install an app that isn't in the store, and, on Fire TV, to grant the one permission Launcher mode needs. IlonaTv shows the exact commands on screen. After setup you can turn debugging off again.
 </details>
 
 <details>
@@ -102,7 +102,7 @@ It runs day to day on a Fire TV Stick 4K (Fire OS 7) and a Fire TV Edition TV (F
 <details>
 <summary><b>Is there a phone app?</b></summary>
 
-The Elimor Companion is coming soon. Elimor already answers it, only on the local network, never from the internet; Elimor answers only devices you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
+The IlonaTv Companion is coming soon. IlonaTv already answers it, only on the local network, never from the internet; IlonaTv answers only devices you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
 </details>
 
 <details>
@@ -114,21 +114,21 @@ Copy the picture to the TV (`adb push picture.png /sdcard/Download/`, a USB stic
 <details>
 <summary><b>How do I undo it?</b></summary>
 
-Turn Launcher mode off, or simply uninstall Elimor. On Google TV, if you disabled the stock launcher, `adb shell pm enable` it again (see [docs/launcher-mode.md](docs/launcher-mode.md)).
+Turn Launcher mode off, or simply uninstall IlonaTv. On Google TV, if you disabled the stock launcher, `adb shell pm enable` it again (see [docs/launcher-mode.md](docs/launcher-mode.md)).
 </details>
 
 ## More
 
 - [Launcher mode](docs/launcher-mode.md): how Home is taken over on each platform, and its limits.
-- [Privacy and permissions](docs/privacy-and-permissions.md): every service Elimor talks to, and why each permission is there.
+- [Privacy and permissions](docs/privacy-and-permissions.md): every service IlonaTv talks to, and why each permission is there.
 - [Development](docs/development.md): building, signing, tests and profiling.
 
 ## Disclaimer
 
-Elimor is an independent project, not affiliated with or endorsed by YouTube, Google, Stremio, TMDB, JustWatch, ESPN, Amazon, Netflix or any other service it opens or talks to. Some of them are used through unofficial interfaces that may stop working at any time; use each according to its terms. Elimor provides no video content: it opens the apps and add-ons you install, and you're responsible for watching only what you have the right to. Product names, logos and the console wordmarks belong to their owners.
+IlonaTv is an independent project, not affiliated with or endorsed by YouTube, Google, Stremio, TMDB, JustWatch, ESPN, Amazon, Netflix or any other service it opens or talks to. Some of them are used through unofficial interfaces that may stop working at any time; use each according to its terms. IlonaTv provides no video content: it opens the apps and add-ons you install, and you're responsible for watching only what you have the right to. Product names, logos and the console wordmarks belong to their owners.
 
 This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB. Where-to-watch data is provided by [JustWatch](https://www.justwatch.com).
 
 ## Licence
 
-Copyright (C) 2026 hiitsgabe and the Elimor contributors. Elimor is free software under the [GNU General Public License v3.0](LICENSE) (`GPL-3.0-only`). The bundled Inter font is under the SIL Open Font License.
+Copyright (C) 2026 hiitsgabe and the IlonaTv contributors. IlonaTv is free software under the [GNU General Public License v3.0](LICENSE) (`GPL-3.0-only`). The bundled Inter font is under the SIL Open Font License.

@@ -18,7 +18,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
-        android:label="Elimor"
+        android:label="IlonaTv"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
@@ -34,7 +34,7 @@
             android:name=".InputActivity"
             android:exported="false"
             android:launchMode="singleTask"
-            android:taskAffinity="app.elimor.input"
+            android:taskAffinity="tv.ilona.input"
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
         <activity

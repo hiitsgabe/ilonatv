@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/data/media.dart';
-import 'package:elimor/data/youtube.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/locale.dart';
-import 'package:elimor/settings.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/data/youtube.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/locale.dart';
+import 'package:ilonatv/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

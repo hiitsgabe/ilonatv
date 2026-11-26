@@ -2,19 +2,19 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/companion/api.dart';
-import 'package:elimor/companion/state.dart';
-import 'package:elimor/data/media.dart';
-import 'package:elimor/data/sports.dart';
-import 'package:elimor/data/stremio.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/data/weather.dart';
-import 'package:elimor/data/youtube.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/net.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/sources.dart';
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv/companion/api.dart';
+import 'package:ilonatv/companion/state.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/data/stremio.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/data/weather.dart';
+import 'package:ilonatv/data/youtube.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/sources.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,7 +59,7 @@ class _Yt extends YoutubeTvClient {
 
 late Settings _s;
 late Sources _sources;
-late ElimorApi _api;
+late IlonaTvApi _api;
 final _injected = <RemoteKey>[];
 final _host = <String>[];
 
@@ -73,7 +73,7 @@ Future<void> _setUp({
 }) async {
   SharedPreferences.setMockInitialValues({});
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+      .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
         call,
       ) async {
         _host.add(call.method);
@@ -108,7 +108,7 @@ Future<void> _setUp({
   );
   _injected.clear();
   _host.clear();
-  _api = ElimorApi(
+  _api = IlonaTvApi(
     _s,
     _sources,
     injectKey: (k) async {
@@ -157,7 +157,7 @@ void main() {
 
   test('key refused by the window is 409', () async {
     await _setUp();
-    _api = ElimorApi(_s, _sources, injectKey: (_) async => false);
+    _api = IlonaTvApi(_s, _sources, injectKey: (_) async => false);
     final (status, _) = await _call('POST', '/api/key', body: {'key': 'up'});
     expect(status, 409);
   });

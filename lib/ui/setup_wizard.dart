@@ -1,4 +1,4 @@
-import 'package:elimor_protocol/elimor_protocol.dart' show SetupStep;
+import 'package:ilonatv_protocol/ilonatv_protocol.dart' show SetupStep;
 import 'package:flutter/material.dart';
 
 import '../companion/pairing.dart';
@@ -31,7 +31,7 @@ List<AppTile> firstDock(Settings s) {
   return [
     for (final p in packages.take(4))
       AppTile(p, p == s.youtubeProvider ? 'youtube' : 'app'),
-    const AppTile('elimor:apps', 'apps'),
+    const AppTile('ilonatv:apps', 'apps'),
   ];
 }
 
@@ -178,7 +178,7 @@ class _SetupWizardState extends State<SetupWizard> {
   (IconData, String, String) get _text => switch (_at) {
     _Step.welcome => (
       Icons.waving_hand_outlined,
-      'Elimor',
+      'IlonaTv',
       t('wizWelcomeHelp'),
     ),
     _Step.location => (

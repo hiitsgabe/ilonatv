@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:elimor/net.dart';
+import 'package:ilonatv/net.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // No TestWidgetsFlutterBinding here: it replaces HttpClient with a mock that
@@ -87,7 +87,7 @@ void main() {
     );
   });
 
-  test('getJson sends its headers and the Elimor user agent', () async {
+  test('getJson sends its headers and the IlonaTv user agent', () async {
     final base = await serve((req) {
       req.response.headers.contentType = ContentType.json;
       req.response.write(
@@ -104,7 +104,7 @@ void main() {
     final Fetch fetch = getJson;
     expect(await fetch(base, headers: {'x-test': 'yes'}), {
       'x': 'yes',
-      'ua': 'Elimor/0.2',
+      'ua': 'IlonaTv/0.2',
     });
   });
 
@@ -148,7 +148,7 @@ void main() {
     final GetText text = getText;
     expect(await post(base, {}, headers: headers), {'heard': 'TV|b'});
     expect(await text(base, headers: headers), 'ação TV|b');
-    expect(await text(base), 'ação Elimor/0.2|null');
+    expect(await text(base), 'ação IlonaTv/0.2|null');
   });
 
   test('postJson encodes the body before it connects', () async {

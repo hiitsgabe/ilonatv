@@ -1,27 +1,27 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/app.dart';
-import 'package:elimor/companion/pairing.dart';
-import 'package:elimor/companion/state.dart';
-import 'package:elimor/data/sports.dart';
-import 'package:elimor/data/stremio.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/data/weather.dart';
-import 'package:elimor/data/youtube.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/host.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/launcher_setup.dart';
-import 'package:elimor/providers.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/sources.dart';
-import 'package:elimor/ui/home_screen.dart';
-import 'package:elimor/ui/qr_code.dart';
-import 'package:elimor/ui/settings_kit.dart';
-import 'package:elimor/ui/settings_screen.dart';
-import 'package:elimor/ui/setup_wizard.dart';
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv/app.dart';
+import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/companion/state.dart';
+import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/data/stremio.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/data/weather.dart';
+import 'package:ilonatv/data/youtube.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/launcher_setup.dart';
+import 'package:ilonatv/providers.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/sources.dart';
+import 'package:ilonatv/ui/home_screen.dart';
+import 'package:ilonatv/ui/qr_code.dart';
+import 'package:ilonatv/ui/settings_kit.dart';
+import 'package:ilonatv/ui/settings_screen.dart';
+import 'package:ilonatv/ui/setup_wizard.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,7 +48,7 @@ Future<(Settings, Sources)> _setUp(
   addTearDown(() => deviceIp = ip);
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
-        const MethodChannel('app.elimor/host'),
+        const MethodChannel('tv.ilona/host'),
         (call) async => switch (call.method) {
           'listApps' => [
             for (final p in [_videos, _other]) {'package': p, 'label': p},
@@ -90,7 +90,7 @@ late Pairing _pairing;
 Future<Settings> _app(WidgetTester tester, Map<String, Object> prefs) async {
   final (s, sources) = await _setUp(tester, prefs);
   _pairing = Pairing(s);
-  await tester.pumpWidget(ElimorApp(s, sources, MemStore(), pairing: _pairing));
+  await tester.pumpWidget(IlonaTvApp(s, sources, MemStore(), pairing: _pairing));
   await tester.pumpAndSettle();
   return s;
 }
@@ -134,7 +134,7 @@ void main() {
         [
           (_videos, 'youtube'),
           (kStremioPackage, 'app'),
-          ('elimor:apps', 'apps'),
+          ('ilonatv:apps', 'apps'),
         ],
       );
     });
@@ -151,14 +151,14 @@ void main() {
         };
       expect(
         [for (final t in firstDock(s)) t.package],
-        ['a.one', 'a.two', 'a.three', 'a.four', 'elimor:apps'],
+        ['a.one', 'a.two', 'a.three', 'a.four', 'ilonatv:apps'],
       );
     });
 
     test('nothing chosen: the Apps grid alone', () async {
       expect(
         [for (final t in firstDock(await settings())) t.package],
-        ['elimor:apps'],
+        ['ilonatv:apps'],
       );
     });
   });
@@ -167,7 +167,7 @@ void main() {
     await _app(tester, {});
     expect(find.byType(SetupWizard), findsOneWidget);
     expect(find.byType(HomeScreen), findsNothing);
-    expect(find.text('Elimor'), findsOneWidget);
+    expect(find.text('IlonaTv'), findsOneWidget);
     expect(find.text('1 of 8'), findsOneWidget);
     // Back on the first step of a first run stays.
     await _back(tester);
@@ -176,7 +176,7 @@ void main() {
     Host.onInputsChanged = null;
     await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .handlePlatformMessage(
-          'app.elimor/host',
+          'tv.ilona/host',
           const StandardMethodCodec().encodeMethodCall(
             const MethodCall('goHome'),
           ),
@@ -329,7 +329,7 @@ void main() {
     expect(s.youtubeProvider, _videos);
     expect(jsonDecode(prefs.getString('tiles')!), [
       const AppTile(_videos, 'youtube').toJson(),
-      const AppTile('elimor:apps', 'apps').toJson(),
+      const AppTile('ilonatv:apps', 'apps').toJson(),
     ]);
   });
 
@@ -337,7 +337,7 @@ void main() {
     tester,
   ) async {
     await _app(tester, {});
-    for (final step in ['Elimor', t('wizLocation'), t('wizTmdb')]) {
+    for (final step in ['IlonaTv', t('wizLocation'), t('wizTmdb')]) {
       expect(find.text(step), findsWidgets);
       expect(find.byType(QrCode), findsOneWidget, reason: step);
       expect(find.text(t('setupFromPhone')), findsOneWidget, reason: step);

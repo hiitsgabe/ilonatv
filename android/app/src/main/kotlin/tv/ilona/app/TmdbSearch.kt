@@ -1,4 +1,4 @@
-package app.elimor.app
+package tv.ilona.app
 
 import android.content.Context
 import android.util.Log
@@ -37,7 +37,7 @@ data class SearchHit(
 }
 
 /**
- * Elimor's own movie/series search, from the assistant. Uses TMDB (the key the person set in Settings) so the voice
+ * IlonaTv's own movie/series search, from the assistant. Uses TMDB (the key the person set in Settings) so the voice
  * assistant finds the same titles the home rows do. YouTube search is a later step.
  */
 object TmdbSearch {

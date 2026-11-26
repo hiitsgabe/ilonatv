@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:elimor/data/processes.dart';
+import 'package:ilonatv/data/processes.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

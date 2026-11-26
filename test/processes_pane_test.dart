@@ -1,5 +1,5 @@
-import 'package:elimor/host.dart';
-import 'package:elimor/ui/processes_pane.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/ui/processes_pane.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,7 +10,7 @@ String _record(String name, String pss, int adj) =>
     '    oom: max=1001 curRaw=$adj setRaw=$adj cur=$adj set=$adj\n';
 
 final _dump = [
-  _record('app.elimor.app', '128MB', 0),
+  _record('tv.ilona.app', '128MB', 0),
   _record('com.example.vpn', '59MB', 200),
   _record('com.amazon.tv.ime', '24MB', 200),
   _record('com.stremio.one:stremio_server_process', '94MB', 905),
@@ -19,7 +19,7 @@ final _dump = [
 ].join();
 
 const _apps = {
-  'app.elimor.app': InstalledApp('app.elimor.app', 'Elimor', tv: true),
+  'tv.ilona.app': InstalledApp('tv.ilona.app', 'IlonaTv', tv: true),
   'com.example.vpn': InstalledApp('com.example.vpn', 'Example VPN'),
   'com.stremio.one': InstalledApp('com.stremio.one', 'Stremio'),
   'com.amazon.tv.ime': InstalledApp('com.amazon.tv.ime', 'Keyboard', tv: true),
@@ -29,7 +29,7 @@ void main() {
   setUp(
     () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-          const MethodChannel('app.elimor/host'),
+          const MethodChannel('tv.ilona/host'),
           (_) async => null,
         ),
   );
@@ -65,8 +65,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('293 MB free of 1663 MB'), findsOneWidget);
-    // Not Elimor, not the keyboard, not a package with no app.
-    expect(find.text('Elimor'), findsNothing);
+    // Not IlonaTv, not the keyboard, not a package with no app.
+    expect(find.text('IlonaTv'), findsNothing);
     expect(find.text('Keyboard'), findsNothing);
     final stremio = tester.getTopLeft(find.text('Stremio'));
     final vpn = tester.getTopLeft(find.text('Example VPN'));
@@ -74,7 +74,7 @@ void main() {
     expect(find.text('104 MB · Cached'), findsOneWidget);
     expect(find.text('59 MB · Active'), findsOneWidget);
 
-    // Each Close is a Force stop; the next waits for Elimor to come back.
+    // Each Close is a Force stop; the next waits for IlonaTv to come back.
     Future<void> back() async {
       for (final s in [
         AppLifecycleState.inactive,
@@ -92,7 +92,7 @@ void main() {
     await tester.tap(find.text('Stremio'));
     await tester.pumpAndSettle();
     expect(stopped, ['com.stremio.one']);
-    // Still waiting for Elimor: a second press does nothing.
+    // Still waiting for IlonaTv: a second press does nothing.
     await tester.tap(find.text('Example VPN'));
     await tester.pumpAndSettle();
     expect(stopped, ['com.stremio.one']);
@@ -153,7 +153,7 @@ void main() {
         home: Scaffold(
           body: ProcessesPane(
             _apps,
-            grant: const ['adb shell pm grant app.elimor.app DUMP'],
+            grant: const ['adb shell pm grant tv.ilona.app DUMP'],
             processes: () async =>
                 (dump: 'Permission Denial: no DUMP', availKb: 0, totalKb: 0),
           ),
@@ -161,6 +161,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('adb shell pm grant app.elimor.app DUMP'), findsOneWidget);
+    expect(find.text('adb shell pm grant tv.ilona.app DUMP'), findsOneWidget);
   });
 }

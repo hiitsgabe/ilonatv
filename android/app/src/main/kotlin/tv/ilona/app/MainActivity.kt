@@ -1,4 +1,4 @@
-package app.elimor.app
+package tv.ilona.app
 
 import android.Manifest
 import android.content.Intent

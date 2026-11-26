@@ -7,7 +7,7 @@ import '../settings.dart';
 import 'settings_kit.dart';
 
 /// Launcher mode: the switch, whether the accessibility service took, the
-/// Fire TV fixes that need it, and what to do where Elimor may not turn the
+/// Fire TV fixes that need it, and what to do where IlonaTv may not turn the
 /// service on by itself. Read again on resume, back from the system's screens.
 class LauncherPane extends StatefulWidget {
   final Settings settings;
@@ -52,7 +52,7 @@ class _LauncherPaneState extends State<LauncherPane> {
     await widget.settings.save();
   }
 
-  /// Saves the switch, then enables or disables the service where Elimor
+  /// Saves the switch, then enables or disables the service where IlonaTv
   /// may (LauncherSetup.kt); the status row shows whether it took. Where it
   /// may not, on Google TV, the system's accessibility settings open.
   Future<void> _apply(bool on) async {

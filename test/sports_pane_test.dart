@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:elimor/data/sports.dart';
-import 'package:elimor/net.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/ui/settings_kit.dart';
-import 'package:elimor/ui/sports_pane.dart';
+import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/ui/settings_kit.dart';
+import 'package:ilonatv/ui/sports_pane.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

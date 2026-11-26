@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:elimor/store.dart';
+import 'package:ilonatv/store.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late Directory dir;
 
-  setUp(() async => dir = await Directory.systemTemp.createTemp('elimor'));
+  setUp(() async => dir = await Directory.systemTemp.createTemp('ilonatv'));
   tearDown(() => dir.delete(recursive: true));
 
   test('write, read, writtenAt, delete', () async {

@@ -17,13 +17,13 @@ const kStremioPackage = 'com.stremio.one';
 const _fahrenheitCountries = {'US', 'BS', 'BZ', 'KY', 'LR', 'PW', 'FM', 'MH'};
 
 /// One slot of the app row. [package] is an installed package or a pseudo
-/// package (`elimor:apps`, `elimor:settings`); [icon] names a drawn icon, or is
+/// package (`ilonatv:apps`, `ilonatv:settings`); [icon] names a drawn icon, or is
 /// `app` for the app's own icon.
 class AppTile {
   final String package;
   final String icon;
 
-  /// A picture of the user's, copied into Elimor's files: drawn in [icon]'s
+  /// A picture of the user's, copied into IlonaTv's files: drawn in [icon]'s
   /// place, covering the card, or with [centered] contained in its middle
   /// over [background] (ARGB; null is glass).
   final String? image;
@@ -111,7 +111,7 @@ const kMaxSportsLeagues = 8;
 
 /// The Apps grid alone: the first-run setup adds the chosen apps. Settings has
 /// its own gear in the home's corner pill, so its tile is optional.
-const _factoryTiles = [AppTile('elimor:apps', 'apps')];
+const _factoryTiles = [AppTile('ilonatv:apps', 'apps')];
 
 /// How many searches the search screen offers again.
 const kRecentSearches = 6;
@@ -163,10 +163,10 @@ class Settings extends ChangeNotifier {
   /// instead of stopping on the list of streams.
   bool stremioAutoPlay = true;
 
-  /// The remote's mic button opens Elimor instead of Alexa: the accessibility
+  /// The remote's mic button opens IlonaTv instead of Alexa: the accessibility
   /// service dismisses Alexa's window and comes to the front
   /// (`flutter.alexaBounce`, HomeWatcher.onAlexa). Fire OS still hears the
-  /// button, so Alexa may flash before Elimor takes over.
+  /// button, so Alexa may flash before IlonaTv takes over.
   bool alexaBounce = false;
 
   /// The one colour the assistant screen's gradient is built from (ARGB).
@@ -285,7 +285,7 @@ class Settings extends ChangeNotifier {
       // Once, for rows saved before the corner gear: Settings leaves the row
       // (it can be added back as a tile).
       if (prefs.getBool('settingsTileDropped') != true) {
-        tiles.removeWhere((t) => t.package == 'elimor:settings');
+        tiles.removeWhere((t) => t.package == 'ilonatv:settings');
         await prefs.setString('tiles', jsonEncode(tiles));
       }
     }
@@ -513,7 +513,7 @@ class Settings extends ChangeNotifier {
   /// others stay in [tiles], so reinstalling an app brings its tile back.
   List<AppTile> visibleTiles(Set<String> installedPackages) => [
     for (final t in tiles)
-      if (t.package.startsWith('elimor:') ||
+      if (t.package.startsWith('ilonatv:') ||
           installedPackages.contains(t.package))
         t,
   ];

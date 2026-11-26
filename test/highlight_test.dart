@@ -1,5 +1,5 @@
-import 'package:elimor/data/media.dart';
-import 'package:elimor/ui/highlight.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/ui/highlight.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import 'package:elimor/companion/pairing.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -17,7 +17,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "app.elimor.app"
+    namespace = "tv.ilona.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.elimor.app"
+        applicationId = "tv.ilona.app"
         // Fire OS 7 is Android 9 (API 28); targetSdk is pinned, not tied to Flutter's default.
         minSdk = 28
         targetSdk = 34

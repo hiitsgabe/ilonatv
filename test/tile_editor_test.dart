@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/host.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/ui/tile_editor.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/ui/tile_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +15,7 @@ const _uri = 'content://media/external/images/media/7';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('app.elimor/host');
+  const channel = MethodChannel('tv.ilona/host');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late Directory dir;
@@ -80,7 +80,7 @@ void main() {
       'tile', (tester) async {
     final s = await show(tester, [
       const AppTile(_tv, 'tv'),
-      const AppTile('elimor:apps', 'apps'),
+      const AppTile('ilonatv:apps', 'apps'),
     ]);
     await openPicker(tester);
     expect(calls, containsAll(['images', 'imageThumb']));
@@ -126,7 +126,7 @@ void main() {
     final b = File('${dir.path}/b.img')..writeAsBytesSync([1]);
     final s = await show(tester, [
       AppTile(_tv, 'tv', image: a.path),
-      AppTile('elimor:apps', 'apps', image: b.path, centered: true),
+      AppTile('ilonatv:apps', 'apps', image: b.path, centered: true),
     ]);
     await tester.tap(find.text(t('chooseIcon')).first);
     await tester.pumpAndSettle();

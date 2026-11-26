@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../data/media.dart';
 import '../data/tmdb.dart';
@@ -26,8 +26,8 @@ const _notFound = (404, {'error': 'notFound'});
 
 /// What a paired phone can do: what the TV's own screens do, with the TV's
 /// code. Answers carry display data only, never a key or a token.
-class ElimorApi implements CompanionApi {
-  ElimorApi(this.settings, this.sources, {this.injectKey = Host.injectKey});
+class IlonaTvApi implements CompanionApi {
+  IlonaTvApi(this.settings, this.sources, {this.injectKey = Host.injectKey});
 
   final Settings settings;
   final Sources sources;

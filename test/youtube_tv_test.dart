@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/net.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/store.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/store.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,4 +1,4 @@
-name: elimor
+name: ilonatv
 description: "A home screen launcher for Android TV and Fire TV, with an Apple TV look."
 publish_to: 'none'
 
@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.5.6
-  elimor_protocol:
-    path: packages/elimor_protocol
+  ilonatv_protocol:
+    path: packages/ilonatv_protocol
   qr: ^4.0.1
 
 dev_dependencies:

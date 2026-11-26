@@ -1,7 +1,7 @@
-import 'package:elimor/data/media.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/ui/content_row.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/ui/content_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

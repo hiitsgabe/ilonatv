@@ -8,10 +8,10 @@ import '../host.dart';
 import '../i18n.dart';
 import 'settings_kit.dart';
 
-/// Apps never offered for closing: Elimor itself, the Amazon home that
+/// Apps never offered for closing: IlonaTv itself, the Amazon home that
 /// Settings and Inputs live in, its settings and the keyboard.
 const kKeepRunning = {
-  'app.elimor.app',
+  'tv.ilona.app',
   'com.amazon.tv.launcher',
   'com.amazon.firehomestarter',
   'com.amazon.tv.settings.v2',
@@ -76,7 +76,7 @@ class _ProcessesPaneState extends State<ProcessesPane> {
   /// A Close or Clean under way: presses meanwhile do nothing.
   var _busy = false;
 
-  /// Completed when Elimor comes back from a Force stop page.
+  /// Completed when IlonaTv comes back from a Force stop page.
   Completer<void>? _back;
   Future<void>? _inFlight;
 
@@ -144,7 +144,7 @@ class _ProcessesPaneState extends State<ProcessesPane> {
   }
 
   /// Force stop on [package]'s page, clicked by the accessibility service,
-  /// waiting (up to 8 s) for Elimor to come back. Fire OS refuses an app's
+  /// waiting (up to 8 s) for IlonaTv to come back. Fire OS refuses an app's
   /// plain kill of another ("Invalid packageName"), so this is the one way;
   /// without the service it tries the plain kill anyway and says what is
   /// missing. False when it could not use the page.

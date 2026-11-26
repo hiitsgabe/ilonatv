@@ -37,22 +37,22 @@ UI text goes through `t('key')` in `lib/i18n.dart`, in English and Portuguese; `
 
 `adb shell input keyevent <code>` drives the remote from a computer: Up 19, Down 20, Left 21, Right 22, OK 23, Back 4, Home 3. On-device checks are listed in [verification.md](verification.md).
 
-**Frame times.** A profile build (`flutter build apk --profile --split-per-abi --target-platform android-arm`) logs every frame over 17 ms with its build and raster times (`adb logcat -s flutter`). `adb shell dumpsys SurfaceFlinger --latency 'SurfaceView - app.elimor.app/app.elimor.app.MainActivity#0'` gives frame times without a build. Elimor forces Skia over Impeller in the manifest: on a Fire TV Edition's Mali-G52, Impeller took 21-22 ms per home frame, Skia 5-14.
+**Frame times.** A profile build (`flutter build apk --profile --split-per-abi --target-platform android-arm`) logs every frame over 17 ms with its build and raster times (`adb logcat -s flutter`). `adb shell dumpsys SurfaceFlinger --latency 'SurfaceView - tv.ilona.app/tv.ilona.app.MainActivity#0'` gives frame times without a build. IlonaTv forces Skia over Impeller in the manifest: on a Fire TV Edition's Mali-G52, Impeller took 21-22 ms per home frame, Skia 5-14.
 
 **Memory.** Measure on a profile build; a debug build's memory is inflated by the JIT.
 
 ## Seeding an emulator
 
-The fixtures can give an emulator its rows with no keys. Each source writes what it fetched to `files/cache/<name>.json` (`tmdb.json`, `stremio.json`, `youtube.json`), and a start shows those files at any age. On a debug build, run Elimor once so `files/cache` exists, then:
+The fixtures can give an emulator its rows with no keys. Each source writes what it fetched to `files/cache/<name>.json` (`tmdb.json`, `stremio.json`, `youtube.json`), and a start shows those files at any age. On a debug build, run IlonaTv once so `files/cache` exists, then:
 
 ```sh
-adb shell "run-as app.elimor.app sh -c 'cat > files/cache/tmdb.json'" < tmdb.json
+adb shell "run-as tv.ilona.app sh -c 'cat > files/cache/tmdb.json'" < tmdb.json
 ```
 
 To make such a file, run a source over the fixtures in a throwaway test (`TmdbSource(settings, Store(dir), fetch: fake(routes).call).refresh()` writes `dir/cache/tmdb.json`), or pull one from a debug build that has the keys:
 
 ```sh
-adb exec-out run-as app.elimor.app cat files/cache/tmdb.json > tmdb.json
+adb exec-out run-as tv.ilona.app cat files/cache/tmdb.json > tmdb.json
 ```
 
 The YouTube row also needs enabled accounts in the preferences (`youtubeAccounts`), and "Continue watching" needs a `stremioAuthKey`.

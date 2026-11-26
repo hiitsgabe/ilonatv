@@ -1,21 +1,21 @@
 import 'dart:io';
 
-import 'package:elimor/app.dart';
-import 'package:elimor/companion/pairing.dart';
-import 'package:elimor/data/sports.dart';
-import 'package:elimor/data/stremio.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/data/weather.dart';
-import 'package:elimor/data/youtube.dart';
-import 'package:elimor/data/youtube_tv.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/sources.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/launcher_setup.dart';
-import 'package:elimor/ui/qr_code.dart';
-import 'package:elimor/ui/settings_kit.dart';
-import 'package:elimor/ui/settings_panes.dart';
-import 'package:elimor/ui/settings_screen.dart';
+import 'package:ilonatv/app.dart';
+import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/data/stremio.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/data/weather.dart';
+import 'package:ilonatv/data/youtube.dart';
+import 'package:ilonatv/data/youtube_tv.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/sources.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/launcher_setup.dart';
+import 'package:ilonatv/ui/qr_code.dart';
+import 'package:ilonatv/ui/settings_kit.dart';
+import 'package:ilonatv/ui/settings_panes.dart';
+import 'package:ilonatv/ui/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -415,7 +415,7 @@ Future<Settings> _screen(WidgetTester tester) async {
   // A platform that answers nothing: no apps.
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
-        const MethodChannel('app.elimor/host'),
+        const MethodChannel('tv.ilona/host'),
         (_) async => null,
       );
   final (s, sources) = await _pane(tester);

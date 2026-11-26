@@ -3,10 +3,10 @@ import 'dart:io';
 /// What Launcher mode needs from the device, as `LauncherSetup.kt` reads it.
 class LauncherSetup {
   /// An Amazon device: Fire OS lists no third-party accessibility service, so
-  /// only Elimor itself can enable it, after [grantCommands].
+  /// only IlonaTv itself can enable it, after [grantCommands].
   final bool fireTv;
 
-  /// Elimor's accessibility service is in the system's enabled list.
+  /// IlonaTv's accessibility service is in the system's enabled list.
   final bool serviceOn;
 
   /// `Build.VERSION.SDK_INT`.
@@ -28,7 +28,7 @@ LauncherHint launcherHint(LauncherSetup s, {required bool wanted}) {
   return s.fireTv ? LauncherHint.grant : LauncherHint.systemSettings;
 }
 
-/// What a computer on the same network runs once so Elimor may enable its own
+/// What a computer on the same network runs once so IlonaTv may enable its own
 /// service; typed there, so shown as is and never translated. [ip] is the TV's
 /// address, `<tv-ip>` when unknown. `-s` keeps the grant on the TV when the
 /// computer has other devices attached.
@@ -36,12 +36,12 @@ List<String> grantCommands(String? ip) {
   final tv = '${ip ?? '<tv-ip>'}:5555';
   return [
     'adb connect $tv',
-    'adb -s $tv shell pm grant app.elimor.app '
+    'adb -s $tv shell pm grant tv.ilona.app '
         'android.permission.WRITE_SECURE_SETTINGS',
     // Settings > Processes reads what each app holds: the activity manager's
     // dump wants both.
-    'adb -s $tv shell pm grant app.elimor.app android.permission.DUMP',
-    'adb -s $tv shell pm grant app.elimor.app '
+    'adb -s $tv shell pm grant tv.ilona.app android.permission.DUMP',
+    'adb -s $tv shell pm grant tv.ilona.app '
         'android.permission.PACKAGE_USAGE_STATS',
   ];
 }

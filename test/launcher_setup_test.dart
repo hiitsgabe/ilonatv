@@ -1,4 +1,4 @@
-import 'package:elimor/launcher_setup.dart';
+import 'package:ilonatv/launcher_setup.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -19,18 +19,18 @@ void main() {
     expect(launcherHint(fire, wanted: true), LauncherHint.grant);
     expect(launcherHint(google, wanted: true), LauncherHint.systemSettings);
   });
-  test('the grant commands connect to the TV, then grant to Elimor', () {
+  test('the grant commands connect to the TV, then grant to IlonaTv', () {
     expect(grantCommands('10.0.0.5'), [
       'adb connect 10.0.0.5:5555',
-      'adb -s 10.0.0.5:5555 shell pm grant app.elimor.app android.permission.WRITE_SECURE_SETTINGS',
-      'adb -s 10.0.0.5:5555 shell pm grant app.elimor.app android.permission.DUMP',
-      'adb -s 10.0.0.5:5555 shell pm grant app.elimor.app android.permission.PACKAGE_USAGE_STATS',
+      'adb -s 10.0.0.5:5555 shell pm grant tv.ilona.app android.permission.WRITE_SECURE_SETTINGS',
+      'adb -s 10.0.0.5:5555 shell pm grant tv.ilona.app android.permission.DUMP',
+      'adb -s 10.0.0.5:5555 shell pm grant tv.ilona.app android.permission.PACKAGE_USAGE_STATS',
     ]);
     expect(grantCommands(null), [
       'adb connect <tv-ip>:5555',
-      'adb -s <tv-ip>:5555 shell pm grant app.elimor.app android.permission.WRITE_SECURE_SETTINGS',
-      'adb -s <tv-ip>:5555 shell pm grant app.elimor.app android.permission.DUMP',
-      'adb -s <tv-ip>:5555 shell pm grant app.elimor.app android.permission.PACKAGE_USAGE_STATS',
+      'adb -s <tv-ip>:5555 shell pm grant tv.ilona.app android.permission.WRITE_SECURE_SETTINGS',
+      'adb -s <tv-ip>:5555 shell pm grant tv.ilona.app android.permission.DUMP',
+      'adb -s <tv-ip>:5555 shell pm grant tv.ilona.app android.permission.PACKAGE_USAGE_STATS',
     ]);
   });
 }

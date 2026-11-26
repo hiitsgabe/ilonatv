@@ -57,7 +57,7 @@ ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)
   *APP* UID 10208 ProcessRecord{aa7165 13636:com.amazon.ftve.audioprovider/u0a208}
     adjSeq=96111 lruSeq=0 lastPss=3.0MB lastSwapPss=2.2MB lastCachedPss=0.00 lastCachedSwapPss=0.00
     oom: max=1001 curRaw=1 setRaw=1 cur=1 set=1
-  *APP* UID 10243 ProcessRecord{1d324f0 1604:app.elimor.app/u0a243}
+  *APP* UID 10243 ProcessRecord{1d324f0 1604:tv.ilona.app/u0a243}
     adjSeq=96111 lruSeq=0 lastPss=120MB lastSwapPss=19MB lastCachedPss=0.00 lastCachedSwapPss=0.00
     oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
   *APP* UID 10229 ProcessRecord{927a7ba 3960:com.example.vpn/u0a229}
@@ -146,7 +146,7 @@ ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)
     oom: max=1001 curRaw=904 setRaw=904 cur=903 set=903
     Isolated #0: ProcessRecord{e7e0c27 4872:com.amazon.webview.chromium:sandboxed_process0/u0a231i12}
     PID #676: ProcessRecord{43ef45a 676:com.amazon.ceviche/u0a84}
-    PID #1604: ProcessRecord{1d324f0 1604:app.elimor.app/u0a243}
+    PID #1604: ProcessRecord{1d324f0 1604:tv.ilona.app/u0a243}
     PID #2058: ProcessRecord{55fb723 2058:com.amazon.venezia/u0a174}
     PID #3242: ProcessRecord{ae9e7c7 3242:system/1000}
     PID #3960: ProcessRecord{927a7ba 3960:com.example.vpn/u0a229}
@@ -194,4 +194,4 @@ ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)
     PID #19461: ProcessRecord{9f22710 19461:com.amazon.device.blepa/u0a91}
     PID #32683: ProcessRecord{7d89c1d 32683:com.amazon.tv.settings.v2/u0a171}
   mHomeProcess: ProcessRecord{70fb724 7112:com.amazon.tv.launcher/u0a159}
-  mPreviousProcess: ProcessRecord{1d324f0 1604:app.elimor.app/u0a243}
+  mPreviousProcess: ProcessRecord{1d324f0 1604:tv.ilona.app/u0a243}

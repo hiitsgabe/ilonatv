@@ -1,6 +1,6 @@
-import 'package:elimor/companion/state.dart';
-import 'package:elimor/ui/qr_code.dart';
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv/companion/state.dart';
+import 'package:ilonatv/ui/qr_code.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

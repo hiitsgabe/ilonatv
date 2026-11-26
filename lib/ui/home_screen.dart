@@ -207,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Home: whatever is open closes, the rows come down and focus lands on the
-  /// first app, at once rather than animated: Elimor is coming back from
+  /// first app, at once rather than animated: IlonaTv is coming back from
   /// behind the curtain or another app, and its first frame should already
   /// be the top.
   void _goHome() {
@@ -255,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /// Asked again on every resume, so apps installed or removed outside Elimor
+  /// Asked again on every resume, so apps installed or removed outside IlonaTv
   /// show up. A failed call keeps the last list (empty the first time) and the
   /// next resume retries. Icons already fetched are kept. A good list goes to
   /// the store for the next start.
@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Checks the network now and every 30 s, while Elimor is in front.
+  /// Checks the network now and every 30 s, while IlonaTv is in front.
   void _watchNet() {
     _netTimer?.cancel();
     _netTimer = Timer.periodic(const Duration(seconds: 30), (_) => _checkNet());
@@ -339,13 +339,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _open(AppTile tile) {
     switch (tile.package) {
-      case 'elimor:apps':
+      case 'ilonatv:apps':
         _push(
           AppsScreen(
             offeredApps(_apps ?? const {}, widget.settings.hiddenApps),
           ),
         );
-      case 'elimor:settings':
+      case 'ilonatv:settings':
         _openSettings();
       default:
         Host.launch(tile.package);

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/foundation.dart';
 
 import '../app.dart' show kVersion;
@@ -113,7 +113,7 @@ class CompanionServer {
     if (method == 'GET' && path == '/') {
       req.response.headers.contentType = ContentType.html;
       req.response.write(
-        '<!doctype html><title>Elimor</title>Elimor is running',
+        '<!doctype html><title>IlonaTv</title>IlonaTv is running',
       );
       return req.response.close();
     }

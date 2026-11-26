@@ -1,9 +1,9 @@
-import 'package:elimor/companion/pairing.dart';
-import 'package:elimor/i18n.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/ui/companion_pane.dart';
-import 'package:elimor/ui/qr_code.dart';
-import 'package:elimor/ui/settings_kit.dart';
+import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/i18n.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/ui/companion_pane.dart';
+import 'package:ilonatv/ui/qr_code.dart';
+import 'package:ilonatv/ui/settings_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -129,7 +129,7 @@ void main() {
     expect(_focusedRow(), t('newQr'));
   });
 
-  testWidgets('leaving Elimor withdraws the code; coming back offers it', (
+  testWidgets('leaving IlonaTv withdraws the code; coming back offers it', (
     tester,
   ) async {
     final pairing = await _pump(tester, '192.168.1.5');

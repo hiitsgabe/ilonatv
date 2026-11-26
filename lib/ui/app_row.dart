@@ -56,7 +56,7 @@ class AppRow extends StatelessWidget {
                     child: Semantics(
                       label:
                           apps[tile.package]?.label ??
-                          t(tile.package.replaceFirst('elimor:', '')),
+                          t(tile.package.replaceFirst('ilonatv:', '')),
                       // A lift repaints this tile only.
                       child: RepaintBoundary(
                         child: Tile(

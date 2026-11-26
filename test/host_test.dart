@@ -1,12 +1,12 @@
-import 'package:elimor/host.dart';
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('app.elimor/host');
+  const channel = MethodChannel('tv.ilona/host');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late MethodCall received;
@@ -157,8 +157,8 @@ void main() {
   });
 
   test('filesDir asks the channel', () async {
-    reply('/data/user/0/app.elimor.app/files');
-    expect(await Host.filesDir(), '/data/user/0/app.elimor.app/files');
+    reply('/data/user/0/tv.ilona.app/files');
+    expect(await Host.filesDir(), '/data/user/0/tv.ilona.app/files');
     expect(received.method, 'filesDir');
     expect(received.arguments, isNull);
   });

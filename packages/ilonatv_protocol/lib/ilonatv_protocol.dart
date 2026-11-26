@@ -2,7 +2,7 @@ import 'dart:convert';
 
 const kCompanionPort = 8642;
 const kProtocolVersion = 1;
-const kServiceType = '_elimor._tcp';
+const kServiceType = '_ilonatv._tcp';
 
 enum RemoteKey { up, down, left, right, ok, back, home }
 

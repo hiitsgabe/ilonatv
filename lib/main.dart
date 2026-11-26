@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:elimor_protocol/elimor_protocol.dart' show kCompanionPort;
+import 'package:ilonatv_protocol/ilonatv_protocol.dart' show kCompanionPort;
 import 'package:flutter/foundation.dart' show kProfileMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -129,16 +129,16 @@ Future<void> main() async {
   await sources.loadCache();
   final pairing = Pairing(s);
   runApp(
-    ElimorApp(s, sources, store, pairing: pairing, cachedApps: cachedApps),
+    IlonaTvApp(s, sources, store, pairing: pairing, cachedApps: cachedApps),
   );
   WidgetsBinding.instance.addObserver(SnapshotObserver(homeBoundaryKey, s));
   sources.start();
-  // Another app on the port, or no network, leaves Elimor without its
+  // Another app on the port, or no network, leaves IlonaTv without its
   // Companion, not without its home.
   unawaited(
-    CompanionServer(pairing, ElimorApi(s, sources))
+    CompanionServer(pairing, IlonaTvApi(s, sources))
         .start()
-        .then((_) => Host.advertise(kCompanionPort, 'Elimor'))
+        .then((_) => Host.advertise(kCompanionPort, 'IlonaTv'))
         .catchError((Object e) => debugPrint('companion server: $e')),
   );
   DiskImages.prune().ignore();

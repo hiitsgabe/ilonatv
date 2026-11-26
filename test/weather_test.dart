@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:elimor/data/weather.dart';
-import 'package:elimor/net.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor/store.dart';
+import 'package:ilonatv/data/weather.dart';
+import 'package:ilonatv/net.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv/store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -156,7 +156,7 @@ void main() {
         ..weatherLat = 48.85
         ..weatherLon = 2.35
         ..fahrenheit = false;
-      dir = await Directory.systemTemp.createTemp('elimor');
+      dir = await Directory.systemTemp.createTemp('ilonatv');
       store = Store(dir);
       net = _Net();
     });

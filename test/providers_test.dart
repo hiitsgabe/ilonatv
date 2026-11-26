@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:elimor/data/media.dart';
-import 'package:elimor/data/stremio.dart';
-import 'package:elimor/data/tmdb.dart';
-import 'package:elimor/host.dart';
-import 'package:elimor/providers.dart';
-import 'package:elimor/settings.dart';
+import 'package:ilonatv/data/media.dart';
+import 'package:ilonatv/data/stremio.dart';
+import 'package:ilonatv/data/tmdb.dart';
+import 'package:ilonatv/host.dart';
+import 'package:ilonatv/providers.dart';
+import 'package:ilonatv/settings.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,7 +68,7 @@ void main() {
       MethodCall? got;
       Object? answer = true;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+          .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
             call,
           ) async {
             got = call;
@@ -96,7 +96,7 @@ void main() {
     final calls = <String>[];
     late List<bool> answers;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+        .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
           call,
         ) async {
           final args = call.arguments as Map;
@@ -209,7 +209,7 @@ void main() {
     final calls = <String>[];
     late List<bool> answers;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+        .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
           call,
         ) async {
           calls.add('${call.method} ${(call.arguments as Map)['package']}');
@@ -309,7 +309,7 @@ void main() {
     final s = await settings();
     final calls = <String>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+        .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
           call,
         ) async {
           calls.add('${call.method} ${(call.arguments as Map)['uri']}');
@@ -448,7 +448,7 @@ void main() {
     final calls = <String>[];
     late List<bool> answers;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+        .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
           call,
         ) async {
           final args = call.arguments as Map;
@@ -592,7 +592,7 @@ void main() {
     setUp(() {
       calls.clear();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
+          .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
             call,
           ) async {
             final args = call.arguments as Map;

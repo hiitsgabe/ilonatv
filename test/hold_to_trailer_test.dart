@@ -1,4 +1,4 @@
-import 'package:elimor/hold_to_trailer.dart';
+import 'package:ilonatv/hold_to_trailer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _ms = Duration(milliseconds: 1);

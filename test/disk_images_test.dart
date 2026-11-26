@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:elimor/disk_images.dart';
+import 'package:ilonatv/disk_images.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -9,7 +9,7 @@ void main() {
   final fetched = <Uri>[];
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp('elimor-img');
+    dir = await Directory.systemTemp.createTemp('ilonatv-img');
     DiskImages.dir = dir;
     fetched.clear();
     DiskImages.fetch = (uri, {timeout = const Duration(seconds: 15)}) async {

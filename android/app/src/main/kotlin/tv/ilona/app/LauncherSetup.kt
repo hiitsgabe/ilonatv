@@ -1,4 +1,4 @@
-package app.elimor.app
+package tv.ilona.app
 
 import android.Manifest
 import android.content.Context
@@ -22,7 +22,7 @@ object LauncherSetup {
     fun canWriteSettings(ctx: Context): Boolean =
         ctx.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
 
-    /** Adds or removes Elimor's entry and keeps every other service's. False without the permission. */
+    /** Adds or removes IlonaTv's entry and keeps every other service's. False without the permission. */
     fun setServiceEnabled(ctx: Context, on: Boolean): Boolean = try {
         val cr = ctx.contentResolver
         val others = (Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: "")

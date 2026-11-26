@@ -13,7 +13,7 @@ const kVersion = '0.6.0';
 /// The home screen's repaint boundary, which `SnapshotObserver` captures.
 final homeBoundaryKey = GlobalKey();
 
-class ElimorApp extends StatelessWidget {
+class IlonaTvApp extends StatelessWidget {
   final Settings settings;
   final Sources sources;
   final Store store;
@@ -22,7 +22,7 @@ class ElimorApp extends StatelessWidget {
   /// The app list of the last run (`apps` in [store]), for the dock's first
   /// frame.
   final Map<String, dynamic>? cachedApps;
-  const ElimorApp(
+  const IlonaTvApp(
     this.settings,
     this.sources,
     this.store, {
@@ -33,7 +33,7 @@ class ElimorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Elimor',
+    title: 'IlonaTv',
     debugShowCheckedModeBanner: false,
     // A held OK presses once. Flutter's defaults repeat it, so holding OK on
     // Remove would clear row after row, and the hold that opens Settings from

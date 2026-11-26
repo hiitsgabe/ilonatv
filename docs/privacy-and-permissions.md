@@ -2,7 +2,7 @@
 
 ## What leaves the TV
 
-Elimor has no server, no analytics and no ads. Your keys, accounts and settings stay in Elimor's private storage on the TV, and backup and device-to-device transfer are turned off for it. Elimor talks directly to these services, and only for the features you turn on:
+IlonaTv has no cloud server, no analytics and no ads. The one thing it serves is the Companion: a small server on the TV, on port 8642, that answers only phones and computers you paired, and only on your local network. Your keys, accounts and settings stay in IlonaTv's private storage on the TV, and backup and device-to-device transfer are turned off for it. IlonaTv talks directly to these services, and only for the features you turn on:
 
 | Service | For | With |
 | --- | --- | --- |
@@ -21,9 +21,9 @@ Elimor has no server, no analytics and no ads. Your keys, accounts and settings 
 | Permission | Why |
 | --- | --- |
 | `INTERNET` | The services above. |
-| `RECEIVE_BOOT_COMPLETED` | Launcher mode starts Elimor at boot. |
-| Accessibility service | Launcher mode (see [launcher-mode.md](launcher-mode.md)). While it is on it can also undo a double power press, replace Alexa with Elimor's assistant, tap the first stream in Stremio when "Play the first stream" is on, and tap Force stop when you close an app from Processes. It keeps nothing it reads on screen. |
-| `WRITE_SECURE_SETTINGS` (adb only) | Lets Elimor turn its own accessibility service on, on Fire TV. |
+| `RECEIVE_BOOT_COMPLETED` | Launcher mode starts IlonaTv at boot. |
+| Accessibility service | Launcher mode (see [launcher-mode.md](launcher-mode.md)). While it is on it can also undo a double power press, replace Alexa with IlonaTv's assistant, tap the first stream in Stremio when "Play the first stream" is on, and tap Force stop when you close an app from Processes. It keeps nothing it reads on screen. |
+| `WRITE_SECURE_SETTINGS` (adb only) | Lets IlonaTv turn its own accessibility service on, on Fire TV. |
 | `DUMP`, `PACKAGE_USAGE_STATS` (adb only) | Settings > Processes: what each app holds in memory. |
 | `KILL_BACKGROUND_PROCESSES` | Processes: Close and Clean for apps in the background. |
 | `RECORD_AUDIO` | The voice assistant only, asked for when you turn it on. |
@@ -32,7 +32,7 @@ Elimor has no server, no analytics and no ads. Your keys, accounts and settings 
 The three adb-only permissions are granted once from a computer:
 
 ```sh
-adb shell pm grant app.elimor.app android.permission.WRITE_SECURE_SETTINGS
-adb shell pm grant app.elimor.app android.permission.DUMP
-adb shell pm grant app.elimor.app android.permission.PACKAGE_USAGE_STATS
+adb shell pm grant tv.ilona.app android.permission.WRITE_SECURE_SETTINGS
+adb shell pm grant tv.ilona.app android.permission.DUMP
+adb shell pm grant tv.ilona.app android.permission.PACKAGE_USAGE_STATS
 ```

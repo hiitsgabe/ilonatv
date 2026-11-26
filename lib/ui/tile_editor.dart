@@ -19,10 +19,10 @@ const _maxTiles = 5;
 /// A newly chosen app's icon: its own, or for a pseudo package the painted
 /// icon its suffix names (`apps`, `settings`), never a grey box.
 String _iconFor(String package) =>
-    package.startsWith('elimor:') ? package.substring(7) : 'app';
+    package.startsWith('ilonatv:') ? package.substring(7) : 'app';
 
 /// The custom image entry of the icon picker.
-const _custom = 'elimor:image';
+const _custom = 'ilonatv:image';
 
 /// The backgrounds of a centred custom image, after glass.
 const _swatches = [
@@ -184,7 +184,7 @@ class _TileEditorState extends State<TileEditor> {
   Future<String?> _pickApp() => pickAppDialog(
     context,
     offeredApps(widget.apps, widget.settings.hiddenApps),
-    first: [('elimor:apps', t('apps')), ('elimor:settings', t('settings'))],
+    first: [('ilonatv:apps', t('apps')), ('ilonatv:settings', t('settings'))],
   );
 
   Future<void> _chooseApp(int i) async {
@@ -248,7 +248,7 @@ class _TileEditorState extends State<TileEditor> {
     final names = [
       for (final icon in TileIcon.values) icon.name,
       // A pseudo package has no icon of its own: it would stay grey.
-      if (!tile.package.startsWith('elimor:')) 'app',
+      if (!tile.package.startsWith('ilonatv:')) 'app',
     ];
     final icon = await _pickTile(
       t('chooseIcon'),
@@ -375,8 +375,8 @@ class _TileEditorState extends State<TileEditor> {
                 if (app != null)
                   Text(app.label)
                 // A pseudo package's suffix is its i18n key.
-                else if (tile.package.startsWith('elimor:'))
-                  Text(t(tile.package.replaceFirst('elimor:', '')))
+                else if (tile.package.startsWith('ilonatv:'))
+                  Text(t(tile.package.replaceFirst('ilonatv:', '')))
                 else
                   Text(
                     '${tile.package} · ${t('notInstalled')}',
@@ -424,7 +424,7 @@ class _TileEditorState extends State<TileEditor> {
 }
 
 /// The pictures on the device, newest first, as a grid of [width] whose
-/// thumbnails load as they scroll in. OK on one copies it into Elimor's files
+/// thumbnails load as they scroll in. OK on one copies it into IlonaTv's files
 /// and pops the copy's path. Without read access or without pictures, it says
 /// how to put some on the TV, with a retry.
 class _ImagePicker extends StatefulWidget {

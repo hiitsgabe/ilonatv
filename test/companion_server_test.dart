@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:elimor/app.dart' show kVersion;
-import 'package:elimor/companion/pairing.dart';
-import 'package:elimor/companion/server.dart';
-import 'package:elimor/companion/state.dart';
-import 'package:elimor/settings.dart';
-import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:ilonatv/app.dart' show kVersion;
+import 'package:ilonatv/companion/pairing.dart';
+import 'package:ilonatv/companion/server.dart';
+import 'package:ilonatv/companion/state.dart';
+import 'package:ilonatv/settings.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,7 +116,7 @@ void main() {
     final (status, body, headers) = await send('GET', '/');
     expect(status, 200);
     expect(headers.contentType?.mimeType, 'text/html');
-    expect(body, contains('Elimor is running'));
+    expect(body, contains('IlonaTv is running'));
   });
 
   test('GET /api/info without a token is 401', () async {

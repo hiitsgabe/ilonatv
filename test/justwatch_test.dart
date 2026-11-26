@@ -1,5 +1,5 @@
-import 'package:elimor/data/justwatch.dart';
-import 'package:elimor/data/media.dart';
+import 'package:ilonatv/data/justwatch.dart';
+import 'package:ilonatv/data/media.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures.dart';
