@@ -98,10 +98,12 @@ jobs:
           TAG="v${NEW_VERSION_NAME}"
 
           sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml companion/pubspec.yaml
+          sed -i "s/^const kVersion = .*/const kVersion = '${NEW_VERSION_NAME}';/" lib/app.dart
+          grep -q "^const kVersion = '${NEW_VERSION_NAME}';" lib/app.dart
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add pubspec.yaml companion/pubspec.yaml
+          git add pubspec.yaml companion/pubspec.yaml lib/app.dart
           git commit -m "chore: bump version to ${NEW_VERSION}"
           git push origin main
           git tag "$TAG"
