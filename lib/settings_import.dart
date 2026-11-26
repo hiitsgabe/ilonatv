@@ -35,6 +35,7 @@ final Map<String, _Check> _keys = {
     'stremioAutoPlay',
     'alexaBounce',
     'fahrenheit',
+    'gamesBySport',
   ])
     k: _bool,
   'assistantColor': _int,

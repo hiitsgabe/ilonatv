@@ -15,7 +15,7 @@ One JSON object, pref key to value. Each key given replaces that setting; keys l
 
 | Type | Keys |
 | --- | --- |
-| bool | `setupDone`, `settingsTileDropped`, `fireTvMode`, `doublePowerFix`, `stremioAutoPlay`, `alexaBounce`, `fahrenheit` |
+| bool | `setupDone`, `settingsTileDropped`, `fireTvMode`, `doublePowerFix`, `stremioAutoPlay`, `alexaBounce`, `fahrenheit`, `gamesBySport` |
 | int | `assistantColor` (ARGB) |
 | number | `weatherLat`, `weatherLon` |
 | string | `language`, `country`, `tmdbKey`, `geminiKey`, `stremioAuthKey`, `stremioEmail`, `weatherCity`, `movieProvider`, `seriesProvider`, `youtubeProvider`, `youtubeDeviceId` |
