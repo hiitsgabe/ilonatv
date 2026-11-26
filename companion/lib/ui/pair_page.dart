@@ -13,7 +13,25 @@ import 'remote_page.dart';
   if (u == null || u.scheme != 'http' || u.host.isEmpty) return null;
   final m = RegExp(r'^s=([^&]+)').firstMatch(u.fragment);
   if (m == null) return null;
-  return (host: u.host, port: u.hasPort ? u.port : 80, secret: m.group(1)!);
+  return (host: u.host, port: u.hasPort ? u.port : kCompanionPort, secret: m.group(1)!);
+}
+
+final _hostRe = RegExp(
+  r'^(\d{1,3}(\.\d{1,3}){3}|[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*)$',
+);
+
+({String host, int? port})? parseHostInput(String input) {
+  final s = input.trim();
+  final i = s.lastIndexOf(':');
+  final host = i < 0 ? s : s.substring(0, i);
+  final port = i < 0 ? null : int.tryParse(s.substring(i + 1));
+  if (!_hostRe.hasMatch(host)) return null;
+  if (i >= 0 && (port == null || port < 1 || port > 65535)) return null;
+  if (RegExp(r'^\d+(\.\d+){3}$').hasMatch(host) &&
+      host.split('.').any((o) => int.parse(o) > 255)) {
+    return null;
+  }
+  return (host: host, port: port);
 }
 
 typedef ClientFor = TvClient Function(Tv tv);
@@ -101,9 +119,13 @@ class _PairPageState extends State<PairPage> {
   }
 
   void _submit() {
-    final host = _host.text.trim();
-    if (host.isEmpty || _code.text.length != 6 || _busy) return;
-    _pair(_tvFor(host), code: _code.text);
+    if (_host.text.trim().isEmpty || _code.text.length != 6 || _busy) return;
+    final h = parseHostInput(_host.text);
+    if (h == null) {
+      setState(() => _error = t('badAddress'));
+      return;
+    }
+    _pair(_tvFor(h.host, h.port), code: _code.text);
   }
 
   @override
@@ -229,7 +251,15 @@ class _ScanPageState extends State<_ScanPage> {
     body: Stack(
       fit: StackFit.expand,
       children: [
-        MobileScanner(onDetect: _onDetect),
+        MobileScanner(
+          onDetect: _onDetect,
+          errorBuilder: (_, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(t('cameraDenied'), textAlign: TextAlign.center),
+            ),
+          ),
+        ),
         SafeArea(
           child: Align(
             alignment: Alignment.topRight,
