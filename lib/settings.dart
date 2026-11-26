@@ -196,6 +196,12 @@ class Settings extends ChangeNotifier {
   String youtubeDeviceId = '';
   List<YtAccount> youtubeAccounts = [];
 
+  /// 32 hex characters that pair a phone by QR; made on the first [load].
+  String companionSecret = '';
+
+  /// Paired phones: token -> the name the phone gave.
+  Map<String, String> companionDevices = {};
+
   /// Packages the Apps grid and the app picker leave out; stored as a JSON
   /// list, the defaults until the first save.
   Set<String> hiddenApps = {...kDefaultHiddenApps};
@@ -317,6 +323,19 @@ class Settings extends ChangeNotifier {
       s.youtubeDeviceId = _uuid4();
       await prefs.setString('youtubeDeviceId', s.youtubeDeviceId);
     }
+    s.companionSecret = prefs.getString('companionSecret') ?? '';
+    if (s.companionSecret.isEmpty) {
+      s.companionSecret = randomHex();
+      await prefs.setString('companionSecret', s.companionSecret);
+    }
+    final devices = prefs.getString('companionDevices');
+    if (devices != null) {
+      try {
+        s.companionDevices = Map<String, String>.from(
+          jsonDecode(devices) as Map,
+        );
+      } catch (_) {} // ponytail: unreadable reads as none
+    }
     final accounts = prefs.getString('youtubeAccounts');
     if (accounts != null) {
       try {
@@ -425,6 +444,8 @@ class Settings extends ChangeNotifier {
     await prefs.setString('seriesProvider', seriesProvider);
     await prefs.setString('youtubeProvider', youtubeProvider);
     await prefs.setString('youtubeDeviceId', youtubeDeviceId);
+    await prefs.setString('companionSecret', companionSecret);
+    await prefs.setString('companionDevices', jsonEncode(companionDevices));
     await prefs.setString('youtubeAccounts', jsonEncode(youtubeAccounts));
     await prefs.setString('hiddenApps', jsonEncode([...hiddenApps]));
     await prefs.setString('recentSearches', jsonEncode(recentSearches));
@@ -496,4 +517,13 @@ String _uuid4() {
   final h = [for (final x in b) x.toRadixString(16).padLeft(2, '0')].join();
   return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-'
       '${h.substring(16, 20)}-${h.substring(20)}';
+}
+
+/// 16 random bytes as 32 hex characters.
+String randomHex([Random? random]) {
+  final r = random ?? Random.secure();
+  return [
+    for (var i = 0; i < 16; i++)
+      r.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ].join();
 }

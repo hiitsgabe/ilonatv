@@ -299,6 +299,31 @@ void main() {
     });
   });
 
+  test(
+    'companionSecret is made once and kept, and setup is still due',
+    () async {
+      final s = await Settings.load();
+      expect(s.companionSecret, matches(RegExp(r'^[0-9a-f]{32}$')));
+      expect(s.setupDone, isFalse);
+      final again = await Settings.load();
+      expect(again.companionSecret, s.companionSecret);
+      expect(again.setupDone, isFalse);
+      SharedPreferences.setMockInitialValues({});
+      expect((await Settings.load()).companionSecret, isNot(s.companionSecret));
+    },
+  );
+
+  test('companionDevices round trip', () async {
+    final s = await Settings.load();
+    expect(s.companionDevices, isEmpty);
+    s.companionDevices = {'t1': 'Mac', 't2': 'Phone'};
+    await s.save();
+    expect((await Settings.load()).companionDevices, {
+      't1': 'Mac',
+      't2': 'Phone',
+    });
+  });
+
   test('youtubeDeviceId is a v4 UUID, made once and kept', () async {
     final s = await Settings.load();
     expect(
