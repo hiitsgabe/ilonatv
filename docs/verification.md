@@ -78,14 +78,14 @@ The TV answers on port 8642. From a laptop on the same network, with `TVIP=<tv-i
 
 ## Companion app
 
-Run these with the companion APK on an Android phone on the same Wi-Fi as the TV. Items 49 to 52 start from a Fire TV without IlonaTv installed.
+Run these with the companion APK on an Android phone on the same Wi-Fi as the TV. Item 49 starts from a Fire TV without IlonaTv installed; the others use the IlonaTv it installed.
 
 49. **Install from the phone. (changes the TV)** With ADB debugging on, open the companion, choose to install, and pick the TV from the scan (or type its IP). Expected: the TV shows "Allow debugging?" and the phone says to choose Allow; after Allow the phone installs the APK for the TV's CPU, starts IlonaTv and offers "Open the remote". Then the same with the prompt denied: the phone says the TV didn't allow the connection, and Retry shows a new prompt on the TV.
 50. **Pair by QR and by code.** On the TV, Settings > Companion. Scan the QR from the companion: the TV appears in the phone's list. Remove it, then pair again by typing the code. A QR that was used once does not pair a second time. The installer's own pairing needs neither.
 51. **Remote keys.** Up, Down, Left, Right, OK, Back and Home on the phone move focus on the TV. With another app in front and Launcher mode off, the phone says "Open IlonaTv on the TV" and offers the Launcher-mode tip.
 52. **Search and Watch, IlonaTv in front.** Search for a title on the phone, open it and press Watch: the TV opens it in the app it uses for that title. Browse a row and do the same.
 53. **Search and Watch, another app in front.** With Netflix (or any app) in front and Launcher mode on, Watch brings the title's app forward within 3 s. With Launcher mode off, the phone says "Open IlonaTv on the TV" and nothing opens.
-54. **Typing during setup.** Start the wizard on a TV; on a step with a text field (TMDB key, city), the phone's typing box appears and what you type shows in the field on the TV.
+54. **Typing during setup.** Start the wizard on a TV; on a step with a text field (TMDB key, city), the phone shows the matching card (the TMDB key, or a city search). The TV receives the key only on Test or Save, and the city only when you tap a result.
 55. **Remove on the TV.** In Settings > Companion on the TV, Remove the phone. Expected: the next key press or search on the phone shows "This TV removed this phone. Pair again." and the TV is listed as unpaired; pairing again works. With the TV off or unplugged, the phone shows "Can't reach <name>" with Retry, not a spinner.
 56. **ADB can go off.** After 49, turn ADB debugging off on the TV: the remote, search and Watch still work.
 

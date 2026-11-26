@@ -29,7 +29,7 @@ IlonaTv has no cloud server, no analytics and no ads. The one thing it serves is
 | `RECORD_AUDIO` | The voice assistant only, asked for when you turn it on. |
 | `READ_EXTERNAL_STORAGE` (Android 12 and lower), `READ_MEDIA_IMAGES` (13+) | Custom tile images: lists the pictures on the TV, asked for when the picker opens. No picture leaves the TV. |
 
-The three adb-only permissions are granted once from a computer:
+The three adb-only permissions are granted once, by the companion's installer on Fire TV (which also allows restricted settings on Android 13+), or from a computer:
 
 ```sh
 adb shell pm grant tv.ilona.app android.permission.WRITE_SECURE_SETTINGS
@@ -49,5 +49,5 @@ The IlonaTv Companion (`tv.ilona.companion`) asks for three permissions:
 
 It stores, for each paired TV, only the host, port, name and token. It also keeps the ADB key it uses to talk to a TV in the app's private storage, excluded from backup and device transfer; a new phone makes a new key and the TV asks "Allow debugging?" again. It connects over ADB only in the installer.
 
-On the TV, a content provider (`content://tv.ilona.app.pairing`) hands the pairing secret to the installer so the phone can pair without a QR code. It is guarded by `DUMP`, which only the adb shell holds, so no ordinary app can read it, and each read renews the secret.
+On the TV, a content provider (`content://tv.ilona.app.pairing`) hands the pairing secret to the installer so the phone can pair without a QR code. It is guarded by `DUMP` and answers only the adb shell (or root), so no app on the TV can read it. Reading does not change the secret: a successful pairing with it renews it, and so does removing a phone in Settings > Companion.
 
