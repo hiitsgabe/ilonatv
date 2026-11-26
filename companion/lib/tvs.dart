@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -121,12 +122,41 @@ class Tvs extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _wanted = false;
+  bool _running = false;
+  int _held = 0;
+
   void startDiscovery() {
-    _channel.setMethodCallHandler(_fromHost);
-    _channel.invokeMethod<void>('discoverStart');
+    _wanted = true;
+    _apply();
   }
 
   void stopDiscovery() {
+    _wanted = false;
+    _apply();
+  }
+
+  /// Pages that have no use for found TVs (the remote, the installer, a hidden app) hold discovery off,
+  /// each with one hold() and one release(); a counter, since one may replace another.
+  void hold() {
+    _held++;
+    _apply();
+  }
+
+  void release() {
+    _held--;
+    _apply();
+  }
+
+  void _apply() {
+    final on = _wanted && _held == 0;
+    if (on == _running) return;
+    _running = on;
+    if (on) {
+      _channel.setMethodCallHandler(_fromHost);
+      _channel.invokeMethod<void>('discoverStart');
+      return;
+    }
     _channel.setMethodCallHandler(null);
     _channel.invokeMethod<void>('discoverStop');
     _seen.clear();
@@ -134,7 +164,8 @@ class Tvs extends ChangeNotifier {
     for (final t in _paired.values) {
       t.found = false;
     }
-    notifyListeners();
+    // A hold() can come from a page's initState, mid-build, where listeners may not rebuild yet.
+    scheduleMicrotask(notifyListeners);
   }
 
   Future<void> _fromHost(MethodCall call) async {

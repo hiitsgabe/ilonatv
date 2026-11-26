@@ -69,7 +69,14 @@ class _InstallFlowState extends State<InstallFlow> {
   Adb get _adb => widget.adb;
 
   @override
+  void initState() {
+    super.initState();
+    widget.tvs.hold();
+  }
+
+  @override
   void dispose() {
+    widget.tvs.release();
     _gen++;
     _scan?.cancel();
     _ip.dispose();

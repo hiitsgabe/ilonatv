@@ -39,11 +39,13 @@ class _RemotePageState extends State<RemotePage> {
   @override
   void initState() {
     super.initState();
+    widget.tvs.hold();
     _connect();
   }
 
   @override
   void dispose() {
+    widget.tvs.release();
     _sub?.cancel();
     _retry?.cancel();
     super.dispose();

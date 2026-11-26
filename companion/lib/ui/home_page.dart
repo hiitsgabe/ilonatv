@@ -25,14 +25,31 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late final AppLifecycleListener _life;
+  bool _hidden = false;
+
   @override
   void initState() {
     super.initState();
     widget.tvs.startDiscovery();
+    _life = AppLifecycleListener(
+      onHide: () {
+        if (_hidden) return;
+        _hidden = true;
+        widget.tvs.hold();
+      },
+      onShow: () {
+        if (!_hidden) return;
+        _hidden = false;
+        widget.tvs.release();
+      },
+    );
   }
 
   @override
   void dispose() {
+    _life.dispose();
+    if (_hidden) widget.tvs.release();
     widget.tvs.stopDiscovery();
     super.dispose();
   }
