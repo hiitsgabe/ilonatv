@@ -302,7 +302,14 @@ void main() {
     await server.start();
     final port = server.boundPort;
     await server.stop();
-    await expectLater(send('GET', '/'), throwsA(isA<SocketException>()));
+    await expectLater(
+      Socket.connect(
+        InternetAddress.loopbackIPv4,
+        port,
+        timeout: const Duration(seconds: 2),
+      ),
+      throwsA(isA<SocketException>()),
+    );
     final again = await ServerSocket.bind(InternetAddress.loopbackIPv4, port);
     await again.close();
   });
