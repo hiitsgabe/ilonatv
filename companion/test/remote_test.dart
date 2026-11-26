@@ -43,17 +43,14 @@ class Fake extends TvClient {
     return const Ok('keyOk');
   }
 
+  Completer<void>? cityGate;
+  List<Place>? cityResult;
+
   @override
-  Future<TvResult<List<Place>>> cities(String q) async => const Ok([
-    Place(
-      name: 'Lisbon',
-      region: 'Lisboa',
-      country: 'Portugal',
-      countryCode: 'PT',
-      lat: 1,
-      lon: 2,
-    ),
-  ]);
+  Future<TvResult<List<Place>>> cities(String q) async {
+    if (cityGate != null) await cityGate!.future;
+    return Ok(cityResult ?? _lisbon);
+  }
 
   @override
   Future<TvResult<void>> setCity(Place p) async {
@@ -61,6 +58,17 @@ class Fake extends TvClient {
     return const Ok(null);
   }
 }
+
+const _lisbon = [
+  Place(
+    name: 'Lisbon',
+    region: 'Lisboa',
+    country: 'Portugal',
+    countryCode: 'PT',
+    lat: 1,
+    lon: 2,
+  ),
+];
 
 TvInfo info(String? step) => TvInfo(
   protocol: 1,
@@ -248,6 +256,43 @@ void main() {
     await t.tap(find.text('Lisbon'));
     await t.pumpAndSettle();
     expect(client.city?.name, 'Lisbon');
+  });
+
+  testWidgets('an Ok after Unreachable clears the banner', (t) async {
+    await open(t);
+    client.keyResult = const Unreachable('x');
+    await t.tap(find.byKey(const Key('key-back')));
+    await t.pumpAndSettle();
+    expect(find.text("Can't reach IlonaTv"), findsOneWidget);
+    client.keyResult = const Ok(null);
+    await t.tap(find.byKey(const Key('key-back')));
+    await t.pumpAndSettle();
+    expect(find.text("Can't reach IlonaTv"), findsNothing);
+  });
+
+  testWidgets('Back and Home are labelled in the language', (t) async {
+    I18n.language = 'pt';
+    addTearDown(() => I18n.language = 'en');
+    await open(t);
+    expect(find.bySemanticsLabel(t0('back')), findsOneWidget);
+    expect(find.bySemanticsLabel(t0('home')), findsOneWidget);
+    expect(t0('back'), isNot('Back'));
+  });
+
+  testWidgets('city search shows progress, then nothing found', (t) async {
+    await open(t);
+    client.events$.add(info('location'));
+    await t.pumpAndSettle();
+    client.cityGate = Completer();
+    client.cityResult = const [];
+    await t.enterText(find.byType(TextField), 'zzz');
+    await t.tap(find.byIcon(Icons.search));
+    await t.pump();
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    client.cityGate!.complete();
+    await t.pumpAndSettle();
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.text(t0('noResults')), findsOneWidget);
   });
 }
 

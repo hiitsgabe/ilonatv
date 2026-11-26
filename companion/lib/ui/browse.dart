@@ -16,10 +16,15 @@ class SearchTab extends StatefulWidget {
   State<SearchTab> createState() => _SearchTabState();
 }
 
-class _SearchTabState extends State<SearchTab> {
+class _SearchTabState extends State<SearchTab>
+    with AutomaticKeepAliveClientMixin {
   Timer? _debounce;
   SearchResults? _results;
   String _q = '';
+  bool _busy = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -34,6 +39,7 @@ class _SearchTabState extends State<SearchTab> {
       setState(() {
         _q = '';
         _results = null;
+        _busy = false;
       });
       return;
     }
@@ -41,9 +47,13 @@ class _SearchTabState extends State<SearchTab> {
   }
 
   Future<void> _run(String q) async {
-    _q = q;
+    setState(() {
+      _q = q;
+      _busy = true;
+    });
     final r = await widget.client.search(q);
     if (!mounted || q != _q) return;
+    setState(() => _busy = false);
     if (r is Ok<SearchResults>) {
       setState(() => _results = r.value);
     } else {
@@ -98,6 +108,7 @@ class _SearchTabState extends State<SearchTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final r = _results;
     return Column(
       children: [
@@ -115,6 +126,11 @@ class _SearchTabState extends State<SearchTab> {
             ),
           ),
         ),
+        if (_busy)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: LinearProgressIndicator(),
+          ),
         Expanded(
           child: r == null
               ? const SizedBox.shrink()
@@ -144,9 +160,13 @@ class BrowseTab extends StatefulWidget {
   State<BrowseTab> createState() => _BrowseTabState();
 }
 
-class _BrowseTabState extends State<BrowseTab> {
+class _BrowseTabState extends State<BrowseTab>
+    with AutomaticKeepAliveClientMixin {
   List<TvRow>? _rows;
   bool _failed = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -170,6 +190,7 @@ class _BrowseTabState extends State<BrowseTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final rows = _rows;
     if (rows == null && _failed) {
       return Center(

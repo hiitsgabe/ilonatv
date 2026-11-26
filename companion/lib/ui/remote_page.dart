@@ -106,7 +106,12 @@ class _RemotePageState extends State<RemotePage> {
       case Unreachable():
         setState(() => _unreachable = true);
       case Ok():
-        if (_notInFront != null) setState(() => _notInFront = null);
+        if (_notInFront != null || _unreachable) {
+          setState(() {
+            _notInFront = null;
+            _unreachable = false;
+          });
+        }
       default:
     }
   }
@@ -330,7 +335,8 @@ class _CityCard extends StatefulWidget {
 
 class _CityCardState extends State<_CityCard> {
   final _q = TextEditingController();
-  List<Place> _places = const [];
+  List<Place>? _places;
+  bool _busy = false;
 
   @override
   void dispose() {
@@ -340,9 +346,11 @@ class _CityCardState extends State<_CityCard> {
 
   Future<void> _search() async {
     final q = _q.text.trim();
-    if (q.isEmpty) return;
+    if (q.isEmpty || _busy) return;
+    setState(() => _busy = true);
     final r = await widget.client.cities(q);
     if (!mounted) return;
+    setState(() => _busy = false);
     if (r is Ok<List<Place>>) {
       setState(() => _places = r.value);
     } else {
@@ -374,12 +382,22 @@ class _CityCardState extends State<_CityCard> {
               ),
             ),
           ),
+          if (_busy)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: LinearProgressIndicator(),
+            )
+          else if (_places?.isEmpty ?? false)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(t('noResults')),
+            ),
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 160),
             child: ListView(
               shrinkWrap: true,
               children: [
-                for (final p in _places)
+                for (final p in _places ?? const <Place>[])
                   ListTile(
                     dense: true,
                     title: Text(p.name),
@@ -522,9 +540,9 @@ class _PadState extends State<_Pad> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _round(Icons.arrow_back, 'Back', RemoteKey.back),
+              _round(Icons.arrow_back, t('back'), RemoteKey.back),
               const SizedBox(width: 48),
-              _round(Icons.home_outlined, 'Home', RemoteKey.home),
+              _round(Icons.home_outlined, t('home'), RemoteKey.home),
             ],
           ),
           const SizedBox(height: 32),

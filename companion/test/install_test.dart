@@ -29,6 +29,7 @@ class FakeAdb extends Adb {
   final log = <String>[];
   final connects = <AdbResult>[];
   String? installed;
+  String? installError;
 
   @override
   Future<AdbResult> connect(String host, int port) async {
@@ -55,7 +56,7 @@ class FakeAdb extends Adb {
   Future<String?> install(String path) async {
     log.add('install ${path.split('/').last}');
     installed = path;
-    return null;
+    return installError;
   }
 
   @override
@@ -65,9 +66,10 @@ class FakeAdb extends Adb {
 class FakeClient extends TvClient {
   FakeClient() : super('10.0.0.7');
   String? secret, name;
+  TvResult<TvInfo> infoResult = const Unpaired();
 
   @override
-  Future<TvResult<TvInfo>> info() async => const Unpaired();
+  Future<TvResult<TvInfo>> info() async => infoResult;
 
   @override
   Future<TvResult<String>> pair({
@@ -133,8 +135,11 @@ void main() {
     );
   }
 
-  Future<void> toConnect(WidgetTester tester) async {
-    await tester.tap(find.text(t('instFireTv')));
+  Future<void> toConnect(
+    WidgetTester tester, [
+    String kind = 'instFireTv',
+  ]) async {
+    await tester.tap(find.text(t(kind)));
     await tester.pumpAndSettle();
     await tester.tap(find.text(t('next')));
     await tester.pumpAndSettle();
@@ -151,7 +156,7 @@ void main() {
     await tester.tap(find.text(t('instInstall')));
     await tester.pumpAndSettle();
 
-    expect(find.text(t('instDone')), findsOneWidget);
+    expect(find.text(t('instDoneFire')), findsOneWidget);
     expect(adb.log, [
       'close',
       'connect 10.0.0.7:5555',
@@ -254,7 +259,7 @@ void main() {
       adb.log[i + 1],
       'appops set tv.ilona.app ACCESS_RESTRICTED_SETTINGS allow',
     );
-    expect(find.text(t('instDone')), findsOneWidget);
+    expect(find.text(t('instDoneFire')), findsOneWidget);
   });
 
   testWidgets('an existing package says Update and still installs', (
@@ -267,7 +272,7 @@ void main() {
     await tester.tap(find.text(t('instUpdate')));
     await tester.pumpAndSettle();
     expect(adb.installed, endsWith('ilonatv-arm64-v8a.apk'));
-    expect(find.text(t('instDone')), findsOneWidget);
+    expect(find.text(t('instDoneFire')), findsOneWidget);
   });
 
   testWidgets('the Google TV choice shows the README pointer', (tester) async {
@@ -382,6 +387,63 @@ void main() {
     await tester.tap(find.text(t('installOnTv')));
     await tester.pumpAndSettle();
     expect(find.byType(InstallFlow), findsOneWidget);
+  });
+
+  testWidgets('Android TV ends with its own menu path', (tester) async {
+    final adb = FakeAdb();
+    await pump(tester, adb);
+    await toConnect(tester, 'instAndroidTv');
+    await tester.tap(find.text(t('instInstall')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('instDoneAndroid')), findsOneWidget);
+    expect(find.text(t('instDoneFire')), findsNothing);
+  });
+
+  testWidgets('a TV below Android 9 stops without Retry', (tester) async {
+    final adb = FakeAdb(sdk: '27');
+    await pump(tester, adb);
+    await toConnect(tester);
+    expect(find.text(t('instOldAndroid')), findsOneWidget);
+    expect(find.text(t('instInstall')), findsNothing);
+    expect(find.text(t('retry')), findsNothing);
+  });
+
+  for (final (code, key) in [
+    ('INSTALL_FAILED_UPDATE_INCOMPATIBLE', 'instSignedOther'),
+    ('INSTALL_FAILED_VERSION_DOWNGRADE', 'instDowngrade'),
+    ('INSTALL_FAILED_OLDER_SDK', 'instOldAndroid'),
+  ]) {
+    testWidgets('$code has its own message and no Retry', (tester) async {
+      final adb = FakeAdb()
+        ..installError = 'Failure [$code: Package tv.ilona.app x]';
+      await pump(tester, adb);
+      await toConnect(tester);
+      await tester.tap(find.text(t('instInstall')));
+      await tester.pumpAndSettle();
+      expect(find.text(t(key)), findsOneWidget);
+      expect(find.text(t('retry')), findsNothing);
+    });
+  }
+
+  testWidgets('a TV this phone is already paired with is not paired again', (
+    tester,
+  ) async {
+    await tvs.savePaired(
+      Tv(host: '10.0.0.7', port: 8642, name: 'Living'),
+      'old',
+    );
+    client.infoResult = const Ok(
+      TvInfo(protocol: 1, version: '1', inFront: true, launcherMode: true),
+    );
+    final adb = FakeAdb();
+    await pump(tester, adb);
+    await toConnect(tester);
+    await tester.tap(find.text(t('instInstall')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('instDoneFire')), findsOneWidget);
+    expect(adb.log.where((l) => l.startsWith('content query')), isEmpty);
+    expect(client.secret, isNull);
+    expect(tvs.all.single.token, 'old');
   });
 
   group('scan', () {

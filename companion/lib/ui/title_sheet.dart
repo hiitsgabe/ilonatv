@@ -132,7 +132,8 @@ class _TitleSheetState extends State<TitleSheet> {
     if (r is Ok<bool>) {
       messenger.showSnackBar(SnackBar(content: Text(t('openingOnTv'))));
     }
-    if (nav.mounted) nav.pop();
+    // Only this sheet's own route: if it was dismissed meanwhile, a pop would close the remote.
+    if (mounted) nav.pop();
     await widget.onResult(r);
   }
 
@@ -212,7 +213,12 @@ class _TitleSheetState extends State<TitleSheet> {
               child: FilledButton.icon(
                 key: const Key('watch'),
                 onPressed: _busy ? null : _watch,
-                icon: const Icon(Icons.tv),
+                icon: _busy
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.tv),
                 label: Text(
                   t('watchOnTv'),
                   style: const TextStyle(

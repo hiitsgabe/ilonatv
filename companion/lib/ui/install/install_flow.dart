@@ -16,6 +16,8 @@ import 'scan.dart';
 const readmeUrl = 'https://github.com/hiitsgabe/ilonatv#get-started';
 const _pkg = 'tv.ilona.app';
 const _adbPort = 5555;
+// IlonaTv's minSdk (android/app/build.gradle.kts).
+const _minSdk = 28;
 const _steps = 9;
 
 enum _Kind { fireTv, androidTv, googleTv }
@@ -235,6 +237,7 @@ class _InstallFlowState extends State<InstallFlow> {
     }
     final [sdk, abis, pkgs] = out;
     _sdk = int.tryParse(sdk.trim()) ?? 0;
+    if (_sdk < _minSdk) return _fail(t('instOldAndroid'), retry: false);
     _abi = pickAbi(abis);
     if (_abi == null) {
       return _fail(
@@ -287,7 +290,16 @@ class _InstallFlowState extends State<InstallFlow> {
     }
     if (_stale(g)) return;
     if (timedOut) return _fail(t('instTooLong'));
-    if (err != null) return _fail(t('instFailed').replaceAll('{why}', err));
+    if (err != null) {
+      for (final (code, key) in [
+        ('INSTALL_FAILED_UPDATE_INCOMPATIBLE', 'instSignedOther'),
+        ('INSTALL_FAILED_VERSION_DOWNGRADE', 'instDowngrade'),
+        ('INSTALL_FAILED_OLDER_SDK', 'instOldAndroid'),
+      ]) {
+        if (err.contains(code)) return _fail(t(key), retry: false);
+      }
+      return _fail(t('instFailed').replaceAll('{why}', err));
+    }
     return _perms(g);
   }
 
@@ -333,6 +345,15 @@ class _InstallFlowState extends State<InstallFlow> {
       up = r is! Unreachable;
     }
     if (!up) return _fail(t('instNotStarted'));
+    // Pairing again would add this phone to the TV's list a second time.
+    final saved = widget.tvs.all
+        .where((t) => t.host == _host && t.token != null)
+        .firstOrNull;
+    if (saved != null && await widget.clientFor(saved).info() is Ok) {
+      if (_stale(g)) return;
+      return _done();
+    }
+    if (_stale(g)) return;
     final q = await _sh('content query --uri content://$_pkg.pairing/secret');
     if (_stale(g)) return;
     if (q.exitCode == -1) return _fail(t('instAdbLost'));
@@ -349,11 +370,13 @@ class _InstallFlowState extends State<InstallFlow> {
       r.value,
     );
     if (_stale(g)) return;
-    setState(() {
-      _step = 8;
-      _busy = false;
-    });
+    _done();
   }
+
+  void _done() => setState(() {
+    _step = 8;
+    _busy = false;
+  });
 
   Future<void> _openRemote() async {
     await _adb.close();
@@ -531,7 +554,10 @@ class _InstallFlowState extends State<InstallFlow> {
       default:
         return (
           [
-            _Note(t('instDone'), big: true),
+            _Note(
+              t(_kind == _Kind.fireTv ? 'instDoneFire' : 'instDoneAndroid'),
+              big: true,
+            ),
             if (_missed.isNotEmpty)
               _Note(
                 t('instPermsMissed').replaceAll('{list}', _missed.join(', ')),
