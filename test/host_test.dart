@@ -1,4 +1,5 @@
 import 'package:elimor/host.dart';
+import 'package:elimor_protocol/elimor_protocol.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,6 +19,35 @@ void main() {
   }
 
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+  test('injectKey sends the key name; false without a reply', () async {
+    reply(true);
+    expect(await Host.injectKey(RemoteKey.left), isTrue);
+    expect(received.method, 'injectKey');
+    expect(received.arguments, {'key': 'left'});
+    reply(null);
+    expect(await Host.injectKey(RemoteKey.ok), isFalse);
+  });
+
+  test('injectKey home goes home in Dart, not over the channel', () async {
+    received = const MethodCall('none');
+    reply(false);
+    var went = 0;
+    Host.onGoHome = () => went++;
+    expect(await Host.injectKey(RemoteKey.home), isTrue);
+    Host.goHome();
+    expect(went, 2);
+    expect(received.method, 'none');
+  });
+
+  test('advertise and unadvertise', () async {
+    reply(null);
+    await Host.advertise(8642, 'x');
+    expect(received.method, 'advertise');
+    expect(received.arguments, {'port': 8642, 'name': 'x'});
+    await Host.unadvertise();
+    expect(received.method, 'unadvertise');
+  });
 
   test('listApps maps channel reply', () async {
     reply([

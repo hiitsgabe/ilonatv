@@ -18,6 +18,8 @@ import android.media.MediaScannerConnection
 import android.media.tv.TvInputInfo
 import android.media.tv.TvInputManager
 import android.net.Uri
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.os.Build
 import android.os.Debug
 import android.os.Environment
@@ -26,6 +28,7 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import android.view.KeyEvent
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
@@ -224,6 +227,27 @@ object HostChannel {
                     // Only once it opened: a failed start leaves Elimor up and nothing would clear the flag.
                     if (opened && call.argument<Boolean>("pause") == true) HomeWatcher.pausedForSettings = true
                     result.success(opened)
+                }
+                "injectKey" -> {
+                    val code = KEYS[call.argument<String>("key")]
+                    val target = MainActivity.resumed()
+                    if (code == null || target == null) {
+                        result.success(false)
+                    } else {
+                        main.post {
+                            target.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, code))
+                            target.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, code))
+                        }
+                        result.success(true)
+                    }
+                }
+                "advertise" -> {
+                    advertise(activity, call.argument<Int>("port") ?: 0, call.argument<String>("name") ?: "Elimor")
+                    result.success(null)
+                }
+                "unadvertise" -> {
+                    unadvertise(activity)
+                    result.success(null)
                 }
                 "processMemoryKb" -> result.success(processMemoryKb())
                 "deviceMemoryKb" -> result.success(ActivityManager.MemoryInfo().also {
@@ -499,6 +523,52 @@ object HostChannel {
         if (pkg != null) intent.setPackage(pkg)
         return start(ctx, intent)
     }
+
+    private val KEYS = mapOf(
+        "up" to KeyEvent.KEYCODE_DPAD_UP,
+        "down" to KeyEvent.KEYCODE_DPAD_DOWN,
+        "left" to KeyEvent.KEYCODE_DPAD_LEFT,
+        "right" to KeyEvent.KEYCODE_DPAD_RIGHT,
+        "ok" to KeyEvent.KEYCODE_DPAD_CENTER,
+        "back" to KeyEvent.KEYCODE_BACK,
+    )
+
+    private var registration: NsdManager.RegistrationListener? = null
+
+    private fun advertise(ctx: Context, port: Int, name: String) {
+        unadvertise(ctx)
+        val info = NsdServiceInfo().apply {
+            serviceName = name
+            serviceType = "_elimor._tcp"
+            setPort(port)
+            setAttribute("v", "1")
+            setAttribute("model", Build.MODEL)
+        }
+        val listener = object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(info: NsdServiceInfo) { Log.i(TAG, "advertising ${info.serviceName}") }
+            override fun onRegistrationFailed(info: NsdServiceInfo, code: Int) {
+                Log.w(TAG, "advertise failed: $code")
+                if (registration === this) registration = null
+            }
+            override fun onServiceUnregistered(info: NsdServiceInfo) {}
+            override fun onUnregistrationFailed(info: NsdServiceInfo, code: Int) {}
+        }
+        registration = listener
+        runCatching {
+            nsd(ctx).registerService(info, NsdManager.PROTOCOL_DNS_SD, listener)
+        }.onFailure {
+            Log.w(TAG, "advertise failed", it)
+            registration = null
+        }
+    }
+
+    private fun unadvertise(ctx: Context) {
+        val l = registration ?: return
+        registration = null
+        runCatching { nsd(ctx).unregisterService(l) }
+    }
+
+    private fun nsd(ctx: Context) = ctx.applicationContext.getSystemService(Context.NSD_SERVICE) as NsdManager
 
     private fun processMemoryKb(): Int = Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }.totalPss
 }

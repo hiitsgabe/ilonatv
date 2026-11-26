@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import java.lang.ref.WeakReference
 
 class MainActivity : FlutterActivity() {
     // Whether Flutter has drawn into the current surface. Per activity: a new one in a warm process starts without.
@@ -16,6 +17,9 @@ class MainActivity : FlutterActivity() {
         private const val MIC_REQUEST = 7
         /** Asked once per process: a person who said no is not nagged on every resume. */
         private var micAsked = false
+        private var resumedRef: WeakReference<MainActivity>? = null
+
+        fun resumed(): MainActivity? = resumedRef?.get()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +34,7 @@ class MainActivity : FlutterActivity() {
 
     override fun onResume() {
         super.onResume()
+        resumedRef = WeakReference(this)
         HomeWatcher.cancelClick()
         HomeWatcher.pausedForSettings = false
         // A surface that survived the pause brings no new first frame.
@@ -57,6 +62,7 @@ class MainActivity : FlutterActivity() {
 
     override fun onPause() {
         super.onPause()
+        if (resumed() === this) resumedRef = null
         flutterEngine?.let { HostChannel.watchInputs(this, it.dartExecutor.binaryMessenger, false) }
     }
 

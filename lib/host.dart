@@ -1,3 +1,4 @@
+import 'package:elimor_protocol/elimor_protocol.dart';
 import 'package:flutter/services.dart';
 
 import 'launcher_setup.dart';
@@ -118,6 +119,23 @@ class Host {
     _inputsChanged = f;
     _listen();
   }
+
+  static void goHome() => _goHome?.call();
+
+  /// Sends [key] into Elimor's window; false when no activity is resumed.
+  static Future<bool> injectKey(RemoteKey key) async {
+    if (key == RemoteKey.home) {
+      goHome();
+      return true;
+    }
+    return _bool('injectKey', {'key': key.name});
+  }
+
+  static Future<void> advertise(int port, String name) =>
+      _channel.invokeMethod<void>('advertise', {'port': port, 'name': name});
+
+  static Future<void> unadvertise() =>
+      _channel.invokeMethod<void>('unadvertise');
 
   static Future<bool> _bool(String method, [Object? args]) async =>
       await _channel.invokeMethod<bool>(method, args) ?? false;
