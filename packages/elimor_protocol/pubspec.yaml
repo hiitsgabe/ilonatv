@@ -1,0 +1,10 @@
+name: elimor_protocol
+description: The shapes Elimor and the Companion app share.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.2
+
+dev_dependencies:
+  test: ^1.25.0
