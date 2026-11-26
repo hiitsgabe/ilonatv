@@ -6,20 +6,25 @@ import android.content.Context
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Binder
 
 /**
  * The pairing secret for the companion's installer, read over adb with
  * `content query --uri content://tv.ilona.app.pairing/secret`, which prints `Row: 0 secret=<32 hex>`
  * (`secret=NULL` before IlonaTv's first launch has made one). The manifest guards it with DUMP, which the adb shell
- * holds and ordinary apps cannot. Pairing with the secret renews it, so each read pairs once.
+ * holds and ordinary apps cannot; any caller but the shell or root (an app granted DUMP over adb, IlonaTv itself) gets
+ * no row. Pairing with the secret renews it, so each read pairs once.
  */
 class PairingProvider : ContentProvider() {
     override fun onCreate() = true
 
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor {
+        val cursor = MatrixCursor(arrayOf("secret"))
+        // Process.SHELL_UID and ROOT_UID, which are API 29; minSdk is 28.
+        if (Binder.getCallingUid() != 2000 && Binder.getCallingUid() != 0) return cursor
         val secret = context!!.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             .getString("flutter.companionSecret", null)
-        return MatrixCursor(arrayOf("secret")).apply { addRow(arrayOf(secret)) }
+        return cursor.apply { addRow(arrayOf(secret)) }
     }
 
     override fun getType(uri: Uri): String? = null
