@@ -94,6 +94,10 @@ class ElimorApi implements CompanionApi {
       return _badRequest;
     }
     if (item.type case MediaType.game || MediaType.input) return _badRequest;
+    // Android blocks a background app's start unless it is the home app.
+    if (!companionState.inFront && !settings.fireTvMode) {
+      return (409, {'error': 'notInFront'});
+    }
     final opened = await openItem(
       item,
       settings,

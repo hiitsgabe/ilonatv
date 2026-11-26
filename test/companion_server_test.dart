@@ -142,6 +142,7 @@ void main() {
         'version': kVersion,
         'step': null,
         'inFront': true,
+        'launcherMode': false,
       });
     },
   );
@@ -202,6 +203,7 @@ void main() {
     final first = await next(it);
     expect(first.type, 'state');
     expect(first.data['step'], isNull);
+    expect(first.data['launcherMode'], isFalse);
     companionState.setStep(SetupStep.tmdb);
     final second = await next(it);
     expect(second.type, 'state');

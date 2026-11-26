@@ -38,6 +38,20 @@ void main() {
     expect(p.isValid(token!), isTrue);
   });
 
+  test('a secret pairs once, and the QR shows the next', () async {
+    final (s, p) = await make();
+    final old = s.companionSecret;
+    var calls = 0;
+    p.addListener(() => calls++);
+    expect(await p.pair(PairRequest(secret: old, name: 'Mac')), isNotNull);
+    expect(p.secret, isNot(old));
+    expect(p.secret, matches(RegExp(r'^[0-9a-f]{32}$')));
+    expect(calls, 1);
+    expect((await Settings.load()).companionSecret, p.secret);
+    expect(await p.pair(PairRequest(secret: old, name: 'Mac')), isNull);
+    expect(s.companionDevices, hasLength(1));
+  });
+
   test('a wrong secret does not pair', () async {
     final (_, p) = await make();
     expect(await p.pair(PairRequest(secret: 'x' * 32, name: 'Mac')), isNull);
@@ -89,6 +103,16 @@ void main() {
     expect(p.isValid(token), isFalse);
     expect(calls, 1);
     expect((await Settings.load()).companionDevices, isEmpty);
+  });
+
+  test('remove renews the secret', () async {
+    final (s, p) = await make();
+    final token = (await p.pair(PairRequest(code: p.code, name: 'A')))!;
+    final old = s.companionSecret;
+    await p.remove(token);
+    expect(p.secret, isNot(old));
+    expect((await Settings.load()).companionSecret, p.secret);
+    expect(await p.pair(PairRequest(secret: old, name: 'A')), isNull);
   });
 
   test(

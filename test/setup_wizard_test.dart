@@ -333,21 +333,21 @@ void main() {
     ]);
   });
 
-  testWidgets('the welcome step offers setup from the phone; the next steps '
-      'say where', (tester) async {
+  testWidgets('a first run offers setup from the phone up to the TMDB step', (
+    tester,
+  ) async {
     await _app(tester, {});
-    expect(find.byType(QrCode), findsOneWidget);
-    expect(find.text(t('setupFromPhone')), findsOneWidget);
-    expect(find.text(_pairing.code), findsOneWidget);
-    expect(_pairing.codeOffered, isTrue);
-    await _press(tester, 'Continue');
+    for (final step in ['Elimor', t('wizLocation'), t('wizTmdb')]) {
+      expect(find.text(step), findsWidgets);
+      expect(find.byType(QrCode), findsOneWidget, reason: step);
+      expect(find.text(t('setupFromPhone')), findsOneWidget, reason: step);
+      expect(find.text(_pairing.code), findsOneWidget, reason: step);
+      expect(_pairing.codeOffered, isTrue, reason: step);
+      expect(find.text(t('useYourPhone')), findsNothing, reason: step);
+      await _press(tester, 'Continue');
+    }
     expect(_pairing.codeOffered, isFalse);
     expect(find.byType(QrCode), findsNothing);
-    expect(find.text(t('useYourPhone')), findsOneWidget);
-    await _press(tester, 'Continue');
-    expect(find.text(t('useYourPhone')), findsOneWidget);
-    await _press(tester, 'Continue');
-    expect(find.text(t('useYourPhone')), findsNothing);
   });
 
   testWidgets('the wizard publishes its step', (tester) async {
@@ -381,6 +381,11 @@ void main() {
     expect(_row('Run setup again'), findsOneWidget);
 
     await _press(tester, 'Run setup again');
+    expect(find.byType(QrCode), findsOneWidget);
+    await _press(tester, 'Continue');
+    // Settings is a Back away from a re-run, so it says where to go there.
+    expect(find.byType(QrCode), findsNothing);
+    expect(find.text(t('useYourPhone')), findsOneWidget);
     await _toDone(tester);
     expect(find.text(t('wizDoneAgainHelp')), findsOneWidget);
     await _press(tester, 'Done');

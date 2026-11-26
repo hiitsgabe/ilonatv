@@ -66,6 +66,7 @@ class Pairing extends ChangeNotifier {
     }
     final token = randomHex(_random);
     settings.companionDevices[token] = r.name;
+    if (bySecret) settings.companionSecret = randomHex(_random);
     await settings.save();
     notifyListeners();
     return token;
@@ -81,6 +82,8 @@ class Pairing extends ChangeNotifier {
 
   Future<void> remove(String token) async {
     settings.companionDevices.remove(token);
+    // A photo of the QR would otherwise pair the removed phone again.
+    settings.companionSecret = randomHex(_random);
     await settings.save();
     notifyListeners();
   }

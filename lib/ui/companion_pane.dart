@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:elimor_protocol/elimor_protocol.dart' show kCompanionPort;
 import 'package:flutter/material.dart';
 
@@ -29,6 +31,8 @@ class CompanionPane extends StatefulWidget {
 
 class _CompanionPaneState extends State<CompanionPane> {
   late final AppLifecycleListener _lifecycle;
+  final _newQr = FocusNode();
+  final _rows = <String, FocusNode>{};
 
   @override
   void initState() {
@@ -44,7 +48,25 @@ class _CompanionPaneState extends State<CompanionPane> {
   void dispose() {
     _lifecycle.dispose();
     widget.pairing.withdrawCode();
+    _newQr.dispose();
+    for (final n in _rows.values) {
+      n.dispose();
+    }
     super.dispose();
+  }
+
+  /// Focus, whose button goes, lands on the row that took this one's place,
+  /// the one above, or New QR: never on another Remove, which OK would press.
+  Future<void> _remove(String token) async {
+    final p = widget.pairing;
+    final i = p.settings.companionDevices.keys.toList().indexOf(token);
+    await p.remove(token);
+    final left = p.settings.companionDevices.keys.toList();
+    final next = left.isEmpty ? _newQr : _rows[left[min(i, left.length - 1)]];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _rows.remove(token)?.dispose();
+      if (mounted && next?.context != null) next!.requestFocus();
+    });
   }
 
   @override
@@ -104,6 +126,7 @@ class _CompanionPaneState extends State<CompanionPane> {
               SettingsRow(
                 title: t('newQr'),
                 valueIcon: Icons.refresh,
+                focusNode: _newQr,
                 onPressed: p.renewSecret,
               ),
             ],
@@ -114,12 +137,14 @@ class _CompanionPaneState extends State<CompanionPane> {
             children: [
               for (final MapEntry(key: token, value: name) in devices.entries)
                 SettingsRow(
+                  key: ValueKey(token),
                   title: name,
+                  focusNode: _rows.putIfAbsent(token, FocusNode.new),
                   extras: [
                     RoundIconButton(
                       Icons.delete_outline,
                       label: t('remove'),
-                      onPressed: () => p.remove(token),
+                      onPressed: () => _remove(token),
                     ),
                   ],
                 ),

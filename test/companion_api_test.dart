@@ -245,6 +245,30 @@ void main() {
     expect(_host, contains('open'));
   });
 
+  test(
+    'open while another app is in front is 409, unless Launcher mode',
+    () async {
+      await _setUp();
+      companionState.setInFront(false);
+      final (status, body) = await _call(
+        'POST',
+        '/api/open',
+        body: {'item': _item},
+      );
+      expect(status, 409);
+      expect(body, {'error': 'notInFront'});
+      expect(_host, isEmpty);
+      _s.fireTvMode = true;
+      final (on, opened) = await _call(
+        'POST',
+        '/api/open',
+        body: {'item': _item},
+      );
+      expect(on, 200);
+      expect(opened, {'opened': true});
+    },
+  );
+
   test('open an input is 400 and opens nothing', () async {
     await _setUp();
     for (final type in ['input', 'game']) {

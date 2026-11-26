@@ -211,14 +211,22 @@ class _SetupWizardState extends State<SetupWizard> {
     ),
   };
 
+  /// The QR and the code, on the welcome step and, on a first run, the two
+  /// steps with typing; a re-run's hint points to Settings instead.
+  bool get _phone =>
+      _at == _Step.welcome ||
+      !_rerun && (_at == _Step.location || _at == _Step.tmdb);
+
   Widget _pane() {
     final s = widget.settings;
     final sources = widget.sources;
     final apps = _apps ?? const {};
-    final usePhone = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Text(t('useYourPhone'), style: settingsNote),
-    );
+    final usePhone = _phone
+        ? null
+        : Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(t('useYourPhone'), style: settingsNote),
+          );
     // Until the platform answers, OK on an app row would offer nothing.
     if (_apps == null && (_at == _Step.titles || _at == _Step.videos)) {
       return const Text('…', style: settingsNote);
@@ -229,15 +237,14 @@ class _SetupWizardState extends State<SetupWizard> {
           header: t('language'),
           children: [LanguagePane(s, sources)],
         ),
-        if (_ipKnown) CompanionPane(widget.pairing, _ip, compact: true),
       ]),
       _Step.location => settingsGroups([
         WeatherPane(s, sources.weather),
-        usePhone,
+        ?usePhone,
       ]),
       _Step.tmdb => settingsGroups([
         TmdbPane(s, sources.tmdb),
-        usePhone,
+        ?usePhone,
         const TmdbGuide(),
       ]),
       _Step.titles => settingsGroups([
@@ -374,6 +381,7 @@ class _SetupWizardState extends State<SetupWizard> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
+                                spacing: 16,
                                 children: [
                                   Focus(
                                     focusNode: _content,
@@ -384,6 +392,14 @@ class _SetupWizardState extends State<SetupWizard> {
                                       child: _pane(),
                                     ),
                                   ),
+                                  // Outside the step's subtree, so the code
+                                  // stays offered from one step to the next.
+                                  if (_phone && _ipKnown)
+                                    CompanionPane(
+                                      widget.pairing,
+                                      _ip,
+                                      compact: true,
+                                    ),
                                 ],
                               ),
                             ),

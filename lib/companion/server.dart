@@ -77,6 +77,7 @@ class CompanionServer {
   Map<String, dynamic> get _state => {
     'step': companionState.step?.name,
     'inFront': companionState.inFront,
+    'launcherMode': pairing.settings.fireTvMode,
   };
 
   void _onState() {

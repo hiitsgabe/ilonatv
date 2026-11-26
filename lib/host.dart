@@ -108,7 +108,7 @@ class Host {
 
   /// Called when Android sends Elimor back to its home screen: Home pressed,
   /// or the Fire TV curtain relaunching it (MainActivity.onNewIntent).
-  static set onGoHome(void Function() f) {
+  static set onGoHome(void Function()? f) {
     _goHome = f;
     _listen();
   }
@@ -122,11 +122,12 @@ class Host {
 
   static void goHome() => _goHome?.call();
 
-  /// Sends [key] into Elimor's window; false when no activity is resumed.
+  /// Sends [key] into Elimor's window; false when no activity is resumed, or
+  /// for Home before the home screen exists (the first run's setup).
   static Future<bool> injectKey(RemoteKey key) async {
     if (key == RemoteKey.home) {
       goHome();
-      return true;
+      return _goHome != null;
     }
     return _bool('injectKey', {'key': key.name});
   }

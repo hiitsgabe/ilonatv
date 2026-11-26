@@ -26,7 +26,7 @@ The stock TV homes push ads and whatever their store wants you to watch. Elimor 
 - **Takes over the Home button**, even on Fire TV, where the Amazon home can't normally be replaced.
 - **Set up in minutes.** A first-run wizard walks you through everything. Sign-ins happen on your phone, so there's no typing passwords with a remote.
 - **Your phone as a remote, coming soon.** The Elimor Companion app will pair with the QR code in Settings > Companion, for typing searches and keys on your phone instead of the remote.
-- **Private.** No account, no server, no analytics. Everything stays on the TV.
+- **Private.** No cloud server, no account, no analytics. Everything stays on the TV.
 
 Plus the weather, the TV's HDMI inputs with console control over HDMI-CEC (Fire TV Edition TVs), a voice assistant powered by your own Gemini key (Fire TV), and English and Portuguese.
 
@@ -102,7 +102,7 @@ It runs day to day on a Fire TV Stick 4K (Fire OS 7) and a Fire TV Edition TV (F
 <details>
 <summary><b>Is there a phone app?</b></summary>
 
-The Elimor Companion is coming soon. Elimor already answers it on your home network, and only there: Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
+The Elimor Companion is coming soon. Elimor already answers it, only on the local network, never from the internet; Elimor answers only devices you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
 </details>
 
 <details>

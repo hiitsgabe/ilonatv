@@ -29,6 +29,11 @@ void main() {
     expect(await Host.injectKey(RemoteKey.ok), isFalse);
   });
 
+  test('injectKey home is false with no home to go to', () async {
+    Host.onGoHome = null;
+    expect(await Host.injectKey(RemoteKey.home), isFalse);
+  });
+
   test('injectKey home goes home in Dart, not over the channel', () async {
     received = const MethodCall('none');
     reply(false);
