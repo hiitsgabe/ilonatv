@@ -45,16 +45,26 @@ class Tvs extends ChangeNotifier {
     final raw = (await SharedPreferences.getInstance()).getString(_key);
     _paired.clear();
     if (raw != null) {
-      for (final e in jsonDecode(raw) as List) {
-        final m = e as Map<String, dynamic>;
-        final tv = Tv(
-          host: m['host'] as String,
-          port: m['port'] as int,
-          name: m['name'] as String,
-          token: m['token'] as String?,
-          found: _seen.containsKey(m['host']),
-        );
-        _paired[tv.host] = tv;
+      try {
+        for (final e in jsonDecode(raw) as List) {
+          try {
+            final m = e as Map<String, dynamic>;
+            final tv = Tv(
+              host: m['host'] as String,
+              port: m['port'] as int,
+              name: m['name'] as String,
+              token: m['token'] as String?,
+              found: _seen.containsKey(m['host']),
+            );
+            _paired[tv.host] = tv;
+          } on TypeError {
+            continue;
+          }
+        }
+      } on FormatException {
+        _paired.clear();
+      } on TypeError {
+        _paired.clear();
       }
     }
     notifyListeners();

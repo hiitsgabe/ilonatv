@@ -32,7 +32,10 @@ class Nsd(ctx: Context, private val channel: MethodChannel) {
         val l = object : NsdManager.DiscoveryListener {
             override fun onDiscoveryStarted(type: String) {}
             override fun onDiscoveryStopped(type: String) {}
-            override fun onStartDiscoveryFailed(type: String, code: Int) { Log.w(TAG, "discovery failed: $code") }
+            override fun onStartDiscoveryFailed(type: String, code: Int) {
+                Log.w(TAG, "discovery failed: $code")
+                main.post { if (listener === this) { listener = null; releaseLock() } }
+            }
             override fun onStopDiscoveryFailed(type: String, code: Int) {}
             override fun onServiceFound(info: NsdServiceInfo) = main.post { resolve(info) }.let {}
             override fun onServiceLost(info: NsdServiceInfo) = main.post { lost(info.serviceName) }.let {}
@@ -60,6 +63,7 @@ class Nsd(ctx: Context, private val channel: MethodChannel) {
     }
 
     private fun resolve(info: NsdServiceInfo) {
+        if (listener == null) return
         if (Build.VERSION.SDK_INT >= 34) resolveWithCallback(info) else {
             queue.addLast(info)
             next()
@@ -76,7 +80,8 @@ class Nsd(ctx: Context, private val channel: MethodChannel) {
             override fun onServiceInfoCallbackUnregistered() {}
         }
         callbacks[name] = cb
-        nsd.registerServiceInfoCallback(info, { main.post(it) }, cb)
+        runCatching { nsd.registerServiceInfoCallback(info, { main.post(it) }, cb) }
+            .onFailure { Log.w(TAG, "resolve failed", it); callbacks.remove(name) }
     }
 
     // resolveService allows one at a time (FAILURE_ALREADY_ACTIVE otherwise); deprecated from API 34, used only below it.
@@ -85,13 +90,15 @@ class Nsd(ctx: Context, private val channel: MethodChannel) {
         if (resolving) return
         val info = queue.removeFirstOrNull() ?: return
         resolving = true
-        nsd.resolveService(info, object : NsdManager.ResolveListener {
+        val rl = object : NsdManager.ResolveListener {
             override fun onResolveFailed(i: NsdServiceInfo, code: Int) { Log.w(TAG, "resolve failed: $code"); done() }
             override fun onServiceResolved(i: NsdServiceInfo) {
                 main.post { found(i, listOfNotNull(i.host)); done() }
             }
             private fun done() = main.post { resolving = false; next() }.let {}
-        })
+        }
+        runCatching { nsd.resolveService(info, rl) }
+            .onFailure { Log.w(TAG, "resolve failed", it); resolving = false; next() }
     }
 
     private fun found(info: NsdServiceInfo, addresses: List<InetAddress>) {

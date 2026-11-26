@@ -87,4 +87,27 @@ void main() {
     await tvs.forget('10.0.0.1');
     expect(tvs.all.single.token, isNull);
   });
+
+  test('unparseable saved data loads as no TVs', () async {
+    SharedPreferences.setMockInitialValues({'tvs': 'x{'});
+    final tvs = Tvs();
+    await tvs.load();
+    expect(tvs.all, isEmpty);
+  });
+
+  test('a bad entry is skipped, the good ones stay', () async {
+    SharedPreferences.setMockInitialValues({
+      'tvs': '[{"host":"h"},5,{"host":"10.0.0.9","port":8642,"name":"N","token":"t"}]',
+    });
+    final tvs = Tvs();
+    await tvs.load();
+    expect(tvs.all.map((t) => t.host), ['10.0.0.9']);
+  });
+
+  test('a non-list value loads as no TVs', () async {
+    SharedPreferences.setMockInitialValues({'tvs': '{"a":1}'});
+    final tvs = Tvs();
+    await tvs.load();
+    expect(tvs.all, isEmpty);
+  });
 }
