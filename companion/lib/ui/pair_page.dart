@@ -94,7 +94,7 @@ class _PairPageState extends State<PairPage> {
         final paired = _tvFor(tv.host, tv.port);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => RemotePage(tv: paired, client: widget.clientFor(paired)),
+            builder: (_) => RemotePage(tv: paired, client: widget.clientFor(paired), tvs: widget.tvs),
           ),
         );
       case Unpaired():

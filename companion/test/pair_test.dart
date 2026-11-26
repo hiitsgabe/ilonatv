@@ -18,6 +18,12 @@ class FakeClient extends TvClient {
     this.code = code;
     return result;
   }
+
+  @override
+  Stream<TvInfo> events() => const Stream.empty();
+
+  @override
+  Future<TvResult<TvInfo>> info() async => const Unreachable('test');
 }
 
 void main() {

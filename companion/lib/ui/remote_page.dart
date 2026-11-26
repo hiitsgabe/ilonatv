@@ -1,17 +1,449 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:ilonatv_protocol/ilonatv_protocol.dart';
+
+import '../i18n.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
 
-class RemotePage extends StatelessWidget {
-  const RemotePage({super.key, required this.tv, required this.client});
+class RemotePage extends StatefulWidget {
+  const RemotePage({super.key, required this.tv, required this.client, required this.tvs});
 
   final Tv tv;
   final TvClient client;
+  final Tvs tvs;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(tv.label)),
-    body: Center(child: Text(tv.label)),
+  State<RemotePage> createState() => _RemotePageState();
+}
+
+class _RemotePageState extends State<RemotePage> {
+  StreamSubscription<TvInfo>? _sub;
+  Timer? _retry;
+  TvInfo? _info;
+  bool _unreachable = false;
+  bool? _notInFront;
+
+  @override
+  void initState() {
+    super.initState();
+    _connect();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    _retry?.cancel();
+    super.dispose();
+  }
+
+  void _connect() {
+    _retry?.cancel();
+    _sub?.cancel();
+    _sub = widget.client.events().listen(
+      (i) {
+        if (!mounted) return;
+        setState(() {
+          _info = i;
+          _unreachable = false;
+        });
+      },
+      onDone: _ended,
+    );
+  }
+
+  // events() ends silently on a failed connect, so ask the TV why.
+  Future<void> _ended() async {
+    final r = await widget.client.info();
+    if (!mounted) return;
+    switch (r) {
+      case Unpaired():
+        await _forgotten();
+      case Ok(:final value):
+        setState(() {
+          _info = value;
+          _unreachable = false;
+        });
+        _retry = Timer(const Duration(seconds: 2), _connect);
+      default:
+        setState(() => _unreachable = true);
+    }
+  }
+
+  Future<void> _forgotten() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
+    await widget.tvs.forget(widget.tv.host);
+    messenger.showSnackBar(SnackBar(content: Text(t('removedPairAgain'))));
+    if (nav.mounted) nav.popUntil((r) => r.isFirst);
+  }
+
+  Future<void> _handle(TvResult r) async {
+    if (!mounted) return;
+    switch (r) {
+      case Unpaired():
+        await _forgotten();
+      case NotInFront(:final launcherMode):
+        setState(() => _notInFront = launcherMode);
+      case Unreachable():
+        setState(() => _unreachable = true);
+      case Ok():
+        if (_notInFront != null) setState(() => _notInFront = null);
+      default:
+    }
+  }
+
+  Future<void> _press(RemoteKey k) async {
+    HapticFeedback.lightImpact();
+    await _handle(await widget.client.key(k));
+  }
+
+  void _retryNow() {
+    setState(() => _unreachable = false);
+    _connect();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final step = _info?.step;
+    final setup = step == 'tmdb' || step == 'location';
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.tv.label),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: t('tabRemote')),
+              Tab(text: t('tabSearch')),
+              Tab(text: t('tabBrowse')),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            if (_unreachable)
+              _Banner(
+                text: t('cantReachTv').replaceAll('{name}', widget.tv.label),
+                action: TextButton(onPressed: _retryNow, child: Text(t('retry'))),
+              ),
+            if (_notInFront != null)
+              _Banner(
+                text: t('notInFront'),
+                sub: _notInFront == false ? t('launcherTip') : null,
+              ),
+            Expanded(
+              child: TabBarView(
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  Column(
+                    children: [
+                      if (setup)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: step == 'tmdb'
+                              ? _TmdbCard(client: widget.client, onResult: _handle)
+                              : _CityCard(client: widget.client, onResult: _handle),
+                        ),
+                      Expanded(child: _Pad(onKey: _press)),
+                    ],
+                  ),
+                  Center(child: Text(t('tabSearch'))),
+                  Center(child: Text(t('tabBrowse'))),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Banner extends StatelessWidget {
+  const _Banner({required this.text, this.sub, this.action});
+
+  final String text;
+  final String? sub;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+                if (sub != null) Text(sub!, style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+          ?action,
+        ],
+      ),
+    ),
+  );
+}
+
+class _TmdbCard extends StatefulWidget {
+  const _TmdbCard({required this.client, required this.onResult});
+
+  final TvClient client;
+  final Future<void> Function(TvResult) onResult;
+
+  @override
+  State<_TmdbCard> createState() => _TmdbCardState();
+}
+
+class _TmdbCardState extends State<_TmdbCard> {
+  final _key = TextEditingController();
+  String? _message;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _key.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(bool save) async {
+    final k = _key.text.trim();
+    if (k.isEmpty || _busy) return;
+    setState(() => _busy = true);
+    final r = await widget.client.setupTmdb(k, save: save);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _message = switch (r) {
+        Ok(:final value) => t(value),
+        _ => t('networkError'),
+      };
+    });
+    if (r is! Ok) await widget.onResult(r);
+  }
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _key,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(labelText: t('tmdbKey')),
+          ),
+          if (_message != null)
+            Padding(padding: const EdgeInsets.only(top: 8), child: Text(_message!)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: _busy ? null : () => _run(false), child: Text(t('test'))),
+              FilledButton(onPressed: _busy ? null : () => _run(true), child: Text(t('save'))),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _CityCard extends StatefulWidget {
+  const _CityCard({required this.client, required this.onResult});
+
+  final TvClient client;
+  final Future<void> Function(TvResult) onResult;
+
+  @override
+  State<_CityCard> createState() => _CityCardState();
+}
+
+class _CityCardState extends State<_CityCard> {
+  final _q = TextEditingController();
+  List<Place> _places = const [];
+
+  @override
+  void dispose() {
+    _q.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search() async {
+    final q = _q.text.trim();
+    if (q.isEmpty) return;
+    final r = await widget.client.cities(q);
+    if (!mounted) return;
+    if (r is Ok<List<Place>>) {
+      setState(() => _places = r.value);
+    } else {
+      await widget.onResult(r);
+    }
+  }
+
+  Future<void> _pick(Place p) async {
+    await widget.onResult(await widget.client.setCity(p));
+  }
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _q,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _search(),
+            decoration: InputDecoration(
+              labelText: t('city'),
+              hintText: t('searchCity'),
+              suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: _search),
+            ),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 160),
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final p in _places)
+                  ListTile(
+                    dense: true,
+                    title: Text(p.name),
+                    subtitle: Text([p.region, p.country].where((s) => s.isNotEmpty).join(', ')),
+                    onTap: () => _pick(p),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _Pad extends StatefulWidget {
+  const _Pad({required this.onKey});
+
+  final void Function(RemoteKey) onKey;
+
+  @override
+  State<_Pad> createState() => _PadState();
+}
+
+class _PadState extends State<_Pad> {
+  static const _swipe = 40.0;
+  Offset _drag = Offset.zero;
+
+  void _tap(Offset p, double size) {
+    final d = p - Offset(size / 2, size / 2);
+    if (d.distance < size * 0.2) {
+      HapticFeedback.selectionClick();
+      widget.onKey(RemoteKey.ok);
+    } else if (d.dx.abs() > d.dy.abs()) {
+      widget.onKey(d.dx > 0 ? RemoteKey.right : RemoteKey.left);
+    } else {
+      widget.onKey(d.dy > 0 ? RemoteKey.down : RemoteKey.up);
+    }
+  }
+
+  void _pan(Offset delta) {
+    _drag += delta;
+    if (_drag.distance < _swipe) return;
+    final d = _drag;
+    _drag = Offset.zero;
+    widget.onKey(
+      d.dx.abs() > d.dy.abs()
+          ? (d.dx > 0 ? RemoteKey.right : RemoteKey.left)
+          : (d.dy > 0 ? RemoteKey.down : RemoteKey.up),
+    );
+  }
+
+  Widget _round(IconData icon, String label, RemoteKey k) => Semantics(
+    label: label,
+    button: true,
+    child: Material(
+      color: const Color(0x2EFFFFFF),
+      shape: const CircleBorder(side: BorderSide(color: Color(0x66FFFFFF))),
+      child: InkResponse(
+        key: Key('key-${k.name}'),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onKey(k);
+        },
+        child: SizedBox(width: 64, height: 64, child: Icon(icon, size: 28)),
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, c) {
+      final size = (c.maxWidth < c.maxHeight - 130 ? c.maxWidth : c.maxHeight - 130)
+          .clamp(120.0, 340.0);
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          GestureDetector(
+            key: const Key('pad'),
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (d) => _tap(d.localPosition, size),
+            onPanStart: (_) => _drag = Offset.zero,
+            onPanUpdate: (d) => _pan(d.delta),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0x14FFFFFF),
+                border: Border.all(color: const Color(0x66FFFFFF), width: 2),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Align(alignment: Alignment(0, -0.78), child: Icon(Icons.keyboard_arrow_up, size: 40)),
+                  const Align(alignment: Alignment(0, 0.78), child: Icon(Icons.keyboard_arrow_down, size: 40)),
+                  const Align(alignment: Alignment(-0.78, 0), child: Icon(Icons.keyboard_arrow_left, size: 40)),
+                  const Align(alignment: Alignment(0.78, 0), child: Icon(Icons.keyboard_arrow_right, size: 40)),
+                  Container(
+                    width: size * 0.36,
+                    height: size * 0.36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.white54, width: 3),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 22),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _round(Icons.arrow_back, 'Back', RemoteKey.back),
+              const SizedBox(width: 48),
+              _round(Icons.home_outlined, 'Home', RemoteKey.home),
+            ],
+          ),
+          const SizedBox(height: 32),
+        ],
+      );
+    },
   );
 }

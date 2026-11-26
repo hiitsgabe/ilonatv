@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
 
   void _open(Tv tv) {
     final Widget page = tv.token != null
-        ? RemotePage(tv: tv, client: widget.clientFor(tv))
+        ? RemotePage(tv: tv, client: widget.clientFor(tv), tvs: widget.tvs)
         : PairPage(tvs: widget.tvs, clientFor: widget.clientFor, host: tv.host);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
