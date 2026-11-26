@@ -48,6 +48,7 @@ The Ilona TV Companion is an Android app that does the computer steps below from
 - **Install** Ilona TV on a Fire TV: it finds the TV on your Wi-Fi, asks for the "Allow debugging?" prompt, downloads the right APK from the latest [release](../../releases) (checking its SHA-256), installs it, grants the permissions Launcher mode and Processes need, and starts it.
 - **Pair** with the QR code or the code from Settings > Companion.
 - **Remote:** the keys, Back and Home, search and browse with Watch, and typing during the setup.
+- **Updates:** once per launch it checks the latest release and says when the Companion, or the TV you are controlling, has a newer version; Update on the remote runs the installer again.
 
 Download `ilonatv-companion.apk` from the [Releases](../../releases) page, sideload it on your phone, then choose "Install Ilona TV on a TV". To build it yourself, see [development](docs/development.md#companion).
 

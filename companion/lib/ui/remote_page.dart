@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../i18n.dart';
+import '../releases.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
 import 'browse.dart';
@@ -15,11 +16,17 @@ class RemotePage extends StatefulWidget {
     required this.tv,
     required this.client,
     required this.tvs,
+    this.updates,
+    this.onUpdate,
   });
 
   final Tv tv;
   final TvClient client;
   final Tvs tvs;
+  final UpdateCheck? updates;
+
+  /// Opens the installer, which sees the older version and offers Update.
+  final VoidCallback? onUpdate;
 
   @override
   State<RemotePage> createState() => _RemotePageState();
@@ -35,11 +42,15 @@ class _RemotePageState extends State<RemotePage> {
   bool _forgetting = false;
   final _queue = <RemoteKey>[];
   bool _sending = false;
+  String? _latest;
 
   @override
   void initState() {
     super.initState();
     widget.tvs.hold();
+    widget.updates?.latest.then((v) {
+      if (mounted && v != null) setState(() => _latest = v);
+    });
     _connect();
   }
 
@@ -138,6 +149,11 @@ class _RemotePageState extends State<RemotePage> {
   Widget build(BuildContext context) {
     final step = _info?.step;
     final setup = step == 'tmdb' || step == 'location';
+    final tvUpdate =
+        widget.onUpdate != null &&
+        _latest != null &&
+        _info != null &&
+        isOlder(_info!.version, _latest!);
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -159,6 +175,14 @@ class _RemotePageState extends State<RemotePage> {
                 action: TextButton(
                   onPressed: _retryNow,
                   child: Text(t('retry')),
+                ),
+              ),
+            if (tvUpdate)
+              _Banner(
+                text: t('tvUpdate').replaceAll('{version}', _latest!),
+                action: TextButton(
+                  onPressed: widget.onUpdate,
+                  child: Text(t('instUpdate')),
                 ),
               ),
             if (_notInFront != null)

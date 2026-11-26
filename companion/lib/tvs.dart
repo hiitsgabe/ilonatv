@@ -44,6 +44,17 @@ Future<String> deviceName() async {
   }
 }
 
+/// The installed versionName, like 0.6.1; null when the platform can't say.
+Future<String?> appVersion() async {
+  try {
+    return await Tvs._channel.invokeMethod<String>('appVersion');
+  } on PlatformException {
+    return null;
+  } on MissingPluginException {
+    return null;
+  }
+}
+
 Future<bool> openUrl(String url) async {
   try {
     return await Tvs._channel.invokeMethod<bool>('openUrl', url) ?? false;

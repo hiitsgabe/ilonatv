@@ -159,4 +159,58 @@ void main() {
     expect(compareVersions('1.0', 'v1.0.0'), 0);
     expect(compareVersions('0.6.1+10002', 'v0.6.1'), 0);
   });
+
+  test('an update shows only for a well-formed older version', () {
+    expect(isOlder('0.6.0', 'v0.6.1'), isTrue);
+    expect(isOlder('v0.6.1', '0.6.1'), isFalse);
+    expect(isOlder('0.6.1+10002', 'v0.6.1'), isFalse);
+    expect(isOlder('0.7.0', 'v0.6.1'), isFalse);
+    expect(isOlder('0.9.9', 'v0.10.0'), isTrue);
+    for (final bad in ['', '1', 'dev', '0.6', 'v0.6.x', '0.6.1.2']) {
+      expect(isOlder(bad, 'v9.9.9'), isFalse, reason: bad);
+      expect(isOlder('0.0.1', bad), isFalse, reason: bad);
+    }
+  });
+
+  test('latestTag is the release tag', () async {
+    expect(await latestTag(url: base.resolve('/latest')), 'v0.6.1');
+    expect(requests.single.value('user-agent'), 'IlonaTV-Companion');
+  });
+
+  for (final code in [403, 404, 429, 500]) {
+    test('latestTag is null when GitHub answers $code', () async {
+      status = code;
+      expect(await latestTag(url: base.resolve('/latest')), isNull);
+    });
+  }
+
+  test('latestTag is null offline', () async {
+    await server.close(force: true);
+    expect(await latestTag(url: base.resolve('/latest')), isNull);
+  });
+
+  test('an UpdateCheck fetches once', () async {
+    var fetches = 0;
+    final u = UpdateCheck(
+      fetch: () async {
+        fetches++;
+        return 'v0.7.0';
+      },
+      own: () async => '0.6.1',
+    );
+    expect(await u.forApp, 'v0.7.0');
+    expect(await u.newerThan('0.6.1'), 'v0.7.0');
+    expect(await u.newerThan('0.7.0'), isNull);
+    expect(await u.newerThan(''), isNull);
+    expect(fetches, 1);
+  });
+
+  test('a failing fetch is no update', () async {
+    final u = UpdateCheck(
+      fetch: () async => throw const RateLimited(),
+      own: () async => '0.6.1',
+    );
+    expect(await u.forApp, isNull);
+    expect(await u.newerThan('0.6.1'), isNull);
+  });
 }

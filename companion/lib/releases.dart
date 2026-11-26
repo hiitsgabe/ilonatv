@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart';
 final latestRelease = Uri.parse(
   'https://api.github.com/repos/hiitsgabe/ilonatv/releases/latest',
 );
+const releasePage = 'https://github.com/hiitsgabe/ilonatv/releases/latest';
 const _stall = Duration(seconds: 30);
 
 class ReleaseAsset {
@@ -176,4 +177,55 @@ int compareVersions(String a, String b) {
     if (d != 0) return d.sign;
   }
   return 0;
+}
+
+final _semver = RegExp(r'^v?\d+\.\d+\.\d+(?:[+-].*)?$');
+
+/// True only when both are X.Y.Z (a v or +build is fine) and [current] is older.
+bool isOlder(String current, String latest) =>
+    _semver.hasMatch(current) &&
+    _semver.hasMatch(latest) &&
+    compareVersions(current, latest) < 0;
+
+/// The latest release tag, like v0.6.1; null on any failure, which is never worth telling.
+Future<String?> latestTag({HttpClient? http, Uri? url}) async {
+  final client = http ?? HttpClient();
+  client.userAgent = 'IlonaTV-Companion';
+  try {
+    final (status, body) = await _get(
+      client,
+      url ?? latestRelease,
+      api: true,
+    ).timeout(const Duration(seconds: 15));
+    if (status != 200) return null;
+    return (jsonDecode(body) as Map)['tag_name'] as String?;
+  } catch (_) {
+    return null;
+  } finally {
+    if (http == null) client.close(force: true);
+  }
+}
+
+/// One GitHub call per launch: unauthenticated calls get 60 an hour per IP.
+class UpdateCheck {
+  UpdateCheck({required this.fetch, required this.own});
+
+  final Future<String?> Function() fetch;
+  final Future<String?> Function() own;
+
+  late final Future<String?> latest = fetch().then(
+    (v) => v,
+    onError: (_) => null,
+  );
+
+  /// The newer release tag for the companion itself, or null.
+  late final Future<String?> forApp = own().then(
+    (v) => v == null ? null : newerThan(v),
+    onError: (_) => null,
+  );
+
+  Future<String?> newerThan(String current) async {
+    final l = await latest;
+    return l != null && isOlder(current, l) ? l : null;
+  }
 }

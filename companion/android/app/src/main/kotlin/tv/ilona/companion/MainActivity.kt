@@ -20,6 +20,7 @@ class MainActivity : FlutterActivity() {
                 "discoverStart" -> { finder.start(); result.success(null) }
                 "discoverStop" -> { finder.stop(); result.success(null) }
                 "deviceName" -> result.success(Build.MODEL)
+                "appVersion" -> result.success(packageManager.getPackageInfo(packageName, 0).versionName)
                 "openUrl" -> {
                     val uri = (call.arguments as? String)?.let(Uri::parse)
                     result.success(

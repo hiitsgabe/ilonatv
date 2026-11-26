@@ -3,6 +3,7 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 
 import 'i18n.dart';
+import 'releases.dart';
 import 'tv_client.dart';
 import 'tvs.dart';
 import 'ui/home_page.dart';
@@ -14,13 +15,19 @@ Future<void> main() async {
   I18n.language = PlatformDispatcher.instance.locale.languageCode == 'pt'
       ? 'pt'
       : 'en';
-  runApp(CompanionApp(tvs: tvs));
+  runApp(
+    CompanionApp(
+      tvs: tvs,
+      updates: UpdateCheck(fetch: latestTag, own: appVersion),
+    ),
+  );
 }
 
 class CompanionApp extends StatelessWidget {
-  const CompanionApp({super.key, required this.tvs});
+  const CompanionApp({super.key, required this.tvs, this.updates});
 
   final Tvs tvs;
+  final UpdateCheck? updates;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +55,7 @@ class CompanionApp extends StatelessWidget {
       home: HomePage(
         tvs: tvs,
         clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token),
+        updates: updates,
       ),
     );
   }

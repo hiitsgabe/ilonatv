@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../adb.dart';
 import '../i18n.dart';
+import '../releases.dart';
 import '../tvs.dart';
 import 'install/install_flow.dart';
 import 'pair_page.dart';
@@ -13,11 +14,13 @@ class HomePage extends StatefulWidget {
     required this.tvs,
     required this.clientFor,
     this.onInstall,
+    this.updates,
   });
 
   final Tvs tvs;
   final ClientFor clientFor;
   final VoidCallback? onInstall;
+  final UpdateCheck? updates;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -26,10 +29,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final AppLifecycleListener _life;
   bool _hidden = false;
+  String? _appUpdate;
 
   @override
   void initState() {
     super.initState();
+    widget.updates?.forApp.then((v) {
+      if (mounted && v != null) setState(() => _appUpdate = v);
+    });
     widget.tvs.startDiscovery();
     _life = AppLifecycleListener(
       onHide: () {
@@ -55,7 +62,13 @@ class _HomePageState extends State<HomePage> {
 
   void _open(Tv tv) {
     final Widget page = tv.token != null
-        ? RemotePage(tv: tv, client: widget.clientFor(tv), tvs: widget.tvs)
+        ? RemotePage(
+            tv: tv,
+            client: widget.clientFor(tv),
+            tvs: widget.tvs,
+            updates: widget.updates,
+            onUpdate: widget.onInstall ?? _install,
+          )
         : PairPage(tvs: widget.tvs, clientFor: widget.clientFor, host: tv.host);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
@@ -95,6 +108,36 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (_appUpdate != null)
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                t('companionUpdate')
+                                    .replaceAll('{version}', _appUpdate!),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => openUrl(releasePage),
+                              child: Text(t('getIt')),
+                            ),
+                            IconButton(
+                              tooltip: t('close'),
+                              onPressed: () =>
+                                  setState(() => _appUpdate = null),
+                              icon: const Icon(Icons.close),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   Expanded(
                     child: tvs.isEmpty
                         ? _Empty()
