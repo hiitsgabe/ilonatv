@@ -108,6 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _rowKeys = const [];
   final _scroll = ScrollController();
 
+  /// A position never laid out (the home under another screen from its first
+  /// frame) has no extents to scroll in, and is at the top anyway.
+  bool get _scrolls =>
+      _scroll.hasClients && _scroll.position.hasContentDimensions;
+
   /// Around the app row, to tell when focus comes back to it.
   final _appRowFocus = FocusNode(canRequestFocus: false, skipTraversal: true);
 
@@ -219,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
       s.rowGenres.clear();
       s.save().ignore(); // the home rebuilds on it
     }
-    if (_scroll.hasClients) _scroll.jumpTo(0);
+    if (_scrolls) _scroll.jumpTo(0);
     _appRowFocus.traversalDescendants.firstOrNull?.requestFocus();
   }
 
@@ -386,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _appRowFocusChanged(bool focused) {
     _onApps.value = focused;
     if (!focused) return;
-    _scroll.animateTo(0, duration: _moveTime, curve: Curves.ease);
+    if (_scrolls) _scroll.animateTo(0, duration: _moveTime, curve: Curves.ease);
     _row.value = null;
   }
 
@@ -556,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// With the rows up, Back brings them down and focus to the first app.
   void _back() {
-    if (!_scroll.hasClients || _scroll.offset == 0) return;
+    if (!_scrolls || _scroll.offset == 0) return;
     _scroll.animateTo(0, duration: _moveTime, curve: Curves.ease);
     _appRowFocus.traversalDescendants.firstOrNull?.requestFocus();
   }
