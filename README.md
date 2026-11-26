@@ -11,7 +11,7 @@ driven by the remote alone.
 ![Fire TV and Android TV](https://img.shields.io/badge/Fire%20TV%20%C2%B7%20Android%20TV-Android%209%2B-3DDC84)
 ![Flutter](https://img.shields.io/badge/built%20with-Flutter-02569B)
 
-<img src="docs/images/home.webp" alt="Ilona TV's home screen on a Fire TV Edition TV" width="900">
+<img src="docs/images/tv-home.webp" alt="Ilona TV's home screen on a Fire TV Edition TV" width="900">
 
 </div>
 
