@@ -9,9 +9,11 @@ adb shell 'am force-stop tv.ilona.app && am start -n tv.ilona.app/.MainActivity'
 
 The first command stores the file as `files/import/settings.json` (it appears only once adb has sent all of it); nothing changes yet. The next start of Ilona TV writes its keys into the settings, deletes the file, and then loads the settings as usual, so the upgrades of older settings apply (old home row keys, retired tile icons, the `elimor:apps` and `elimor:settings` tiles). `content write` reads standard input and is in Android 9 and later (Fire OS 7 and 8).
 
+The JSON on your computer holds account tokens and API keys: delete it once the import is done.
+
 ## The file
 
-One JSON object, pref key to value. Each key given replaces that setting; keys left out keep their value. A key Ilona TV does not know, or a value of the wrong type, is skipped and logged by name (`adb logcat -s flutter`, never the value); a file that is not a JSON object imports nothing. The file is deleted either way.
+One JSON object, pref key to value. Each key given replaces that setting; keys left out keep their value. A key Ilona TV does not know, or a value of the wrong type, is skipped and logged by name (`adb logcat -s flutter`, never the value); a file that is not a JSON object, or is over 1 MB, imports nothing. The file is deleted either way.
 
 | Type | Keys |
 | --- | --- |
@@ -19,11 +21,11 @@ One JSON object, pref key to value. Each key given replaces that setting; keys l
 | int | `assistantColor` (ARGB) |
 | number | `weatherLat`, `weatherLon` |
 | string | `language`, `country`, `tmdbKey`, `geminiKey`, `stremioAuthKey`, `stremioEmail`, `weatherCity`, `movieProvider`, `seriesProvider`, `youtubeProvider`, `youtubeDeviceId` |
-| string of JSON | `tiles`, `youtubeAccounts`, `sports`, `homeRows`, `rowProviders`, `rowGenres`, `serviceApps`, `companionDevices`, `hiddenApps`, `recentSearches` |
+| string of JSON | `tiles`, `youtubeAccounts`, `sports`, `homeRows`, `rowProviders`, `rowGenres`, `serviceApps`, `hiddenApps`, `recentSearches` |
 
-The string-of-JSON keys are stored as the app stores them, a string holding JSON, and must read as their shape: `tiles` a list of `{"package", "icon"}`, `youtubeAccounts` a list of `{"refreshToken", "name"}`, `sports` a list of `{"league", "name"}`, `homeRows` a list of `{"key", "on"}`, `rowProviders` an object of numbers, `rowGenres`, `serviceApps` and `companionDevices` objects of strings, `hiddenApps` and `recentSearches` lists of strings.
+The string-of-JSON keys are stored as the app stores them, a string holding JSON, and must read as their shape: `tiles` a list of `{"package", "icon"}`, `youtubeAccounts` a list of `{"refreshToken", "name"}`, `sports` a list of `{"league", "name"}`, `homeRows` a list of `{"key", "on"}`, `rowProviders` an object of numbers, `rowGenres` and `serviceApps` objects of strings, `hiddenApps` and `recentSearches` lists of strings.
 
-`companionSecret` is never imported: the TV keeps its own. A tile's custom `image` is a path in the old build's files, which Ilona TV cannot read, so such a tile shows as a grey card until its image is chosen again.
+`companionSecret` and `companionDevices` are never imported: the TV keeps its own secret, and phones pair again with the QR, so a phone paired with another TV cannot control this one. A tile's custom `image` is a path in the old build's files, which Ilona TV cannot read, so such a tile shows as a grey card until its image is chosen again.
 
 ```json
 {

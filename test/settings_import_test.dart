@@ -48,7 +48,6 @@ void main() {
       'youtubeAccounts': jsonEncode([
         {'refreshToken': 'r', 'name': 'n'},
       ]),
-      'companionDevices': jsonEncode({'tok': 'Phone'}),
       'homeRows': jsonEncode([
         {'key': 'games', 'on': false},
       ]),
@@ -68,17 +67,17 @@ void main() {
     expect(jsonDecode(p.getString('tiles')!), [
       {'package': 'com.example.tv', 'icon': 'tv'},
     ]);
-    expect(jsonDecode(p.getString('companionDevices')!), {'tok': 'Phone'});
     expect(file.existsSync(), isFalse);
   });
 
-  test('unknown keys, wrong types and companionSecret are skipped', () async {
+  test('unknown keys, wrong types and companion keys are skipped', () async {
     SharedPreferences.setMockInitialValues({
       'companionSecret': 'mine',
       'tmdbKey': 'old',
     });
     put({
       'companionSecret': 'theirs',
+      'companionDevices': jsonEncode({'tok': 'Phone'}),
       'nope': 'x',
       'tmdbKey': 3,
       'fireTvMode': 'yes',
@@ -117,11 +116,24 @@ void main() {
     expect(file.existsSync(), isFalse);
   });
 
-  test('every key save() writes is importable, but companionSecret', () async {
-    await (await Settings.load()).save();
-    final saved = (await SharedPreferences.getInstance()).getKeys();
-    expect(importKeys, containsAll(saved.difference({'companionSecret'})));
-    expect(importKeys, isNot(contains('companionSecret')));
+  test(
+    'every key save() writes is importable, but the companion ones',
+    () async {
+      await (await Settings.load()).save();
+      final saved = (await SharedPreferences.getInstance()).getKeys();
+      const companion = {'companionSecret', 'companionDevices'};
+      expect(importKeys, containsAll(saved.difference(companion)));
+      for (final k in companion) {
+        expect(importKeys, isNot(contains(k)));
+      }
+    },
+  );
+
+  test('a file over 1 MB is deleted unread', () async {
+    put({'tmdbKey': 'k', 'pad': 'x' * (1 << 20)});
+    await importSettings(file);
+    expect((await SharedPreferences.getInstance()).getKeys(), isEmpty);
+    expect(file.existsSync(), isFalse);
   });
 
   test('load after an import runs the migrations of the older build', () async {

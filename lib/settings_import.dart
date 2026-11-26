@@ -24,8 +24,9 @@ _Check _json(void Function(Object? decoded) shape) => (v) {
 final _stringList = _json((d) => (d as List).cast<String>().toList());
 final _stringMap = _json((d) => Map<String, String>.from(d as Map));
 
-/// The prefs [Settings] owns, by key. Never `companionSecret`: the TV keeps
-/// its own, so a copied secret cannot pair a phone with two TVs.
+/// The prefs [Settings] owns, by key. Never `companionSecret` or
+/// `companionDevices`: the TV keeps its own, and phones pair again with the QR,
+/// so a phone paired with another TV cannot control this one.
 final Map<String, _Check> _keys = {
   for (final k in [
     'setupDone',
@@ -75,7 +76,6 @@ final Map<String, _Check> _keys = {
   ),
   'rowGenres': _stringMap,
   'serviceApps': _stringMap,
-  'companionDevices': _stringMap,
   'hiddenApps': _stringList,
   'recentSearches': _stringList,
 };
@@ -86,11 +86,16 @@ Iterable<String> get importKeys => _keys.keys;
 /// Writes the prefs in [file] (a JSON object of pref key to value, put there
 /// over adb through PairingProvider.kt) and deletes it. Runs before
 /// [Settings.load], so the load's migrations apply to what came in. Keys not
-/// in [_keys] or of the wrong type are skipped; an unreadable file imports
-/// nothing. Logs keys, never values: they hold account tokens.
+/// in [_keys] or of the wrong type are skipped; an unreadable file, or one
+/// over 1 MB, imports nothing. Logs keys, never values: they hold account tokens.
 Future<void> importSettings(File file) async {
   if (!file.existsSync()) return;
   try {
+    // A huge file must never keep the launcher from starting.
+    if (await file.length() > 1 << 20) {
+      debugPrint('settings import: file over 1 MB, nothing imported');
+      return;
+    }
     final json = jsonDecode(await file.readAsString());
     if (json is! Map<String, dynamic>) throw const FormatException();
     final prefs = await SharedPreferences.getInstance();

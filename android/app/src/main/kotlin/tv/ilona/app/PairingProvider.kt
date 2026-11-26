@@ -44,8 +44,9 @@ class PairingProvider : ContentProvider() {
         if (uri.path != "/import" || !mode.startsWith("w")) throw FileNotFoundException(uri.toString())
         val dir = File(context!!.filesDir, "import").apply { mkdirs() }
         val tmp = File(dir, "settings.json.tmp")
-        // The rename waits for the shell to close its end, so a start never reads half a file; a shell that dies
-        // mid-copy closes with an error and leaves nothing.
+        // The rename waits for the shell to close its end, so a start never reads a file still being written. An
+        // interrupted adb ends the input normally, so a cut-off file is renamed into place, fails to parse, imports
+        // nothing and is deleted.
         return ParcelFileDescriptor.open(
             tmp,
             ParcelFileDescriptor.MODE_WRITE_ONLY or ParcelFileDescriptor.MODE_CREATE or ParcelFileDescriptor.MODE_TRUNCATE,
