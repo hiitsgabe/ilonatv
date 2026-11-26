@@ -13,8 +13,9 @@ analyzer:
   exclude:
     - build/**
     - android/**
-    # Analyzed on its own, with its own test dependency.
+    # Analyzed on their own, with their own dependencies.
     - packages/**
+    - companion/**
 
 linter:
   # The lint rules applied to this project can be customized in the
