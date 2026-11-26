@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,6 +12,9 @@ void main() {
   var inFront = true;
   var launcher = true;
   WebSocket? socket;
+  late Completer<void> closed;
+  var bye = true;
+  var badBody = false;
   const item = {'id': 'x', 'title': 'T'};
 
   Future<void> reply(HttpResponse r, int s, [Object? body]) {
@@ -25,6 +29,9 @@ void main() {
   setUp(() async {
     inFront = true;
     launcher = true;
+    bye = true;
+    closed = Completer();
+    badBody = false;
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((req) async {
       final path = req.uri.path;
@@ -41,6 +48,7 @@ void main() {
       switch (path) {
         case '/api/events':
           socket = await WebSocketTransformer.upgrade(req);
+          socket!.listen(null, onDone: closed.complete);
           socket!.add(
             const TvEvent('state', {
               'step': 'tmdb',
@@ -48,7 +56,10 @@ void main() {
               'launcherMode': false,
             }).encode(),
           );
-          socket!.add(const TvEvent('bye').encode());
+          if (bye) socket!.add(const TvEvent('bye').encode());
+        case '/api/info' when badBody:
+          req.response.add([0xff, 0xfe, 0xfd]);
+          return req.response.close();
         case '/api/info':
           return reply(req.response, 200, {
             'protocol': 1,
@@ -188,5 +199,21 @@ void main() {
     final got = await client.events().toList();
     expect(got.single.step, 'tmdb');
     expect(got.single.launcherMode, false);
+  });
+
+  test('cancelling events closes the socket at once', () async {
+    bye = false;
+    final first = Completer<void>();
+    final sub = client.events().listen((_) => first.complete());
+    await first.future;
+    // Let the stream settle into waiting for the next message, where a cancel used to go unseen.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    await sub.cancel();
+    await closed.future.timeout(const Duration(seconds: 1));
+  });
+
+  test('a body that is not UTF-8 is Unreachable, not a throw', () async {
+    badBody = true;
+    expect(await client.info(), isA<Unreachable<TvInfo>>());
   });
 }

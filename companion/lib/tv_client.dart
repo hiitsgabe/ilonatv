@@ -161,6 +161,8 @@ class TvClient {
       return Unreachable(e.message);
     } on HttpException catch (e) {
       return Unreachable(e.message);
+    } on Exception catch (e) {
+      return Unreachable('$e');
     }
   }
 
@@ -265,34 +267,54 @@ class TvClient {
   Future<TvResult<void>> setCity(Place p) =>
       _call<void>('POST', '/api/setup/city', (_) {}, body: p.toJson());
 
-  Stream<TvInfo> events() async* {
-    final WebSocket ws;
-    try {
-      ws = await WebSocket.connect(
-        'ws://$host:$port/api/events?token=${Uri.encodeQueryComponent(token ?? '')}',
-        customClient: _http,
-      ).timeout(_timeout);
-    } catch (_) {
-      return;
+  Stream<TvInfo> events() {
+    WebSocket? ws;
+    var cancelled = false;
+    late final StreamController<TvInfo> out;
+    void end() {
+      ws?.close();
+      out.close();
     }
-    try {
-      await for (final m in ws) {
-        if (m is! String) continue;
-        final TvEvent e;
+
+    out = StreamController<TvInfo>(
+      onListen: () async {
         try {
-          e = TvEvent.decode(m);
-        } on FormatException {
-          continue;
+          ws = await WebSocket.connect(
+            'ws://$host:$port/api/events?token=${Uri.encodeQueryComponent(token ?? '')}',
+            customClient: _http,
+          ).timeout(_timeout);
+        } catch (_) {
+          return end();
         }
-        if (e.type == 'bye') return;
-        if (e.type == 'state') {
-          yield TvInfo.fromJson({'protocol': kProtocolVersion, ...e.data});
-        }
-      }
-    } catch (_) {
-      // a dropped socket ends the stream like a close
-    } finally {
-      await ws.close();
-    }
+        if (cancelled) return end();
+        ws!.listen(
+          (m) {
+            if (m is! String) return;
+            final TvEvent e;
+            try {
+              e = TvEvent.decode(m);
+            } on FormatException {
+              return;
+            }
+            if (e.type == 'bye') return end();
+            if (e.type == 'state') {
+              out.add(
+                TvInfo.fromJson({'protocol': kProtocolVersion, ...e.data}),
+              );
+            }
+          },
+          // a dropped socket ends the stream like a close
+          onError: (Object _) => end(),
+          onDone: end,
+          cancelOnError: true,
+        );
+      },
+      // An await-for stream would only see the cancel on the next message, leaving the socket open.
+      onCancel: () {
+        cancelled = true;
+        ws?.close();
+      },
+    );
+    return out.stream;
   }
 }
