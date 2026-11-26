@@ -36,3 +36,18 @@ adb shell pm grant tv.ilona.app android.permission.WRITE_SECURE_SETTINGS
 adb shell pm grant tv.ilona.app android.permission.DUMP
 adb shell pm grant tv.ilona.app android.permission.PACKAGE_USAGE_STATS
 ```
+
+## The Companion phone app
+
+The IlonaTv Companion (`tv.ilona.companion`) asks for three permissions:
+
+| Permission | Why |
+| --- | --- |
+| `INTERNET` | Talking to the TV on your local network (and ADB, only while installing). |
+| `CHANGE_WIFI_MULTICAST_STATE` | Finding IlonaTv on the network by its mDNS name. |
+| `CAMERA` | Scanning the pairing QR code, asked for when the scanner opens. No picture is kept or sent. |
+
+It stores, for each paired TV, only the host, port, name and token. It also keeps the ADB key it uses to talk to a TV in the app's private storage, excluded from backup and device transfer; a new phone makes a new key and the TV asks "Allow debugging?" again. It connects over ADB only in the installer.
+
+On the TV, a content provider (`content://tv.ilona.app.pairing`) hands the pairing secret to the installer so the phone can pair without a QR code. It is guarded by `DUMP`, which only the adb shell holds, so no ordinary app can read it, and each read renews the secret.
+

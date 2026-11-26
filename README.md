@@ -23,10 +23,22 @@ The stock TV homes push ads and whatever their store wants you to watch. IlonaTv
 - **Your dock, your way.** Up to five app tiles, each with a painted icon, the app's own icon or a picture of your own.
 - **Takes over the Home button**, even on Fire TV, where the Amazon home can't normally be replaced.
 - **Set up in minutes.** A first-run wizard walks you through everything. Sign-ins happen on your phone, so there's no typing passwords with a remote.
-- **Your phone as a remote, coming soon.** The IlonaTv Companion app will pair with the QR code in Settings > Companion, for typing searches and keys on your phone instead of the remote.
+- **Your phone as a remote.** The [IlonaTv Companion](#phone-remote-and-installer) pairs with the QR code in Settings > Companion, for searching, watching and typing on your phone instead of the remote.
 - **Private.** No cloud server, no account, no analytics. Everything stays on the TV.
 
 Plus the weather, the TV's HDMI inputs with console control over HDMI-CEC (Fire TV Edition TVs), a voice assistant powered by your own Gemini key (Fire TV), and English and Portuguese.
+
+## Phone remote and installer
+
+The IlonaTv Companion is an Android app that does the computer steps below from your phone, then stays on as a remote.
+
+- **Install** IlonaTv on a Fire TV: it finds the TV on your Wi-Fi, asks for the "Allow debugging?" prompt, installs the right APK and starts it.
+- **Pair** with the QR code or the code from Settings > Companion.
+- **Remote:** the keys, Back and Home, search and browse with Watch, and typing during the setup.
+
+Download the companion APK from the [Releases](../../releases) page and sideload it on your phone. Until the first release is out, build it with `tool/build_companion.sh` ([details](docs/development.md#companion)).
+
+The phone installer works on Fire TV and on Android TV devices that offer ADB network debugging on port 5555. Google TV and Android 11+ only offer "Wireless debugging", which needs pairing from a computer: follow Get started below. Once IlonaTv is installed you can turn ADB debugging off; the remote does not use it.
 
 ## Get started
 
@@ -91,7 +103,7 @@ It runs day to day on a Fire TV Stick 4K (Fire OS 7) and a Fire TV Edition TV (F
 <details>
 <summary><b>Is there a phone app?</b></summary>
 
-The IlonaTv Companion is coming soon. IlonaTv already answers it, only on the local network, never from the internet; IlonaTv answers only devices you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
+Yes, the [IlonaTv Companion](#phone-remote-and-installer) for Android. It talks to the TV only on the local network, never over the internet, and IlonaTv answers only phones you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
 </details>
 
 <details>

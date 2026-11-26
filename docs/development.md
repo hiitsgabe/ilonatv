@@ -33,6 +33,18 @@ The sources are tested against canned answers in `test/fixtures/` (TMDB, JustWat
 
 UI text goes through `t('key')` in `lib/i18n.dart`, in English and Portuguese; `test/i18n_test.dart` fails when one language misses a key.
 
+## Companion
+
+The phone app is a separate Flutter project in `companion/` (package `ilonatv_companion`, app id `tv.ilona.companion`). It shares the TV's wire format with the app through `packages/ilonatv_protocol`. The TV's side is `lib/companion/` (server) and, for the installer, `PairingProvider.kt`.
+
+`tool/build_companion.sh` builds the TV APKs (split per ABI, armeabi-v7a and arm64-v8a), copies them into `companion/assets/tv/` so the companion can install them, then builds the companion release APK. It prints the result: `companion/build/app/outputs/flutter-apk/app-release.apk`. `JAVA_HOME` and `ANDROID_HOME` default to `~/.cache/elimor-toolchain/jdk` and `.../sdk` when unset, and flutter is taken from `~/.cache/elimor-toolchain/flutter/bin` when it is not on the `PATH`.
+
+```sh
+cd companion
+flutter analyze
+flutter test
+```
+
 ## On a device
 
 `adb shell input keyevent <code>` drives the remote from a computer: Up 19, Down 20, Left 21, Right 22, OK 23, Back 4, Home 3. On-device checks are listed in [verification.md](verification.md).
