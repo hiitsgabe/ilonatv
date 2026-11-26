@@ -60,3 +60,17 @@ These need a TMDB key typed on the TV and accounts approved from a phone.
 
 37. **Following.** Settings > Sports: OK on a league, Follow on; the row value reads "All games". Tick two teams and turn on Only my teams: the value reads "2 teams", and the home's Games row shows only their games, today's and tomorrow's. Following an 8th league works; a 9th is refused with a note.
 38. **Opening a game.** With a Stremio account whose add-ons include a sports catalog and a Stremio app chosen for movies or series, OK on a game opens its item in that app. Without one, the home says no app could open it.
+
+## Companion server
+
+The TV answers on port 8642. From a laptop on the same network, with `TVIP=<tv-ip>` and `A="http://$TVIP:8642"`. The pairing code and token below are placeholders.
+
+39. **Alive.** `curl $A/` prints `Elimor is running`.
+40. **Closed without a token.** `curl -s -o /dev/null -w '%{http_code}\n' $A/api/info` prints `401`.
+41. **Pairing.** Open Settings > Companion on the TV (or the wizard's first step) and leave it on screen: pairing by code only works while one of them is showing. Read the code off the screen, then `curl -X POST $A/api/pair -d '{"code":"<code>","name":"laptop"}'`. Expected: `{"token":"<token>"}`. A wrong code, or the right one with the TV on another screen, gives `403`. Then `curl -H "Authorization: Bearer <token>" $A/api/info`: the protocol, the version, `step` (the wizard step on screen, or null) and `inFront`.
+42. **Keys.** `curl -X POST -H "Authorization: Bearer <token>" -d '{"key":"right"}' $A/api/key` answers `204` and focus moves right on the TV. Repeat for `left`, `up`, `down`, `ok` and `back`. An unknown key answers `400`.
+43. **Open, Launcher mode on.** With Launcher mode on, open Netflix (or any other app) so Elimor is behind it, then pipe the first item of the first row into `/api/open`: `curl -s -H "Authorization: Bearer <token>" $A/api/rows | jq -c '.[0].items[0]' | jq -c '{item: .}' | curl -s -X POST -H "Authorization: Bearer <token>" -d @- $A/api/open`. Expected: `{"opened":true}` and the title's app in front within 3 s. `/api/rows` is `[{"key","title","items":[...]}]`; `/api/open` takes `{"item": <one of those items>}`.
+44. **Open, Launcher mode off.** Same with Launcher mode off. Record whether the app comes to the front (Fire OS 7 should; Android 10+ should not, since a background app may not start activities), and that `/api/key` now answers `409` (`notInFront`) while another app is in front.
+45. **Still answering after 30 minutes.** Leave the TV in Netflix for 30 minutes, then `curl -H "Authorization: Bearer <token>" $A/api/info`. Record whether the server still answers. This is the spec's open risk: if it does not, part 2's plan starts with keeping the engine alive.
+46. **Memory.** `adb -s $TV shell dumpsys meminfo app.elimor.app | grep TOTAL` before and after the server is up: under 5 MB difference.
+47. **Discovery.** On the laptop's network, `dns-sd -B _elimor._tcp` (macOS) or `avahi-browse -r _elimor._tcp` (Linux) lists "Elimor on <model>", port 8642.
