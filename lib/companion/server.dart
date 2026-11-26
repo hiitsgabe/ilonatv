@@ -173,6 +173,12 @@ class CompanionServer {
       return _json(req.response, 400, {'error': 'badRequest'});
     }
     final ws = await WebSocketTransformer.upgrade(req);
+    // Remove or stop may have run during the upgrade, and missed this socket.
+    if (_server == null || !pairing.isValid(token)) {
+      ws.add(const TvEvent('bye').encode());
+      await ws.close(WebSocketStatus.policyViolation);
+      return;
+    }
     _sockets[ws] = token;
     ws.listen(
       (_) {},

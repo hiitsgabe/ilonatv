@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:elimor/app.dart' show kVersion;
 import 'package:elimor/companion/pairing.dart';
 import 'package:elimor/companion/server.dart';
 import 'package:elimor/companion/state.dart';
 import 'package:elimor/settings.dart';
 import 'package:elimor_protocol/elimor_protocol.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,9 +29,24 @@ class FakeApi implements CompanionApi {
   }
 }
 
+// Revokes a token right after its first passing check, with no notification,
+// as if Remove ran while the WebSocket upgrade was in flight.
+class RevokingPairing extends Pairing {
+  RevokingPairing(super.settings);
+
+  String? revoke;
+
+  @override
+  bool isValid(String token) {
+    final ok = super.isValid(token);
+    if (ok && token == revoke) settings.companionDevices.remove(token);
+    return ok;
+  }
+}
+
 void main() {
   late Settings settings;
-  late Pairing pairing;
+  late RevokingPairing pairing;
   late FakeApi api;
   late CompanionServer server;
   final client = HttpClient();
@@ -38,7 +55,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     companionState.setStep(null);
     settings = await Settings.load();
-    pairing = Pairing(settings);
+    pairing = RevokingPairing(settings);
     api = FakeApi();
     server = CompanionServer(
       pairing,
@@ -50,6 +67,7 @@ void main() {
   });
 
   tearDown(() => server.stop());
+  tearDownAll(() => client.close(force: true));
 
   Uri url(String path) =>
       Uri.parse('http://127.0.0.1:${server.boundPort}$path');
@@ -120,7 +138,7 @@ void main() {
       expect(headers.contentType.toString(), 'application/json; charset=utf-8');
       expect(jsonDecode(body), {
         'protocol': 1,
-        'version': '0.6.0',
+        'version': kVersion,
         'step': null,
         'inFront': true,
       });
@@ -190,6 +208,28 @@ void main() {
     await ws.close();
   });
 
+  test('events: a token revoked during the upgrade gets bye', () async {
+    final token = await pairWithSecret();
+    pairing.revoke = token;
+    final (ws, it) = await events(token);
+    expect((await next(it)).type, 'bye');
+    expect(await it.moveNext().timeout(const Duration(seconds: 5)), isFalse);
+    expect(ws.closeCode, WebSocketStatus.policyViolation);
+  });
+
+  test('only the bearer header opens /api/info', () async {
+    final token = await pairWithSecret();
+    for (final (method, path) in [
+      ('GET', '/api/info?token=$token'),
+      ('HEAD', '/api/info'),
+      ('OPTIONS', '/api/info'),
+      ('GET', '/api/info/'),
+    ]) {
+      expect((await send(method, path)).$1, 401, reason: '$method $path');
+    }
+    expect(api.calls, isEmpty);
+  });
+
   test('events without a valid token are refused', () async {
     await expectLater(events('nope'), throwsA(isA<WebSocketException>()));
   });
@@ -236,8 +276,13 @@ void main() {
   test('a failing handler is 500 and the server keeps serving', () async {
     final token = await pairWithSecret();
     api.fail = true;
+    final logged = <String?>[];
+    final print = debugPrint;
+    debugPrint = (m, {wrapWidth}) => logged.add(m);
+    addTearDown(() => debugPrint = print);
     final (status, body, _) = await send('GET', '/api/thing', token: token);
     expect(status, 500);
+    expect(logged.single, contains('Bad state: boom'));
     expect(jsonDecode(body), {'error': 'internal'});
     expect((await send('GET', '/api/info', token: token)).$1, 200);
   });
