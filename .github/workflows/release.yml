@@ -1,0 +1,233 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.47.2"
+  FLUTTER_CHANNEL: "stable"
+
+permissions:
+  contents: read
+
+jobs:
+  resolve-version:
+    # workflow_dispatch can run from any branch; only main is bumped and released.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.resolve.outputs.VERSION }}
+      version_name: ${{ steps.resolve.outputs.VERSION_NAME }}
+      build_number: ${{ steps.resolve.outputs.BUILD_NUMBER }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # One version for both apps: the companion follows the TV app's pubspec.
+      - name: Resolve and bump version
+        id: resolve
+        run: |
+          set -euo pipefail
+          CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          VERSION_NAME=$(echo "$CURRENT" | cut -d'+' -f1)
+          BUILD_NUMBER=$(echo "$CURRENT" | cut -d'+' -f2)
+
+          IFS='.' read -r VMAJOR VMINOR VPATCH <<< "$VERSION_NAME"
+          VPATCH=$((VPATCH + 1))
+          if [ "$VPATCH" -gt 9 ]; then
+            VPATCH=0
+            VMINOR=$((VMINOR + 1))
+            if [ "$VMINOR" -gt 9 ]; then
+              VMINOR=0
+              VMAJOR=$((VMAJOR + 1))
+            fi
+          fi
+
+          NEW_VERSION_NAME="${VMAJOR}.${VMINOR}.${VPATCH}"
+          NEW_BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          NEW_VERSION="${NEW_VERSION_NAME}+${NEW_BUILD_NUMBER}"
+          TAG="v${NEW_VERSION_NAME}"
+
+          sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml companion/pubspec.yaml
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add pubspec.yaml companion/pubspec.yaml
+          git commit -m "chore: bump version to ${NEW_VERSION}"
+          git push origin main
+          git tag "$TAG"
+          git push origin "$TAG"
+
+          echo "VERSION=$TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION_NAME=$NEW_VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "BUILD_NUMBER=$NEW_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
+  build-android:
+    needs: resolve-version
+    runs-on: ubuntu-latest
+    steps:
+      # The tag, not github.sha: that is the pre-bump commit, with the previous version.
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-version.outputs.version }}
+
+      # AGP 9.1 needs JDK 17 or newer; 21 is the JDK every local build of this repo uses.
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+
+      # Without the secrets (a fork), key.properties is not written and both apps
+      # fall back to the debug key, so the build still gives installable APKs.
+      - name: Apply keystore
+        env:
+          KEYSTORE64: ${{ secrets.KEYSTORE64 }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          if [ -z "$KEYSTORE64" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::warning::KEYSTORE64/KEY_PASSWORD/KEY_ALIAS not set: building with debug signing."
+            exit 0
+          fi
+          STORE="$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE64" | base64 --decode > "$STORE"
+          # key.properties is a Java properties file: a backslash in the password must be doubled.
+          PASS=${KEY_PASSWORD//\\/\\\\}
+          for dir in android companion/android; do
+            {
+              echo "storePassword=$PASS"
+              echo "keyPassword=$PASS"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "storeFile=$STORE"
+            } > "$dir/key.properties"
+          done
+          echo "Release signing: using the configured keystore."
+
+      - name: Get dependencies
+        run: |
+          flutter pub get
+          (cd companion && flutter pub get)
+
+      - name: Test the TV app
+        run: flutter test
+
+      - name: Test the companion
+        working-directory: companion
+        run: flutter test
+
+      - name: Build the TV APKs (split ABI)
+        run: flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
+
+      - name: Build the companion APK
+        working-directory: companion
+        run: flutter build apk --release
+
+      - name: Rename and checksum
+        run: |
+          set -euo pipefail
+          mkdir dist
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk dist/ilonatv-armeabi-v7a.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk dist/ilonatv-arm64-v8a.apk
+          cp companion/build/app/outputs/flutter-apk/app-release.apk dist/ilonatv-companion.apk
+          cd dist
+          sha256sum ilonatv-armeabi-v7a.apk ilonatv-arm64-v8a.apk ilonatv-companion.apk > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-apks
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    needs: [resolve-version, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download APKs
+        uses: actions/download-artifact@v8
+        with:
+          name: android-apks
+          path: dist/
+
+      - name: Release notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.resolve-version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # The last published release, not the previous tag: a run that never released still leaves its tag.
+          PREV_TAG=$(gh release list --exclude-drafts --limit 1 --json tagName -q '.[0].tagName // empty')
+          if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ]; then
+            RANGE="$PREV_TAG..$TAG"
+          else
+            RANGE="-20 $TAG"
+          fi
+          # shellcheck disable=SC2086
+          COMMITS=$(git log $RANGE --pretty=format:"- %s" --no-merges | grep -v '^- chore: bump version' || true)
+          EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64)
+          {
+            echo "notes<<${EOF_MARKER}"
+            echo "${COMMITS:-- Maintenance release.}"
+            echo "${EOF_MARKER}"
+          } >> "$GITHUB_OUTPUT"
+          echo "$COMMITS"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.resolve-version.outputs.version }}
+          name: IlonaTv ${{ needs.resolve-version.outputs.version }}
+          body: |
+            ## IlonaTv ${{ needs.resolve-version.outputs.version }}
+
+            ### Changes
+
+            ${{ steps.notes.outputs.notes }}
+
+            ---
+
+            ### Downloads
+
+            | For | File |
+            |-----|------|
+            | TV, 32-bit (most Fire TV) | `ilonatv-armeabi-v7a.apk` |
+            | TV, 64-bit | `ilonatv-arm64-v8a.apk` |
+            | Companion (Android phone) | `ilonatv-companion.apk` |
+            | Checksums | `SHA256SUMS` |
+
+            ### Install
+
+            - **From your phone:** sideload `ilonatv-companion.apk`, open it and choose "Install IlonaTv on a TV". It downloads the right TV APK from this release and checks its SHA-256.
+            - **From a computer:** follow [Get started](https://github.com/${{ github.repository }}#get-started) in the README. `adb shell getprop ro.product.cpu.abilist` says which TV APK to use.
+          files: |
+            dist/ilonatv-armeabi-v7a.apk
+            dist/ilonatv-arm64-v8a.apk
+            dist/ilonatv-companion.apk
+            dist/SHA256SUMS
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
+          make_latest: true

@@ -43,11 +43,11 @@ The IlonaTv Companion (`tv.ilona.companion`) asks for three permissions:
 
 | Permission | Why |
 | --- | --- |
-| `INTERNET` | Talking to the TV on your local network (and ADB, only while installing). |
+| `INTERNET` | Talking to the TV on your local network (and ADB, only while installing), and, in the installer, downloading IlonaTv from GitHub. |
 | `CHANGE_WIFI_MULTICAST_STATE` | Finding IlonaTv on the network by its mDNS name. |
 | `CAMERA` | Scanning the pairing QR code, asked for when the scanner opens. No picture is kept or sent. |
 
-It stores, for each paired TV, only the host, port, name and token. It also keeps the ADB key it uses to talk to a TV in the app's private storage, excluded from backup and device transfer; a new phone makes a new key and the TV asks "Allow debugging?" again. It connects over ADB only in the installer.
+It stores, for each paired TV, only the host, port, name and token. It also keeps the ADB key it uses to talk to a TV in the app's private storage, excluded from backup and device transfer; a new phone makes a new key and the TV asks "Allow debugging?" again. It connects over ADB only in the installer. The installer asks GitHub's API for this repository's latest release (`api.github.com`, with the generic user agent `IlonaTv-Companion` and nothing about you), downloads the APK for the TV's CPU from it, and checks its SHA-256 before installing; nothing else leaves the phone.
 
 On the TV, a content provider (`content://tv.ilona.app.pairing`) hands the pairing secret to the installer so the phone can pair without a QR code. It is guarded by `DUMP` and answers only the adb shell (or root), so no app on the TV can read it. Reading does not change the secret: a successful pairing with it renews it, and so does removing a phone in Settings > Companion.
 

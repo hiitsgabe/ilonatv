@@ -32,11 +32,11 @@ Plus the weather, the TV's HDMI inputs with console control over HDMI-CEC (Fire 
 
 The IlonaTv Companion is an Android app that does the computer steps below from your phone, then stays on as a remote.
 
-- **Install** IlonaTv on a Fire TV: it finds the TV on your Wi-Fi, asks for the "Allow debugging?" prompt, installs the right APK, grants the permissions Launcher mode and Processes need, and starts it.
+- **Install** IlonaTv on a Fire TV: it finds the TV on your Wi-Fi, asks for the "Allow debugging?" prompt, downloads the right APK from the latest [release](../../releases) (checking its SHA-256), installs it, grants the permissions Launcher mode and Processes need, and starts it.
 - **Pair** with the QR code or the code from Settings > Companion.
 - **Remote:** the keys, Back and Home, search and browse with Watch, and typing during the setup.
 
-Download the companion APK from the [Releases](../../releases) page and sideload it on your phone. Until the first release is out, build it with `tool/build_companion.sh` ([details](docs/development.md#companion)).
+Download `ilonatv-companion.apk` from the [Releases](../../releases) page, sideload it on your phone, then choose "Install IlonaTv on a TV". To build it yourself, see [development](docs/development.md#companion).
 
 The phone installer works on Fire TV and on Android TV devices that offer ADB network debugging on port 5555. Google TV and Android 11+ only offer "Wireless debugging", which needs pairing from a computer: follow Get started below. Once IlonaTv is installed you can turn ADB debugging off; the remote does not use it.
 
@@ -54,13 +54,13 @@ The phone installer works on Fire TV and on Android TV devices that offer ADB ne
 
    ```sh
    adb connect <tv-ip>:5555
-   adb shell getprop ro.product.cpu.abilist   # arm64-v8a? use the arm64 APK; otherwise armeabi-v7a
+   adb shell getprop ro.product.cpu.abilist   # arm64-v8a? use ilonatv-arm64-v8a.apk; otherwise ilonatv-armeabi-v7a.apk
    ```
 
-3. **Install IlonaTv** from the [Releases](../../releases) page. Until the first release is out, [build it](docs/development.md#build).
+3. **Install IlonaTv** from the [Releases](../../releases) page (`ilonatv-armeabi-v7a.apk` fits most Fire TV devices; `SHA256SUMS` lists the checksums). To build it yourself, see [development](docs/development.md#build).
 
    ```sh
-   adb install -r app-armeabi-v7a-release.apk
+   adb install -r ilonatv-armeabi-v7a.apk
    adb shell am start -n tv.ilona.app/.MainActivity
    ```
 
