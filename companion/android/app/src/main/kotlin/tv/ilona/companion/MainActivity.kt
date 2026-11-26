@@ -7,6 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var nsd: Nsd? = null
+    private var adb: Adb? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -20,10 +21,13 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+        val a = Adb(filesDir).also { adb = it }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "tv.ilona.companion/adb").setMethodCallHandler(a::onCall)
     }
 
     override fun onDestroy() {
         nsd?.stop()
+        adb?.close()
         super.onDestroy()
     }
 }

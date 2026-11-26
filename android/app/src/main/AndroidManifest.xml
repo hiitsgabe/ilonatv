@@ -79,6 +79,14 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
+        <!-- The companion's installer reads the pairing secret over adb (see PairingProvider). DUMP is held by the adb
+             shell and is signature|privileged|development, so no ordinary app can read it, and nothing can write. -->
+        <provider
+            android:name=".PairingProvider"
+            android:authorities="tv.ilona.app.pairing"
+            android:exported="true"
+            android:readPermission="android.permission.DUMP"
+            android:writePermission="android.permission.DUMP" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

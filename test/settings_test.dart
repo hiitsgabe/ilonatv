@@ -313,6 +313,19 @@ void main() {
     },
   );
 
+  test(
+    'companionSecret is kept under the key PairingProvider reads over adb',
+    () async {
+      final s = await Settings.load();
+      var stored = await SharedPreferencesStorePlatform.instance.getAll();
+      expect(stored['flutter.companionSecret'], s.companionSecret);
+      s.companionSecret = 'renewed';
+      await s.save();
+      stored = await SharedPreferencesStorePlatform.instance.getAll();
+      expect(stored['flutter.companionSecret'], 'renewed');
+    },
+  );
+
   test('companionDevices round trip', () async {
     final s = await Settings.load();
     expect(s.companionDevices, isEmpty);

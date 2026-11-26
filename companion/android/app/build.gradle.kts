@@ -47,3 +47,7 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("dev.mobile:dadb:2.0.0")
+}
