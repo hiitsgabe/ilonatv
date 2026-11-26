@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:elimor/app.dart';
+import 'package:elimor/companion/state.dart';
 import 'package:elimor/data/sports.dart';
 import 'package:elimor/data/stremio.dart';
 import 'package:elimor/data/tmdb.dart';
@@ -17,6 +18,7 @@ import 'package:elimor/ui/home_screen.dart';
 import 'package:elimor/ui/settings_kit.dart';
 import 'package:elimor/ui/settings_screen.dart';
 import 'package:elimor/ui/setup_wizard.dart';
+import 'package:elimor_protocol/elimor_protocol.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -320,6 +322,17 @@ void main() {
       const AppTile(_videos, 'youtube').toJson(),
       const AppTile('elimor:apps', 'apps').toJson(),
     ]);
+  });
+
+  testWidgets('the wizard publishes its step', (tester) async {
+    await _app(tester, {});
+    expect(companionState.step, SetupStep.welcome);
+    await _press(tester, 'Continue');
+    expect(companionState.step, SetupStep.location);
+    await _toDone(tester);
+    expect(companionState.step, SetupStep.done);
+    await _press(tester, 'Done');
+    expect(companionState.step, isNull);
   });
 
   testWidgets('a re-run from Settings leaves with Back and keeps the dock', (

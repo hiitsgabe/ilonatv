@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'companion/state.dart';
 import 'data/media.dart';
 import 'data/sports.dart';
 import 'data/stremio.dart';
@@ -130,5 +131,14 @@ Future<void> main() async {
   // standby resumes it, and start() refreshes what went stale meanwhile. The
   // binding holds the listener for good, so it needs no variable and no
   // dispose.
-  AppLifecycleListener(onResume: sources.start, onPause: sources.stop);
+  AppLifecycleListener(
+    onResume: () {
+      companionState.setInFront(true);
+      sources.start();
+    },
+    onPause: () {
+      companionState.setInFront(false);
+      sources.stop();
+    },
+  );
 }

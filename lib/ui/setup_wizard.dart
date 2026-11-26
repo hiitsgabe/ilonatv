@@ -1,5 +1,7 @@
+import 'package:elimor_protocol/elimor_protocol.dart' show SetupStep;
 import 'package:flutter/material.dart';
 
+import '../companion/state.dart';
 import '../host.dart';
 import '../i18n.dart';
 import '../providers.dart';
@@ -66,12 +68,14 @@ class _SetupWizardState extends State<SetupWizard> {
   @override
   void initState() {
     super.initState();
+    _publish();
     _loadApps();
     _focusStep();
   }
 
   @override
   void dispose() {
+    companionState.setStep(null);
     _content.dispose();
     _continue.dispose();
     super.dispose();
@@ -122,6 +126,8 @@ class _SetupWizardState extends State<SetupWizard> {
     (_content.traversalDescendants.firstOrNull ?? _continue).requestFocus();
   });
 
+  void _publish() => companionState.setStep(SetupStep.values.byName(_at.name));
+
   void _go(int by) {
     final steps = _steps;
     final i = steps.indexOf(_at) + by;
@@ -131,6 +137,7 @@ class _SetupWizardState extends State<SetupWizard> {
       return;
     }
     setState(() => _at = steps[i]);
+    _publish();
     _focusStep();
   }
 
