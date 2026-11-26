@@ -1,0 +1,131 @@
+import 'package:elimor_protocol/elimor_protocol.dart' show kCompanionPort;
+import 'package:flutter/material.dart';
+
+import '../companion/pairing.dart';
+import '../i18n.dart';
+import 'qr_code.dart';
+import 'settings_kit.dart';
+
+/// Settings > Companion: the QR a phone opens Elimor's page with, the code
+/// the Companion app pairs with, and the paired devices. [compact] is the
+/// setup's welcome step: the QR and the code only. The code pairs only while
+/// one of these is on screen.
+class CompanionPane extends StatefulWidget {
+  final Pairing pairing;
+
+  /// The TV's address; null when it is on no network.
+  final String? address;
+  final bool compact;
+  const CompanionPane(
+    this.pairing,
+    this.address, {
+    super.key,
+    this.compact = false,
+  });
+
+  @override
+  State<CompanionPane> createState() => _CompanionPaneState();
+}
+
+class _CompanionPaneState extends State<CompanionPane> {
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.pairing.offerCode();
+    _lifecycle = AppLifecycleListener(
+      onResume: widget.pairing.offerCode,
+      onPause: widget.pairing.withdrawCode,
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    widget.pairing.withdrawCode();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.pairing,
+    builder: (context, _) {
+      final p = widget.pairing;
+      final ip = widget.address;
+      final compact = widget.compact;
+      final code = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (compact)
+            Text(
+              t('setupFromPhone'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+          Text(t('pairCode'), style: settingsNote),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              p.code,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: compact ? 28 : 34,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 4,
+              ),
+            ),
+          ),
+          if (ip == null) Text(t('noNetwork'), style: settingsNote),
+        ],
+      );
+      final top = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          spacing: 20,
+          children: [
+            if (ip != null)
+              QrCode(
+                'http://$ip:$kCompanionPort/#s=${p.secret}',
+                size: compact ? 160 : 180,
+              ),
+            Flexible(child: code),
+          ],
+        ),
+      );
+      if (compact) return top;
+      final devices = p.settings.companionDevices;
+      return settingsGroups([
+        top,
+        if (ip != null)
+          SettingsGroup(
+            footer: t('companionHelp'),
+            children: [
+              SettingsRow(
+                title: t('newQr'),
+                valueIcon: Icons.refresh,
+                onPressed: p.renewSecret,
+              ),
+            ],
+          ),
+        if (devices.isNotEmpty)
+          SettingsGroup(
+            header: t('pairedDevices'),
+            children: [
+              for (final MapEntry(key: token, value: name) in devices.entries)
+                SettingsRow(
+                  title: name,
+                  extras: [
+                    RoundIconButton(
+                      Icons.delete_outline,
+                      label: t('remove'),
+                      onPressed: () => p.remove(token),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+      ]);
+    },
+  );
+}

@@ -47,8 +47,11 @@ List<String> grantCommands(String? ip) {
 }
 
 /// The TV's IPv4 address, for [grantCommands]: the first one of the first
-/// interface that is not loopback; null when there is none.
-Future<String?> deviceIp() async {
+/// interface that is not loopback; null when there is none. Tests replace
+/// it.
+Future<String?> Function() deviceIp = _deviceIp;
+
+Future<String?> _deviceIp() async {
   try {
     final interfaces = await NetworkInterface.list(
       type: InternetAddressType.IPv4,

@@ -538,7 +538,7 @@ object HostChannel {
     private fun advertise(ctx: Context, port: Int, name: String) {
         unadvertise(ctx)
         val info = NsdServiceInfo().apply {
-            serviceName = name
+            serviceName = "$name on ${Build.MODEL}"
             serviceType = "_elimor._tcp"
             setPort(port)
             setAttribute("v", "1")

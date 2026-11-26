@@ -1,13 +1,16 @@
 import 'package:elimor_protocol/elimor_protocol.dart' show SetupStep;
 import 'package:flutter/material.dart';
 
+import '../companion/pairing.dart';
 import '../companion/state.dart';
 import '../host.dart';
 import '../i18n.dart';
+import '../launcher_setup.dart';
 import '../providers.dart';
 import '../settings.dart';
 import '../sources.dart';
 import 'backdrop.dart';
+import 'companion_pane.dart';
 import 'glass.dart';
 import 'launcher_pane.dart';
 import 'settings_kit.dart';
@@ -51,7 +54,13 @@ enum _Step {
 class SetupWizard extends StatefulWidget {
   final Settings settings;
   final Sources sources;
-  const SetupWizard(this.settings, this.sources, {super.key});
+  final Pairing pairing;
+  const SetupWizard(
+    this.settings,
+    this.sources, {
+    super.key,
+    required this.pairing,
+  });
 
   @override
   State<SetupWizard> createState() => _SetupWizardState();
@@ -64,13 +73,26 @@ class _SetupWizardState extends State<SetupWizard> {
   late final _rerun = widget.settings.setupDone;
   Map<String, InstalledApp>? _apps;
   var _stremioApps = const <String>[];
+  // The TV's address, once read: until then the welcome step shows no QR.
+  String? _ip;
+  var _ipKnown = false;
 
   @override
   void initState() {
     super.initState();
     _publish();
     _loadApps();
+    _loadIp();
     _focusStep();
+  }
+
+  Future<void> _loadIp() async {
+    final ip = await deviceIp();
+    if (!mounted) return;
+    setState(() {
+      _ip = ip;
+      _ipKnown = true;
+    });
   }
 
   @override
@@ -193,18 +215,29 @@ class _SetupWizardState extends State<SetupWizard> {
     final s = widget.settings;
     final sources = widget.sources;
     final apps = _apps ?? const {};
+    final usePhone = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(t('useYourPhone'), style: settingsNote),
+    );
     // Until the platform answers, OK on an app row would offer nothing.
     if (_apps == null && (_at == _Step.titles || _at == _Step.videos)) {
       return const Text('…', style: settingsNote);
     }
     return switch (_at) {
-      _Step.welcome => SettingsGroup(
-        header: t('language'),
-        children: [LanguagePane(s, sources)],
-      ),
-      _Step.location => WeatherPane(s, sources.weather),
+      _Step.welcome => settingsGroups([
+        SettingsGroup(
+          header: t('language'),
+          children: [LanguagePane(s, sources)],
+        ),
+        if (_ipKnown) CompanionPane(widget.pairing, _ip, compact: true),
+      ]),
+      _Step.location => settingsGroups([
+        WeatherPane(s, sources.weather),
+        usePhone,
+      ]),
       _Step.tmdb => settingsGroups([
         TmdbPane(s, sources.tmdb),
+        usePhone,
         const TmdbGuide(),
       ]),
       _Step.titles => settingsGroups([

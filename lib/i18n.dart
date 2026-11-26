@@ -227,6 +227,15 @@ const _strings = {
     'topRated': 'Top rated',
     'hiddenGems': 'Hidden gems',
     'inSpotlight': 'in the spotlight',
+    'companion': 'Companion',
+    'companionHelp':
+        "Open the Elimor Companion, or scan with your phone's camera.",
+    'pairCode': 'Code',
+    'pairedDevices': 'Paired devices',
+    'newQr': 'New QR',
+    'setupFromPhone': 'Set up from your phone',
+    'useYourPhone': 'Easier to type? Use your phone: Settings > Companion.',
+    'noNetwork': 'The TV is not on a network.',
   },
   'pt': {
     'nOn': '{n} ligadas',
@@ -439,5 +448,14 @@ const _strings = {
     'topRated': 'Mais bem avaliados',
     'hiddenGems': 'Pérolas escondidas',
     'inSpotlight': 'em destaque',
+    'companion': 'Companion',
+    'companionHelp':
+        'Abra o Elimor Companion, ou escaneie com a câmera do celular.',
+    'pairCode': 'Código',
+    'pairedDevices': 'Aparelhos pareados',
+    'newQr': 'Novo QR',
+    'setupFromPhone': 'Configure pelo celular',
+    'useYourPhone': 'Mais fácil digitar? Use o celular: Ajustes > Companion.',
+    'noNetwork': 'A TV não está numa rede.',
   },
 };

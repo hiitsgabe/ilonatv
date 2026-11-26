@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:elimor/app.dart';
+import 'package:elimor/companion/pairing.dart';
 import 'package:elimor/companion/state.dart';
 import 'package:elimor/data/sports.dart';
 import 'package:elimor/data/stremio.dart';
@@ -11,10 +12,12 @@ import 'package:elimor/data/youtube.dart';
 import 'package:elimor/data/youtube_tv.dart';
 import 'package:elimor/host.dart';
 import 'package:elimor/i18n.dart';
+import 'package:elimor/launcher_setup.dart';
 import 'package:elimor/providers.dart';
 import 'package:elimor/settings.dart';
 import 'package:elimor/sources.dart';
 import 'package:elimor/ui/home_screen.dart';
+import 'package:elimor/ui/qr_code.dart';
 import 'package:elimor/ui/settings_kit.dart';
 import 'package:elimor/ui/settings_screen.dart';
 import 'package:elimor/ui/setup_wizard.dart';
@@ -40,6 +43,9 @@ Future<(Settings, Sources)> _setUp(
     ..devicePixelRatio = 2;
   addTearDown(tester.view.reset);
   addTearDown(() => I18n.language = 'en');
+  final ip = deviceIp;
+  deviceIp = () async => '192.168.1.5';
+  addTearDown(() => deviceIp = ip);
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
         const MethodChannel('app.elimor/host'),
@@ -79,9 +85,12 @@ Future<(Settings, Sources)> _setUp(
   return (s, sources);
 }
 
+late Pairing _pairing;
+
 Future<Settings> _app(WidgetTester tester, Map<String, Object> prefs) async {
   final (s, sources) = await _setUp(tester, prefs);
-  await tester.pumpWidget(ElimorApp(s, sources, MemStore()));
+  _pairing = Pairing(s);
+  await tester.pumpWidget(ElimorApp(s, sources, MemStore(), pairing: _pairing));
   await tester.pumpAndSettle();
   return s;
 }
@@ -324,6 +333,23 @@ void main() {
     ]);
   });
 
+  testWidgets('the welcome step offers setup from the phone; the next steps '
+      'say where', (tester) async {
+    await _app(tester, {});
+    expect(find.byType(QrCode), findsOneWidget);
+    expect(find.text(t('setupFromPhone')), findsOneWidget);
+    expect(find.text(_pairing.code), findsOneWidget);
+    expect(_pairing.codeOffered, isTrue);
+    await _press(tester, 'Continue');
+    expect(_pairing.codeOffered, isFalse);
+    expect(find.byType(QrCode), findsNothing);
+    expect(find.text(t('useYourPhone')), findsOneWidget);
+    await _press(tester, 'Continue');
+    expect(find.text(t('useYourPhone')), findsOneWidget);
+    await _press(tester, 'Continue');
+    expect(find.text(t('useYourPhone')), findsNothing);
+  });
+
   testWidgets('the wizard publishes its step', (tester) async {
     await _app(tester, {});
     expect(companionState.step, SetupStep.welcome);
@@ -343,7 +369,9 @@ void main() {
       'setupDone': true,
       'tiles': jsonEncode(tiles),
     });
-    await tester.pumpWidget(MaterialApp(home: SettingsScreen(s, sources)));
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(s, sources, pairing: Pairing(s))),
+    );
     await tester.pumpAndSettle();
     await _press(tester, 'About');
     await _press(tester, 'Run setup again');

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../companion/pairing.dart';
 import '../data/inputs.dart';
 import '../data/media.dart';
 import '../device.dart';
@@ -56,10 +57,12 @@ class HomeScreen extends StatefulWidget {
   /// That app list as `main` read it before the first frame (the store's
   /// `apps` entry), so the dock is in the first frame; null to read it here.
   final Map<String, dynamic>? cachedApps;
+  final Pairing pairing;
   const HomeScreen(
     this.settings,
     this.sources, {
     super.key,
+    required this.pairing,
     this.store,
     this.cachedApps,
   });
@@ -330,8 +333,9 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   );
 
-  void _openSettings() =>
-      _push(SettingsScreen(widget.settings, widget.sources));
+  void _openSettings() => _push(
+    SettingsScreen(widget.settings, widget.sources, pairing: widget.pairing),
+  );
 
   void _open(AppTile tile) {
     switch (tile.package) {

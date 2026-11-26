@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:elimor/companion/pairing.dart';
 import 'package:elimor/data/inputs.dart';
 import 'package:elimor/data/media.dart';
 import 'package:elimor/data/sports.dart';
@@ -113,7 +114,11 @@ Future<Settings> _open(
     ..providers = providers
     ..genres = genres
     ..popular = popular;
-  await tester.pumpWidget(MaterialApp(home: HomeScreen(settings, sources)));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: HomeScreen(settings, sources, pairing: Pairing(settings)),
+    ),
+  );
   await tester.pumpAndSettle();
   return settings;
 }
@@ -401,7 +406,14 @@ void main() {
       sports: SportsSource(settings, memStore, fetch: fake({}).call),
     );
     await tester.pumpWidget(
-      MaterialApp(home: HomeScreen(settings, sources, store: store)),
+      MaterialApp(
+        home: HomeScreen(
+          settings,
+          sources,
+          pairing: Pairing(settings),
+          store: store,
+        ),
+      ),
     );
     await tester.pump();
     await tester.pump();

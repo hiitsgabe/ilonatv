@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:elimor_protocol/elimor_protocol.dart' show kCompanionPort;
 import 'package:flutter/foundation.dart' show kProfileMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'companion/api.dart';
+import 'companion/pairing.dart';
+import 'companion/server.dart';
 import 'companion/state.dart';
 import 'data/media.dart';
 import 'data/sports.dart';
@@ -123,9 +127,20 @@ Future<void> main() async {
   // The cached forecast is read before the first frame, so it is on screen
   // from the start.
   await sources.loadCache();
-  runApp(ElimorApp(s, sources, store, cachedApps: cachedApps));
+  final pairing = Pairing(s);
+  runApp(
+    ElimorApp(s, sources, store, pairing: pairing, cachedApps: cachedApps),
+  );
   WidgetsBinding.instance.addObserver(SnapshotObserver(homeBoundaryKey, s));
   sources.start();
+  // Another app on the port, or no network, leaves Elimor without its
+  // Companion, not without its home.
+  unawaited(
+    CompanionServer(pairing, ElimorApi(s, sources))
+        .start()
+        .then((_) => Host.advertise(kCompanionPort, 'Elimor'))
+        .catchError((Object e) => debugPrint('companion server: $e')),
+  );
   DiskImages.prune().ignore();
   // The sources run only while the app is in the foreground; a wake from
   // standby resumes it, and start() refreshes what went stale meanwhile. The

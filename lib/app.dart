@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'companion/pairing.dart';
 import 'settings.dart';
 import 'sources.dart';
 import 'store.dart';
@@ -16,6 +17,7 @@ class ElimorApp extends StatelessWidget {
   final Settings settings;
   final Sources sources;
   final Store store;
+  final Pairing pairing;
 
   /// The app list of the last run (`apps` in [store]), for the dock's first
   /// frame.
@@ -25,6 +27,7 @@ class ElimorApp extends StatelessWidget {
     this.sources,
     this.store, {
     super.key,
+    required this.pairing,
     this.cachedApps,
   });
 
@@ -78,11 +81,12 @@ class ElimorApp extends StatelessWidget {
               child: HomeScreen(
                 settings,
                 sources,
+                pairing: pairing,
                 store: store,
                 cachedApps: cachedApps,
               ),
             )
-          : SetupWizard(settings, sources),
+          : SetupWizard(settings, sources, pairing: pairing),
     ),
   );
 }

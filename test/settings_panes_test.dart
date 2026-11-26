@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:elimor/app.dart';
+import 'package:elimor/companion/pairing.dart';
 import 'package:elimor/data/sports.dart';
 import 'package:elimor/data/stremio.dart';
 import 'package:elimor/data/tmdb.dart';
@@ -10,6 +11,8 @@ import 'package:elimor/data/youtube_tv.dart';
 import 'package:elimor/settings.dart';
 import 'package:elimor/sources.dart';
 import 'package:elimor/i18n.dart';
+import 'package:elimor/launcher_setup.dart';
+import 'package:elimor/ui/qr_code.dart';
 import 'package:elimor/ui/settings_kit.dart';
 import 'package:elimor/ui/settings_panes.dart';
 import 'package:elimor/ui/settings_screen.dart';
@@ -197,7 +200,7 @@ void main() {
     expect(find.byType(RowsPane), findsOneWidget);
   });
 
-  testWidgets('the root lists the eleven sections with their values, all on '
+  testWidgets('the root lists the twelve sections with their values, all on '
       'a Fire TV screen; the tile shows the focused one', (tester) async {
     final s = await _screen(tester);
     final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
@@ -210,6 +213,7 @@ void main() {
       ('Open with', null),
       ('Processes', null),
       ('Accounts', '0'),
+      ('Companion', '0'),
       ('Launcher mode', 'Off'),
       ('Language', 'English'),
       ('TV settings', null),
@@ -249,6 +253,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Settings'), findsOneWidget);
     expect(_focused(tester, 'Home rows'), isTrue);
+  });
+
+  testWidgets('Companion shows the QR of the TV\'s address', (tester) async {
+    final ip = deviceIp;
+    deviceIp = () async => '10.0.0.7';
+    addTearDown(() => deviceIp = ip);
+    await _screen(tester);
+    await tester.tap(find.text('Companion'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<QrCode>(find.byType(QrCode)).data,
+      startsWith('http://10.0.0.7:8642/#s='),
+    );
   });
 
   testWidgets('About names the licence and credits TMDB and JustWatch', (
@@ -402,7 +419,9 @@ Future<Settings> _screen(WidgetTester tester) async {
         (_) async => null,
       );
   final (s, sources) = await _pane(tester);
-  await tester.pumpWidget(MaterialApp(home: SettingsScreen(s, sources)));
+  await tester.pumpWidget(
+    MaterialApp(home: SettingsScreen(s, sources, pairing: Pairing(s))),
+  );
   await tester.pumpAndSettle();
   return s;
 }

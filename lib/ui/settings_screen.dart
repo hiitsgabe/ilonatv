@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../app.dart';
+import '../companion/pairing.dart';
 import '../host.dart';
 import '../i18n.dart';
 import '../launcher_setup.dart';
 import '../providers.dart';
 import '../settings.dart';
 import '../sources.dart';
+import 'companion_pane.dart';
 import 'launcher_pane.dart';
 import 'processes_pane.dart';
 import 'settings_kit.dart';
@@ -26,8 +28,11 @@ const _groups = [
     ('providers', Icons.open_in_new),
     ('processes', Icons.memory),
   ],
-  [('accounts', Icons.person_outline)],
+  // One group with the TV's own rows: a group more and the list scrolls at
+  // 1080p.
   [
+    ('accounts', Icons.person_outline),
+    ('companion', Icons.phone_iphone),
     ('fireTvMode', Icons.home_outlined),
     ('language', Icons.language),
     ('systemSettings', Icons.settings_outlined),
@@ -41,7 +46,13 @@ const _groups = [
 class SettingsScreen extends StatefulWidget {
   final Settings settings;
   final Sources sources;
-  const SettingsScreen(this.settings, this.sources, {super.key});
+  final Pairing pairing;
+  const SettingsScreen(
+    this.settings,
+    this.sources, {
+    super.key,
+    required this.pairing,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -60,6 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<String>? _stremioApps;
   LauncherSetup? _setup;
   String? _ip;
+  var _ipKnown = false;
   int? _memoryKb;
 
   late final _listen = Listenable.merge([widget.settings, _loaded]);
@@ -102,6 +114,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _ip = ip;
       });
     } catch (_) {}
+  }
+
+  Future<void> _loadIp() async {
+    final ip = await deviceIp();
+    _set(() {
+      _ip = ip;
+      _ipKnown = true;
+    });
   }
 
   Future<void> _loadMemory() async {
@@ -178,7 +198,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             chevron: true,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => SetupWizard(widget.settings, widget.sources),
+                builder: (_) => SetupWizard(
+                  widget.settings,
+                  widget.sources,
+                  pairing: widget.pairing,
+                ),
               ),
             ),
           ),
@@ -215,7 +239,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         offeredApps(apps),
         grant: grantCommands(_ip),
       ),
-      'rowsConfig' || 'apps' || 'processes' || 'providers' => const SizedBox(),
+      'companion' when _ipKnown => CompanionPane(widget.pairing, _ip),
+      'rowsConfig' ||
+      'apps' ||
+      'processes' ||
+      'providers' ||
+      'companion' => const SizedBox(),
       'accounts' => AccountsPane(
         widget.settings,
         sources,
@@ -234,6 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _open(String key, IconData icon) {
     if (key == 'fireTvMode' || key == 'systemSettings') _loadSetup();
     if (key == 'about') _loadMemory();
+    if (key == 'companion') _loadIp();
     pushSettingsPage(
       context,
       title: () => t(key),
@@ -253,6 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'sports' => s.sports.isEmpty ? t('off') : '${s.sports.length}',
       'accounts' =>
         '${s.youtubeAccounts.length + (s.stremioAuthKey.isEmpty ? 0 : 1) + (s.tmdbKey.isEmpty ? 0 : 1) + (s.alexaBounce && s.geminiKey.isNotEmpty ? 1 : 0)}',
+      'companion' => '${s.companionDevices.length}',
       'fireTvMode' => _onOff(s.fireTvMode),
       'language' => kLanguageNames[s.language],
       'about' => kVersion,
