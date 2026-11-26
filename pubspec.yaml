@@ -2,7 +2,7 @@ name: ilonatv
 description: "A home screen launcher for Android TV and Fire TV, with an Apple TV look."
 publish_to: 'none'
 
-version: 0.6.0+10001
+version: 0.6.1+10002
 
 environment:
   sdk: ^3.13.2

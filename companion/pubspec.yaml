@@ -1,7 +1,7 @@
 name: ilonatv_companion
 description: Remote control for the IlonaTv launcher.
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.6.1+10002
 
 environment:
   sdk: ^3.13.2
