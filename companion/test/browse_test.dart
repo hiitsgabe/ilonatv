@@ -38,10 +38,15 @@ class Fake extends TvClient {
     return Ok(results);
   }
 
+  TvResult<List<TvRow>>? rowsFail;
+
   @override
-  Future<TvResult<List<TvRow>>> rows() async => Ok([
-    TvRow('trending', 'Trending now', [item('Alien')]),
-  ]);
+  Future<TvResult<List<TvRow>>> rows() async =>
+      rowsFail ??
+      Ok([
+        TvRow('trending', 'Trending now', [item('Alien')]),
+        TvRow('yt', 'Videos', [item('Clip', 'video')]),
+      ]);
 
   @override
   Future<TvResult<bool>> open(Map i) async {
@@ -59,12 +64,22 @@ void main() {
     token: 'x',
   );
 
-  Future<void> start(WidgetTester t, String tab) async {
+  Future<void> start(
+    WidgetTester t,
+    String tab, {
+    double scale = 1,
+    bool fail = false,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     I18n.language = 'en';
     client = Fake();
+    if (fail) client.rowsFail = const Unreachable('x');
     await t.pumpWidget(
       MaterialApp(
+        builder: (c, w) => MediaQuery(
+          data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(scale)),
+          child: w!,
+        ),
         home: RemotePage(tv: tv, client: client, tvs: Tvs()),
       ),
     );
@@ -124,5 +139,42 @@ void main() {
     await t.tap(find.byKey(const Key('watch')));
     await t.pumpAndSettle();
     expect(find.text('Open IlonaTv on the TV'), findsOneWidget);
+  });
+
+  testWidgets('rows with videos do not overflow, even at 1.5x text', (t) async {
+    await start(t, 'Browse', scale: 1.5);
+    expect(t.takeException(), isNull);
+    expect(find.text('Clip'), findsOneWidget);
+  });
+
+  testWidgets('search grids do not overflow at 1.5x text', (t) async {
+    await start(t, 'Search', scale: 1.5);
+    await t.enterText(find.byType(TextField), 'dune');
+    await t.pump(const Duration(milliseconds: 450));
+    await t.pumpAndSettle();
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets(
+    'open false shows the message inside the sheet, which stays open',
+    (t) async {
+      await start(t, 'Browse');
+      client.openResult = const Ok(false);
+      await t.tap(find.text('Alien'));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('watch')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('cantOpen')), findsOneWidget);
+      expect(find.byKey(const Key('watch')), findsOneWidget);
+    },
+  );
+
+  testWidgets('a failed first load shows Retry, and Retry loads', (t) async {
+    await start(t, 'Browse', fail: true);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    client.rowsFail = null;
+    await t.tap(find.text('Retry').last);
+    await t.pumpAndSettle();
+    expect(find.text('Trending now'), findsOneWidget);
   });
 }

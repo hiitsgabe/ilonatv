@@ -52,7 +52,7 @@ class _SearchTabState extends State<SearchTab> {
   }
 
   Widget _section(String title, List<Item> items) {
-    final wide = items.isNotEmpty && items.first['type'] == 'video';
+    final wide = isWide(items.first);
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -75,7 +75,7 @@ class _SearchTabState extends State<SearchTab> {
                   crossAxisCount: cols,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  mainAxisExtent: (wide ? w * 9 / 16 : w * 1.5) + 30,
+                  mainAxisExtent: posterHeight(context, items.first, w),
                 ),
                 itemCount: items.length,
                 itemBuilder: (_, i) => Poster(
@@ -146,6 +146,7 @@ class BrowseTab extends StatefulWidget {
 
 class _BrowseTabState extends State<BrowseTab> {
   List<TvRow>? _rows;
+  bool _failed = false;
 
   @override
   void initState() {
@@ -157,8 +158,12 @@ class _BrowseTabState extends State<BrowseTab> {
     final r = await widget.client.rows();
     if (!mounted) return;
     if (r is Ok<List<TvRow>>) {
-      setState(() => _rows = r.value);
+      setState(() {
+        _rows = r.value;
+        _failed = false;
+      });
     } else {
+      if (_rows == null) setState(() => _failed = true);
       await widget.onResult(r);
     }
   }
@@ -166,6 +171,23 @@ class _BrowseTabState extends State<BrowseTab> {
   @override
   Widget build(BuildContext context) {
     final rows = _rows;
+    if (rows == null && _failed) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(t('loadFailed')),
+            TextButton(
+              onPressed: () {
+                setState(() => _failed = false);
+                _load();
+              },
+              child: Text(t('retry')),
+            ),
+          ],
+        ),
+      );
+    }
     if (rows == null) return const Center(child: CircularProgressIndicator());
     return RefreshIndicator(
       onRefresh: _load,
@@ -190,11 +212,9 @@ class _BrowseTabState extends State<BrowseTab> {
                 ),
               ),
               SizedBox(
-                height:
-                    (row.items.first['type'] == 'video'
-                        ? 160 * 9 / 16
-                        : 160 * 1.5) +
-                    34,
+                height: row.items
+                    .map((i) => posterHeight(context, i, posterWidth(i)))
+                    .reduce((a, b) => a > b ? a : b),
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -202,7 +222,7 @@ class _BrowseTabState extends State<BrowseTab> {
                   separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (_, i) => Poster(
                     item: row.items[i],
-                    width: row.items[i]['type'] == 'video' ? 240 : 110,
+                    width: posterWidth(row.items[i]),
                     onTap: () => showTitleSheet(
                       context,
                       row.items[i],

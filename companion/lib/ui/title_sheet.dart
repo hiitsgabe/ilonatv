@@ -8,6 +8,15 @@ String? _s(Item i, String k) {
   return v is String && v.isNotEmpty ? v : null;
 }
 
+bool isWide(Item i) => i['type'] == 'video';
+
+double posterWidth(Item i) => isWide(i) ? 240 : 110;
+
+double posterHeight(BuildContext context, Item i, double width) {
+  final label = MediaQuery.textScalerOf(context).scale(13) * 1.5;
+  return (isWide(i) ? width * 9 / 16 : width * 1.5) + 6 + label;
+}
+
 class Poster extends StatelessWidget {
   const Poster({
     super.key,
@@ -22,7 +31,7 @@ class Poster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = item['type'] == 'video';
+    final wide = isWide(item);
     final url = wide
         ? (_s(item, 'backdropUrl') ?? _s(item, 'posterUrl'))
         : _s(item, 'posterUrl');
@@ -100,16 +109,24 @@ class TitleSheet extends StatefulWidget {
 
 class _TitleSheetState extends State<TitleSheet> {
   bool _busy = false;
+  bool _failed = false;
 
   Future<void> _watch() async {
     if (_busy) return;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _failed = false;
+    });
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
     final r = await widget.client.open(widget.item);
     if (r is Ok<bool> && !r.value) {
-      messenger.showSnackBar(SnackBar(content: Text(t('cantOpen'))));
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _failed = true;
+        });
+      }
       return;
     }
     if (r is Ok<bool>) {
@@ -177,6 +194,18 @@ class _TitleSheetState extends State<TitleSheet> {
                 ),
               ),
             const SizedBox(height: 20),
+            if (_failed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  t('cantOpen'),
+                  key: const Key('cantOpen'),
+                  style: const TextStyle(
+                    color: Color(0xFFFF8A80),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             SizedBox(
               width: double.infinity,
               height: 54,
