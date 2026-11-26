@@ -18,8 +18,8 @@ const _maxTiles = 5;
 
 /// A newly chosen app's icon: its own, or for a pseudo package the painted
 /// icon its suffix names (`apps`, `settings`), never a grey box.
-String _iconFor(String package) =>
-    package.startsWith('ilonatv:') ? package.substring(7) : 'app';
+String newTileIcon(String package) =>
+    package.startsWith('ilonatv:') ? package.replaceFirst('ilonatv:', '') : 'app';
 
 /// The custom image entry of the icon picker.
 const _custom = 'ilonatv:image';
@@ -191,7 +191,7 @@ class _TileEditorState extends State<TileEditor> {
     final package = await _pickApp();
     if (package == null) return;
     _dropImage(_tiles[i]);
-    _tiles[i] = AppTile(package, _iconFor(package));
+    _tiles[i] = AppTile(package, newTileIcon(package));
     if (_tiles[i].icon == 'app') _loadIcon(package);
     await _save();
   }
@@ -230,7 +230,7 @@ class _TileEditorState extends State<TileEditor> {
     if (package == null) return;
     await _loadIcon(package);
     if (!mounted) return;
-    final tile = AppTile(package, _iconFor(package));
+    final tile = AppTile(package, newTileIcon(package));
     widget.settings.addTile(await _pickLook(tile) ?? tile);
     // The last free slot takes Add away, so focus moves to the new row.
     final n = _tiles.length;

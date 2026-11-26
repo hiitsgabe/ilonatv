@@ -76,6 +76,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  test('a new pseudo tile gets the painted icon its suffix names', () {
+    expect(newTileIcon('ilonatv:apps'), 'apps');
+    expect(newTileIcon('ilonatv:settings'), 'settings');
+    expect(newTileIcon('com.example.app'), 'app');
+  });
+
   testWidgets('a custom image: pick, Centered, a swatch, saved with the '
       'tile', (tester) async {
     final s = await show(tester, [
