@@ -25,25 +25,42 @@ class SportsPane extends StatelessWidget {
         _ => t('allGames'),
       };
 
+  Future<void> _toggleBySport() async {
+    settings.gamesBySport = !settings.gamesBySport;
+    await settings.save();
+  }
+
   @override
-  Widget build(BuildContext context) => SettingsGroup(
-    footer: t('sportsHelp'),
-    children: [
-      for (final (league, name) in kSportsLeagues)
+  Widget build(BuildContext context) => settingsGroups([
+    SettingsGroup(
+      footer: t('gamesBySportHelp'),
+      children: [
         SettingsRow(
-          title: name,
-          value: _value(league),
-          chevron: true,
-          onPressed: () => pushSettingsPage(
-            context,
-            title: () => name,
-            icon: Icons.sports_soccer_outlined,
-            listen: settings,
-            build: () => LeaguePane(settings, league, name, fetch: fetch),
-          ),
+          title: t('gamesBySport'),
+          value: t(settings.gamesBySport ? 'on' : 'off'),
+          onPressed: _toggleBySport,
         ),
-    ],
-  );
+      ],
+    ),
+    SettingsGroup(
+      footer: t('sportsHelp'),
+      children: [
+        for (final (league, name) in kSportsLeagues)
+          SettingsRow(
+            title: name,
+            value: _value(league),
+            chevron: true,
+            onPressed: () => pushSettingsPage(
+              context,
+              title: () => name,
+              icon: Icons.sports_soccer_outlined,
+              listen: settings,
+              build: () => LeaguePane(settings, league, name, fetch: fetch),
+            ),
+          ),
+      ],
+    ),
+  ]);
 }
 
 /// One league: Follow, Only my teams, then its teams from ESPN, each a check

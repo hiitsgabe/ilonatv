@@ -50,6 +50,7 @@ Future<Settings> _open(
   List<MediaItem> popular = const [],
   Map<String, int> rowProviders = const {},
   Map<String, String> rowGenres = const {},
+  bool gamesBySport = false,
 }) async {
   // The Fire TV's screen, in logical pixels.
   tester.view
@@ -80,7 +81,8 @@ Future<Settings> _open(
   final settings = await Settings.load()
     ..tmdbKey = tmdbKey
     ..rowProviders = Map.of(rowProviders)
-    ..rowGenres = Map.of(rowGenres);
+    ..rowGenres = Map.of(rowGenres)
+    ..gamesBySport = gamesBySport;
   final store = MemStore();
   final sources = Sources(
     weather: WeatherSource(settings, store, fetch: fake({}).call),
@@ -219,6 +221,48 @@ void main() {
     // In the highlight only: the cards carry no caption.
     expect(find.text('Copa do Brasil'), findsOneWidget);
     expect(find.text('Grêmio × Atlético-MG'), findsOneWidget);
+  });
+
+  testWidgets('one row per sport: a wide games row for each, in the games '
+      'row\'s place; focus moves through them like any row', (tester) async {
+    // No league followed here: the sports come in the games' order.
+    final games = [
+      ...parseScoreboard(fixture('espn_scoreboard_nba.json'), 'basketball/nba'),
+      ...parseScoreboard(
+        fixture('espn_scoreboard_copa.json'),
+        'soccer/bra.copa_do_brazil',
+      ),
+    ];
+    await _open(tester, games: games, gamesBySport: true);
+    final basketball = '${t('games')} · ${t('sport_basketball')}';
+    final soccer = '${t('games')} · ${t('sport_soccer')}';
+    expect(find.text(t('games')), findsNothing);
+    ContentRow row(String title) => tester.widget<ContentRow>(
+      find.ancestor(of: find.text(title), matching: find.byType(ContentRow)),
+    );
+    bool focusedIn(String title) => Focus.of(
+      tester.element(
+        find.ancestor(of: find.text(title), matching: find.byType(ContentRow)),
+      ),
+    ).hasFocus;
+    expect(row(basketball).wide, isTrue);
+    expect(row(soccer).wide, isTrue);
+    expect(
+      tester.getTopLeft(find.text(basketball)).dy,
+      lessThan(tester.getTopLeft(find.text(soccer)).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text(soccer)).dy,
+      lessThan(tester.getTopLeft(find.text(t('trendingMovies'))).dy),
+    );
+    await _press(tester, LogicalKeyboardKey.arrowDown);
+    expect(focusedIn(basketball), isTrue);
+    expect(find.text('NBA'), findsOneWidget);
+    await _press(tester, LogicalKeyboardKey.arrowDown);
+    expect(focusedIn(soccer), isTrue);
+    expect(find.text('Copa do Brasil'), findsOneWidget);
+    await _press(tester, LogicalKeyboardKey.arrowUp);
+    expect(focusedIn(basketball), isTrue);
   });
 
   testWidgets('no inputs, no Inputs row; with them it comes first, wide '

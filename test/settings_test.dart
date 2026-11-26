@@ -640,6 +640,77 @@ void main() {
     expect(rows.first.$2.single.id, 'v');
   });
 
+  test('gamesBySport: off by default; round trip', () async {
+    expect((await Settings.load()).gamesBySport, isFalse);
+    final s = await Settings.load()
+      ..gamesBySport = true;
+    await s.save();
+    expect((await Settings.load()).gamesBySport, isTrue);
+  });
+
+  test('gamesBySport: a games row per sport in place of the games row, in '
+      'the order of the leagues followed, each in its order; off, one row; '
+      'the games row off, none', () async {
+    final s = await Settings.load();
+    MediaItem game(String id, String league) => MediaItem(
+      type: MediaType.game,
+      id: id,
+      title: id,
+      game: Game(
+        league: league,
+        start: DateTime.utc(2026, 11, 1),
+        state: 'pre',
+        home: const GameTeam(id: '1', name: 'A', short: 'A', abbr: 'A'),
+        away: const GameTeam(id: '2', name: 'B', short: 'B', abbr: 'B'),
+      ),
+    );
+    final games = [
+      game('nhl1', 'hockey/nhl'),
+      game('bra1', 'soccer/bra.1'),
+      game('nhl2', 'hockey/nhl'),
+      game('copa1', 'soccer/bra.copa_do_brazil'),
+    ];
+    s
+      ..homeRows = [
+        (key: 'youtube', on: true),
+        (key: 'games', on: true),
+        (key: 'trendingMovies', on: true),
+      ]
+      ..sports = [
+        const SportsFollow('soccer/bra.1', 'Brazilian Serie A'),
+        const SportsFollow('hockey/nhl', 'NHL'),
+        const SportsFollow('soccer/bra.copa_do_brazil', 'Copa do Brasil'),
+      ];
+    final items = {
+      'youtube': [game('v', 'x/y')],
+      'games': games,
+      'trendingMovies': [game('m', 'x/y')],
+    };
+    List<String> shown() => [
+      for (final (key, items) in s.shownRows(items))
+        '$key: ${[for (final i in items) i.id].join(' ')}',
+    ];
+
+    expect(shown(), [
+      'youtube: v',
+      'games: nhl1 bra1 nhl2 copa1',
+      'trendingMovies: m',
+    ]);
+    s.gamesBySport = true;
+    expect(shown(), [
+      'youtube: v',
+      'games:soccer: bra1 copa1',
+      'games:hockey: nhl1 nhl2',
+      'trendingMovies: m',
+    ]);
+    s.homeRows = [
+      (key: 'youtube', on: true),
+      (key: 'games', on: false),
+      (key: 'trendingMovies', on: true),
+    ];
+    expect(shown(), ['youtube: v', 'trendingMovies: m']);
+  });
+
   test('hiddenApps: the four Fire OS apps until saved; round trip', () async {
     final s = await Settings.load();
     expect(s.hiddenApps, kDefaultHiddenApps);

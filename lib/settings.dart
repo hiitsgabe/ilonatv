@@ -233,6 +233,9 @@ class Settings extends ChangeNotifier {
 
   bool fahrenheit = false;
 
+  /// The games row as one row per sport.
+  bool gamesBySport = false;
+
   /// TMDB watch-provider id (as a string) -> the package that opens it.
   Map<String, String> serviceApps = {};
 
@@ -320,6 +323,7 @@ class Settings extends ChangeNotifier {
     s.doublePowerFix = prefs.getBool('doublePowerFix') ?? false;
     s.stremioAutoPlay = prefs.getBool('stremioAutoPlay') ?? true;
     s.alexaBounce = prefs.getBool('alexaBounce') ?? false;
+    s.gamesBySport = prefs.getBool('gamesBySport') ?? false;
     s.assistantColor = prefs.getInt('assistantColor') ?? s.assistantColor;
     s.tmdbKey = prefs.getString('tmdbKey') ?? s.tmdbKey;
     s.geminiKey = prefs.getString('geminiKey') ?? s.geminiKey;
@@ -461,6 +465,7 @@ class Settings extends ChangeNotifier {
     await prefs.setDouble('weatherLon', weatherLon);
     await prefs.setString('country', country);
     await prefs.setBool('fahrenheit', fahrenheit);
+    await prefs.setBool('gamesBySport', gamesBySport);
     await prefs.setString('serviceApps', jsonEncode(serviceApps));
     await prefs.setString('sports', jsonEncode(sports));
     await prefs.setString('movieProvider', movieProvider);
@@ -518,8 +523,27 @@ class Settings extends ChangeNotifier {
     Map<String, List<MediaItem>> items,
   ) => [
     for (final r in homeRows)
-      if (r.on && (items[r.key] ?? const []).isNotEmpty) (r.key, items[r.key]!),
+      if (r.on)
+        for (final row
+            in r.key == 'games' && gamesBySport
+                ? _bySport(items['games'] ?? const [])
+                : [(r.key, items[r.key] ?? const <MediaItem>[])])
+          if (row.$2.isNotEmpty) row,
   ];
+
+  /// The games as `games:<sport>` rows, the sport of the first league
+  /// followed first; each keeps the games' order.
+  List<(String, List<MediaItem>)> _bySport(List<MediaItem> games) {
+    final rows = <String, List<MediaItem>>{
+      for (final f in sports) f.league.split('/').first: [],
+    };
+    for (final g in games) {
+      (rows[g.game?.sport ?? ''] ??= []).add(g);
+    }
+    return [
+      for (final MapEntry(:key, :value) in rows.entries) ('games:$key', value),
+    ];
+  }
 
   /// The row to draw: tiles whose app is installed, plus the pseudo tiles. The
   /// others stay in [tiles], so reinstalling an app brings its tile back.

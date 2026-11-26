@@ -502,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
     List<MediaItem> items,
   ) {
     final type = _filtered[key];
-    if (type == null) return (null, items, t(key));
+    if (type == null) return (null, items, rowTitle(key));
     final settings = widget.settings;
     final service = tmdb.providers
         .where((p) => p.id == settings.rowProvider(key))
@@ -752,19 +752,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           key,
                           items,
                         );
+                        // A sport's games row (`games:soccer`) is the games'.
+                        final wide = _wideRows.contains(key.split(':').first);
                         return ContentRow(
                           key: _rowStates.putIfAbsent(key, GlobalKey.new),
                           title: title,
                           items: shown,
                           // Video thumbs, games and inputs; the others are
                           // posters.
-                          wide: _wideRows.contains(key),
+                          wide: wide,
                           images: images,
                           onFocus: (item) => _rowFocus(key, row, item),
                           onOpen: _openItem,
-                          trailerKey: _wideRows.contains(key)
-                              ? null
-                              : _trailerKey,
+                          trailerKey: wide ? null : _trailerKey,
                           onTrailer: _openTrailer,
                           filter: filter,
                         );

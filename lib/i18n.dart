@@ -10,6 +10,12 @@ class I18n {
 String t(String key) =>
     _strings[I18n.language]?[key] ?? _strings['en']![key] ?? key;
 
+/// A home row's title; a sport's games row (`games:soccer`) says which.
+String rowTitle(String key) => switch (key.split(':')) {
+  ['games', final sport] => '${t('games')} · ${t('sport_$sport')}',
+  _ => t(key),
+};
+
 /// The keys [language] has text for; none for an unknown language.
 @visibleForTesting
 Set<String> i18nKeys(String language) => {...?_strings[language]?.keys};
@@ -209,6 +215,13 @@ const _strings = {
     'noResults': 'No results',
     'sports': 'Sports',
     'sportsHelp': "The games row shows today's and tomorrow's games of the leagues you follow, your teams' first.",
+    'gamesBySport': 'One row per sport',
+    'gamesBySportHelp': 'The games row becomes one row for each sport.',
+    'sport_soccer': 'Football',
+    'sport_basketball': 'Basketball',
+    'sport_hockey': 'Hockey',
+    'sport_baseball': 'Baseball',
+    'sport_football': 'American football',
     'follow': 'Follow',
     'onlyMyTeams': 'Only my teams',
     'onlyMyTeamsHelp': 'Off: every game of the league, your teams first.',
@@ -291,7 +304,8 @@ const _strings = {
     'sysDevice': 'Meu Fire TV',
     'sysAccessibility': 'Acessibilidade',
     'sysAll': 'Todos os ajustes',
-    'sysAllHint': 'Tela da própria Amazon: aperte Home para voltar ao Ilona TV.',
+    'sysAllHint':
+        'Tela da própria Amazon: aperte Home para voltar ao Ilona TV.',
     'about': 'Sobre',
     'memory': 'Memória em uso',
     'imageCache': 'Cache de imagens',
@@ -429,6 +443,13 @@ const _strings = {
     'noResults': 'Sem resultados',
     'sports': 'Esportes',
     'sportsHelp': 'A linha de jogos mostra os jogos de hoje e de amanhã das ligas que você segue, primeiro os dos seus times.',
+    'gamesBySport': 'Uma linha por esporte',
+    'gamesBySportHelp': 'A linha de jogos vira uma linha para cada esporte.',
+    'sport_soccer': 'Futebol',
+    'sport_basketball': 'Basquete',
+    'sport_hockey': 'Hóquei',
+    'sport_baseball': 'Beisebol',
+    'sport_football': 'Futebol americano',
     'follow': 'Seguir',
     'onlyMyTeams': 'Só os meus times',
     'onlyMyTeamsHelp':

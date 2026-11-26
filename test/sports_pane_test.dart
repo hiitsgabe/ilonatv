@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ilonatv/data/sports.dart';
+import 'package:ilonatv/i18n.dart';
 import 'package:ilonatv/net.dart';
 import 'package:ilonatv/settings.dart';
 import 'package:ilonatv/ui/settings_kit.dart';
@@ -67,6 +68,19 @@ Future<void> _openNba(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('One row per sport: off at first; OK turns it on and saves', (
+    tester,
+  ) async {
+    final s = await _open(tester, fake({}).call);
+    expect(_value(tester, t('gamesBySport')), t('off'));
+    expect(find.text(t('gamesBySportHelp')), findsOneWidget);
+    await tester.tap(_row(t('gamesBySport')));
+    await tester.pumpAndSettle();
+    expect(s.gamesBySport, isTrue);
+    expect(_value(tester, t('gamesBySport')), t('on'));
+    expect((await Settings.load()).gamesBySport, isTrue);
+  });
+
   testWidgets('a row per league with its value; OK opens the league: Follow, '
       'Only my teams, then its teams, each a check row; Back shows the '
       'value', (tester) async {

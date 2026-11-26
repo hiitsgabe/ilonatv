@@ -82,7 +82,7 @@ class IlonaTvApi implements CompanionApi {
 
   List<Object> _rows() => [
     for (final (key, items) in settings.shownRows(sources.rowItems()))
-      {'key': key, 'title': t(key), 'items': _items(items)},
+      {'key': key, 'title': rowTitle(key), 'items': _items(items)},
   ];
 
   Future<(int, Object)> _open(Object? json) async {

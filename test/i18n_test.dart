@@ -28,4 +28,13 @@ void main() {
       }
     }
   });
+
+  test('a row title; a sport\'s games row says which', () {
+    expect(rowTitle('recommended'), t('recommended'));
+    expect(rowTitle('games:soccer'), 'Games · Football');
+    expect(rowTitle('games:football'), 'Games · American football');
+    I18n.language = 'pt';
+    expect(rowTitle('games:soccer'), 'Jogos · Futebol');
+    expect(rowTitle('games:hockey'), 'Jogos · Hóquei');
+  });
 }
