@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:elimor_protocol/elimor_protocol.dart';
 
 import '../data/media.dart';
@@ -5,6 +7,7 @@ import '../data/tmdb.dart';
 import '../data/weather.dart';
 import '../host.dart';
 import '../i18n.dart';
+import '../net.dart' show kRequestTimeout;
 import '../providers.dart' show openItem;
 import '../settings.dart';
 import '../sources.dart';
@@ -12,23 +15,23 @@ import 'server.dart';
 import 'state.dart';
 
 const _max = 20;
+const _maxQuery = 200;
+const _maxKey = 64;
+const _maxName = 100;
+const _maxItem = 8 * 1024;
+// Empty as Open-Meteo leaves it for a place with no country.
+final _countryCode = RegExp(r'^([A-Za-z]{2})?$');
 const _badRequest = (400, {'error': 'badRequest'});
 const _notFound = (404, {'error': 'notFound'});
 
 /// What a paired phone can do: what the TV's own screens do, with the TV's
 /// code. Answers carry display data only, never a key or a token.
 class ElimorApi implements CompanionApi {
-  ElimorApi(
-    this.settings,
-    this.sources, {
-    this.injectKey = Host.injectKey,
-    void Function()? goHome,
-  }) : goHome = goHome ?? Host.goHome;
+  ElimorApi(this.settings, this.sources, {this.injectKey = Host.injectKey});
 
   final Settings settings;
   final Sources sources;
   final Future<bool> Function(RemoteKey) injectKey;
-  final void Function() goHome;
 
   @override
   Future<(int, Object)> handle(
@@ -60,14 +63,19 @@ class ElimorApi implements CompanionApi {
   }
 
   Future<(int, Object)> _search(String q) async {
-    if (q.isEmpty) return _badRequest;
+    if (q.isEmpty || q.length > _maxQuery) return _badRequest;
     final tmdb = sources.tmdb.client;
     Future<List<Object>> safe(Future<List<MediaItem>> f) =>
         f.then(_items, onError: (_) => const <Object>[]);
     final (movies, series, videos) = await (
       safe(tmdb.search(MediaType.movie, q)),
       safe(tmdb.search(MediaType.series, q)),
-      safe(sources.youtube.searchFirstAccount(q)),
+      // YouTube's chain is several requests long; it gets no more than one.
+      safe(
+        sources.youtube
+            .searchFirstAccount(q)
+            .timeout(kRequestTimeout, onTimeout: () => const []),
+      ),
     ).wait;
     return (200, {'movies': movies, 'series': series, 'videos': videos});
   }
@@ -80,6 +88,7 @@ class ElimorApi implements CompanionApi {
   Future<(int, Object)> _open(Object? json) async {
     final MediaItem item;
     try {
+      if (jsonEncode(json).length > _maxItem) return _badRequest;
       item = MediaItem.fromJson(json as Map);
     } catch (_) {
       return _badRequest;
@@ -97,6 +106,7 @@ class ElimorApi implements CompanionApi {
   Future<(int, Object)> _tmdb(Object? key, Object? save) async {
     if (key is! String || save is! bool?) return _badRequest;
     final k = key.trim();
+    if (k.length > _maxKey) return _badRequest;
     String result;
     try {
       await sources.tmdb.testKey(k);
@@ -115,7 +125,7 @@ class ElimorApi implements CompanionApi {
   }
 
   Future<(int, Object)> _cities(String q) async {
-    if (q.isEmpty) return _badRequest;
+    if (q.isEmpty || q.length > _maxQuery) return _badRequest;
     final places = await sources.weather.search(q);
     return (
       200,
@@ -143,7 +153,13 @@ class ElimorApi implements CompanionApi {
           'lon': final num lon,
           'countryCode': final String countryCode,
         }
-        when name.isNotEmpty) {
+        when name.isNotEmpty &&
+            name.length <= _maxName &&
+            region.length <= _maxName &&
+            country.length <= _maxName &&
+            _countryCode.hasMatch(countryCode) &&
+            lat.abs() <= 90 &&
+            lon.abs() <= 180) {
       await settings.applyPlace(
         Place(
           name,

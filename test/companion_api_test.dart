@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -22,6 +23,10 @@ import 'fixtures.dart';
 
 const _key = 'SECRET-TMDB-KEY';
 const _refresh = 'SECRET-YT-REFRESH';
+const _access = 'SECRET-YT-ACCESS';
+const _stremio = 'SECRET-STREMIO-AUTH';
+const _gemini = 'SECRET-GEMINI-KEY';
+const _account = YtAccount(refreshToken: _refresh, name: 'Me');
 
 const _tmdb = {
   'genre/movie/list': 'tmdb_genres_movie.json',
@@ -35,8 +40,22 @@ const _weather = {
   'v1/forecast': 'open_meteo_forecast.json',
 };
 
-/// Every answer any test got, for the secrets check.
-final _answers = <String>[];
+/// A YouTube whose access tokens come from [token], its posts from [post].
+class _Yt extends YoutubeTvClient {
+  _Yt(Post post, this.token)
+    : super(
+        store: MemStore(),
+        post: post,
+        // Its only page fetch is the TV page, for the visitor id.
+        getText: (_, {headers = const {}}) async =>
+            File('test/fixtures/yt_tv.html').readAsStringSync(),
+      );
+
+  final Future<String> Function(String refreshToken) token;
+
+  @override
+  Future<String> accessToken(String refreshToken) => token(refreshToken);
+}
 
 late Settings _s;
 late Sources _sources;
@@ -44,7 +63,14 @@ late ElimorApi _api;
 final _injected = <RemoteKey>[];
 final _host = <String>[];
 
-Future<void> _setUp({Fetch? tmdb}) async {
+/// No YouTube account unless [accounts]: a settings save would otherwise
+/// start a refresh of the offline YouTube, which prints its failure.
+Future<void> _setUp({
+  Fetch? tmdb,
+  List<YtAccount> accounts = const [],
+  Post? youtube,
+  Future<String> Function(String)? token,
+}) async {
   SharedPreferences.setMockInitialValues({});
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(const MethodChannel('app.elimor/host'), (
@@ -55,8 +81,10 @@ Future<void> _setUp({Fetch? tmdb}) async {
       });
   _s = await Settings.load()
     ..tmdbKey = _key
+    ..stremioAuthKey = _stremio
+    ..geminiKey = _gemini
     ..movieProvider = 'com.example.player'
-    ..youtubeAccounts = [const YtAccount(refreshToken: _refresh, name: 'Me')];
+    ..youtubeAccounts = accounts;
   final store = MemStore();
   _sources = Sources(
     weather: WeatherSource(_s, store, fetch: fake(_weather).call),
@@ -74,12 +102,7 @@ Future<void> _setUp({Fetch? tmdb}) async {
     youtube: YoutubeSource(
       _s,
       store,
-      YoutubeTvClient(
-        store: store,
-        post: fakePost({}).call,
-        getText: (_, {headers = const {}}) =>
-            Future.error(const SocketException('offline')),
-      ),
+      _Yt(youtube ?? fakePost({}).call, token ?? (_) async => _access),
     ),
     sports: SportsSource(_s, store, fetch: fake({}).call),
   );
@@ -100,11 +123,7 @@ Future<(int, Object)> _call(
   String path, {
   Map<String, String> query = const {},
   Object? body,
-}) async {
-  final r = await _api.handle(method, path, query, body);
-  _answers.add(jsonEncode(r.$2));
-  return r;
-}
+}) => _api.handle(method, path, query, body);
 
 MediaItem _movie(int i) =>
     MediaItem(type: MediaType.movie, id: '$i', title: 'Movie $i');
@@ -158,7 +177,7 @@ void main() {
 
   test('search returns TMDB movies and series from the fixtures; '
       'YouTube failure gives videos []', () async {
-    await _setUp();
+    await _setUp(accounts: [_account]);
     final (status, body) = await _call(
       'GET',
       '/api/search',
@@ -353,16 +372,126 @@ void main() {
     }
   });
 
-  test('no response contains the TMDB key or a YouTube token', () async {
+  testWidgets('a YouTube that never answers gives videos [] on TMDB\'s time', (
+    tester,
+  ) async {
+    await _setUp(
+      accounts: [_account],
+      token: (_) => Completer<String>().future,
+    );
+    (int, Object)? answer;
+    _call(
+      'GET',
+      '/api/search',
+      query: {'q': 'blade runner'},
+    ).then((r) => answer = r).ignore();
+    await tester.pump(kRequestTimeout - const Duration(seconds: 1));
+    expect(answer, isNull);
+    await tester.pump(const Duration(seconds: 1));
+    expect(answer!.$1, 200);
+    final b = answer!.$2 as Map;
+    expect(b['movies'], isNotEmpty);
+    expect(b['videos'], isEmpty);
+  });
+
+  test('inputs past their bounds are 400', () async {
     await _setUp();
-    await _call('GET', '/api/search', query: {'q': 'blade'});
-    await _call('GET', '/api/rows');
-    await _call('POST', '/api/setup/tmdb', body: {'key': 'GOOD'});
-    expect(_answers, isNotEmpty);
-    for (final json in _answers) {
-      expect(json, isNot(contains(_key)));
-      expect(json, isNot(contains(_refresh)));
-      expect(json, isNot(contains('ACCESS')));
+    final long = 'a' * 201;
+    expect((await _call('GET', '/api/search', query: {'q': long})).$1, 400);
+    expect(
+      (await _call('GET', '/api/setup/cities', query: {'q': long})).$1,
+      400,
+    );
+    expect(
+      (await _call(
+        'POST',
+        '/api/setup/tmdb',
+        body: {'key': 'k' * 65, 'save': true},
+      )).$1,
+      400,
+    );
+    expect(_s.tmdbKey, _key);
+    expect(
+      (await _call(
+        'POST',
+        '/api/open',
+        body: {
+          'item': {..._item, 'title': 't' * 9000},
+        },
+      )).$1,
+      400,
+    );
+    expect(_host, isEmpty);
+    const paris = {
+      'name': 'Paris',
+      'region': 'Ile-de-France',
+      'country': 'France',
+      'lat': 48.85,
+      'lon': 2.35,
+      'countryCode': 'FR',
+    };
+    for (final bad in <Map<String, Object>>[
+      {'name': 'n' * 101},
+      {'region': 'r' * 101},
+      {'country': 'c' * 101},
+      {'countryCode': 'FRA'},
+      {'countryCode': 'F1'},
+      {'countryCode': 'É1'},
+      {'lat': 90.5},
+      {'lat': -91},
+      {'lon': 180.5},
+      {'lon': -181},
+    ]) {
+      final (status, _) = await _call(
+        'POST',
+        '/api/setup/city',
+        body: {...paris, ...bad},
+      );
+      expect(status, 400, reason: '$bad');
+    }
+    expect(_s.weatherCity, '');
+    expect((await _call('POST', '/api/setup/city', body: paris)).$1, 204);
+    expect(
+      (await _call(
+        'POST',
+        '/api/setup/city',
+        body: {...paris, 'countryCode': ''},
+      )).$1,
+      204,
+    );
+  });
+
+  test('no response contains a key or a token', () async {
+    await _setUp(
+      accounts: [_account],
+      youtube: fakePost({'youtubei/v1/search': 'yt_search.json'}).call,
+    );
+    _sources.stremio.continueWatching = [
+      const MediaItem(
+        type: MediaType.series,
+        id: 'tt0903747',
+        title: 'Breaking Bad',
+        imdbId: 'tt0903747',
+      ),
+    ];
+    final answers = <(int, Object)>[
+      await _call('GET', '/api/search', query: {'q': 'blade runner'}),
+      await _call('GET', '/api/rows'),
+      await _call('POST', '/api/key', body: {'key': 'ok'}),
+      await _call('POST', '/api/open', body: {'item': _item}),
+      await _call('POST', '/api/setup/tmdb', body: {'key': 'OTHER'}),
+      await _call('GET', '/api/setup/cities', query: {'q': 'paris'}),
+      await _call('GET', '/api/nope'),
+    ];
+    final search = answers[0].$2 as Map;
+    expect(search['videos'], isNotEmpty);
+    final rows = (answers[1].$2 as List).cast<Map>();
+    expect(rows.map((r) => r['key']), contains('continueWatching'));
+    for (final (_, body) in answers) {
+      final json = jsonEncode(body);
+      for (final secret in [_key, _refresh, _access, _stremio, _gemini]) {
+        expect(json, isNot(contains(secret)));
+      }
     }
   });
 }

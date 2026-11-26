@@ -31,6 +31,9 @@ class HttpStatusException implements Exception {
   String toString() => 'HttpStatusException($status)';
 }
 
+/// How long one request may take before its caller stops waiting.
+const kRequestTimeout = Duration(seconds: 15);
+
 final _client = HttpClient()
   ..connectionTimeout = const Duration(seconds: 10)
   ..maxConnectionsPerHost = 4
@@ -41,14 +44,14 @@ final _client = HttpClient()
 Future<Map<String, dynamic>> getJson(
   Uri uri, {
   Map<String, String> headers = const {},
-  Duration timeout = const Duration(seconds: 15),
+  Duration timeout = kRequestTimeout,
 }) async => _object(await _send('GET', uri, headers: headers).timeout(timeout));
 
 Future<Map<String, dynamic>> postJson(
   Uri uri,
   Map<String, dynamic> body, {
   Map<String, String> headers = const {},
-  Duration timeout = const Duration(seconds: 15),
+  Duration timeout = kRequestTimeout,
 }) async => _object(
   await _send('POST', uri, headers: headers, json: body).timeout(timeout),
 );
@@ -57,16 +60,14 @@ Future<Map<String, dynamic>> postJson(
 Future<String> getText(
   Uri uri, {
   Map<String, String> headers = const {},
-  Duration timeout = const Duration(seconds: 15),
+  Duration timeout = kRequestTimeout,
 }) async => utf8.decode(
   await _send('GET', uri, headers: headers).timeout(timeout),
   allowMalformed: true,
 );
 
-Future<Uint8List> getBytes(
-  Uri uri, {
-  Duration timeout = const Duration(seconds: 15),
-}) => _send('GET', uri).timeout(timeout);
+Future<Uint8List> getBytes(Uri uri, {Duration timeout = kRequestTimeout}) =>
+    _send('GET', uri).timeout(timeout);
 
 // ponytail: the callers' .timeout() only stops waiting. A request that timed
 // out keeps its socket until the server answers or closes it; abort() the
