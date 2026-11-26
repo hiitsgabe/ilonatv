@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../i18n.dart';
-import '../releases.dart';
+
+import 'package:ilonatv_protocol/releases.dart';
+
 import '../tv_client.dart';
 import '../tvs.dart';
 import 'browse.dart';

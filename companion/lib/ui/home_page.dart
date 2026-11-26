@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../adb.dart';
 import '../i18n.dart';
-import '../releases.dart';
+
+import 'package:ilonatv_protocol/releases.dart';
+
 import '../tvs.dart';
 import 'install/install_flow.dart';
 import 'pair_page.dart';

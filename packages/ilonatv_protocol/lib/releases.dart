@@ -27,7 +27,7 @@ class ReleaseAsset {
   final String sha256;
 }
 
-/// The latest release has no APK (or no checksum) for the TV's ABI.
+/// The latest release has no such APK, or no checksum for it.
 class NoAsset implements Exception {
   const NoAsset();
 }
@@ -47,6 +47,9 @@ class ReleaseSource {
 
   Future<ReleaseAsset?> latest(String abi) => latestTvApk(abi);
 
+  /// The latest release's asset [name], like ilonatv-companion.apk.
+  Future<ReleaseAsset?> named(String name) => latestApk(name);
+
   Future<File> fetch(
     ReleaseAsset a,
     File to, {
@@ -54,9 +57,13 @@ class ReleaseSource {
   }) => download(a, to, progress: progress);
 }
 
-/// Null when the repository has no release yet.
-Future<ReleaseAsset?> latestTvApk(
-  String abi, {
+/// The TV's APK for [abi]; null when the repository has no release yet.
+Future<ReleaseAsset?> latestTvApk(String abi, {HttpClient? http, Uri? url}) =>
+    latestApk('ilonatv-$abi.apk', http: http, url: url);
+
+/// The latest release's asset [name]; null when there is no release yet.
+Future<ReleaseAsset?> latestApk(
+  String name, {
   HttpClient? http,
   Uri? url,
 }) async {
@@ -65,7 +72,7 @@ Future<ReleaseAsset?> latestTvApk(
   try {
     return await _latest(
       client,
-      abi,
+      name,
       url ?? latestRelease,
     ).timeout(const Duration(seconds: 15));
   } finally {
@@ -73,7 +80,7 @@ Future<ReleaseAsset?> latestTvApk(
   }
 }
 
-Future<ReleaseAsset?> _latest(HttpClient client, String abi, Uri url) async {
+Future<ReleaseAsset?> _latest(HttpClient client, String name, Uri url) async {
   final (status, body) = await _get(client, url, api: true);
   if (status == 404) return null;
   if (status == 403 || status == 429) throw const RateLimited();
@@ -82,7 +89,6 @@ Future<ReleaseAsset?> _latest(HttpClient client, String abi, Uri url) async {
   final assets = (release['assets'] as List).cast<Map<String, Object?>>();
   Map<String, Object?>? named(String n) =>
       assets.where((a) => a['name'] == n).firstOrNull;
-  final name = 'ilonatv-$abi.apk';
   final apk = named(name);
   if (apk == null) throw const NoAsset();
   final digest = apk['digest'] as String?;
@@ -162,6 +168,29 @@ Future<File> download(
   } finally {
     if (http == null) client.close(force: true);
   }
+}
+
+/// Downloads [a] into [dir] and hands it to [install] only once its SHA-256
+/// matched; a mismatch throws [BadChecksum] and leaves no file.
+Future<void> selfUpdate(
+  ReleaseSource releases,
+  ReleaseAsset a,
+  String dir,
+  Future<void> Function(String path) install, {
+  void Function(int received, int total)? progress,
+}) async {
+  final to = File('$dir/${a.url.pathSegments.last}');
+  await install((await releases.fetch(a, to, progress: progress)).path);
+}
+
+/// The APK's ABI for a device's comma-separated list (getprop's abilist,
+/// Build.SUPPORTED_ABIS): arm64 first; null when it has neither.
+String? pickAbi(String abilist) {
+  final abis = abilist.trim().split(',');
+  for (final a in ['arm64-v8a', 'armeabi-v7a']) {
+    if (abis.contains(a)) return a;
+  }
+  return null;
 }
 
 /// Below zero when [a] is older than [b]; "v0.6.1" and "0.6.1+10002" are both 0.6.1.

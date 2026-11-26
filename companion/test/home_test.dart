@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilonatv_companion/i18n.dart';
-import 'package:ilonatv_companion/releases.dart';
+import 'package:ilonatv_protocol/releases.dart';
 import 'package:ilonatv_companion/tv_client.dart';
 import 'package:ilonatv_companion/tvs.dart';
 import 'package:ilonatv_companion/ui/home_page.dart';
