@@ -566,6 +566,11 @@ object HostChannel {
                     if (key == "volumeUp") AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
                     AudioManager.FLAG_SHOW_UI,
                 )
+                "mute" -> audio.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    AudioManager.ADJUST_TOGGLE_MUTE,
+                    AudioManager.FLAG_SHOW_UI,
+                )
                 "playPause" -> for (a in intArrayOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP)) {
                     audio.dispatchMediaKeyEvent(KeyEvent(a, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
                 }

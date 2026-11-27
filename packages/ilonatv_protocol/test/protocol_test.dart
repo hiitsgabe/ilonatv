@@ -8,6 +8,7 @@ void main() {
     expect(remoteKeyByName('volumeUp'), RemoteKey.volumeUp);
     expect(remoteKeyByName('volumeDown'), RemoteKey.volumeDown);
     expect(remoteKeyByName('playPause'), RemoteKey.playPause);
+    expect(remoteKeyByName('mute'), RemoteKey.mute);
   });
 
   test('PairRequest round-trips', () {

@@ -190,6 +190,7 @@ void main() {
     const media = [
       RemoteKey.volumeUp,
       RemoteKey.volumeDown,
+      RemoteKey.mute,
       RemoteKey.playPause,
     ];
     for (final outside in ['all', 'backHome', 'none']) {

@@ -28,7 +28,9 @@ class Adb(private val dir: File) {
     @Volatile private var dadb: Dadb? = null
     private var pending: Future<Dadb>? = null
     private var pendingAt = ""
-    private var keys: AdbShellStream? = null
+    @Volatile private var keys: AdbShellStream? = null
+    // Not the instance's monitor: keyPair() holds that, and a key write can block on the socket.
+    private val keyLock = Any()
 
     fun onCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
@@ -53,11 +55,20 @@ class Adb(private val dir: File) {
     }
 
     fun close() {
-        closeKeys()
         drop(pending)
         pending = null
-        dadb?.close()
+        release(dadb)
         dadb = null
+    }
+
+    // Closing waits on the socket, so never on the main thread.
+    private fun release(d: Dadb?) {
+        val k = keys
+        keys = null
+        pool.execute {
+            runCatching { k?.close() }
+            runCatching { d?.close() }
+        }
     }
 
     // An attempt the TV accepted after its 60 s were up holds an open connection nobody adopted.
@@ -83,10 +94,7 @@ class Adb(private val dir: File) {
             main.post {
                 if (answer is Dadb) {
                     if (pending === attempt) pending = null
-                    if (dadb !== answer) {
-                        closeKeys()
-                        dadb?.close()
-                    }
+                    if (dadb !== answer) release(dadb)
                     dadb = answer
                     result.success("ok")
                 } else {
@@ -129,24 +137,24 @@ class Adb(private val dir: File) {
     }
 
     // One shell for every key: no stream to open per press. Its output is dropped so nothing waits on a reader.
-    @Synchronized
+    // A shell that died (the TV's adbd restarted it) gets one fresh one before the key fails.
     private fun key(code: Int) {
-        try {
-            val shell = keys ?: live().openShell("sh").also {
-                it.write("exec >/dev/null 2>&1\n")
-                keys = it
+        synchronized(keyLock) {
+            repeat(2) { attempt ->
+                val shell = keys ?: live().openShell("sh").also {
+                    it.write("exec >/dev/null 2>&1\n")
+                    keys = it
+                }
+                try {
+                    shell.write("input keyevent $code\n")
+                    return
+                } catch (e: Exception) {
+                    if (keys === shell) keys = null
+                    runCatching { shell.close() }
+                    if (attempt == 1) throw e
+                }
             }
-            shell.write("input keyevent $code\n")
-        } catch (e: Throwable) {
-            closeKeys()
-            throw e
         }
-    }
-
-    @Synchronized
-    private fun closeKeys() {
-        runCatching { keys?.close() }
-        keys = null
     }
 
     private fun live() = dadb ?: throw IOException("not connected")

@@ -25,10 +25,16 @@ const adbKeycodes = {
   RemoteKey.home: 3,
   RemoteKey.volumeUp: 24,
   RemoteKey.volumeDown: 25,
+  RemoteKey.mute: 164,
   RemoteKey.playPause: 85,
 };
 
-const _media = {RemoteKey.volumeUp, RemoteKey.volumeDown, RemoteKey.playPause};
+const mediaKeys = {
+  RemoteKey.volumeUp,
+  RemoteKey.volumeDown,
+  RemoteKey.mute,
+  RemoteKey.playPause,
+};
 
 /// Whether [k] goes over ADB rather than to the TV's server, by what the TV
 /// says it reaches outside its own app ([TvInfo.keysOutside]). A TV older than
@@ -37,9 +43,13 @@ bool useAdb(
   RemoteKey k, {
   required bool inFront,
   required String? keysOutside,
+  bool adbUp = false,
 }) {
-  if (keysOutside == null) return !inFront || _media.contains(k);
-  if (inFront || _media.contains(k)) return false;
+  if (keysOutside == null) return !inFront;
+  // `input keyevent` goes through the system, so volume reaches the set over
+  // CEC, where Fire TV's own AudioManager volume is often fixed.
+  if (mediaKeys.contains(k)) return adbUp && keysOutside != 'all';
+  if (inFront) return false;
   return switch (keysOutside) {
     'all' => false,
     'backHome' => k != RemoteKey.back && k != RemoteKey.home,
@@ -98,12 +108,17 @@ class Adb {
     }
   }
 
-  /// Through one shell kept open on the connection; false when it is gone.
+  /// Through one shell kept open on the connection; false when it is gone, or
+  /// after 3 s, so a stuck connection never holds up the keys behind it.
   Future<bool> key(RemoteKey k) async {
     try {
-      await _channel.invokeMethod<void>('key', {'code': adbKeycodes[k]});
+      await _channel
+          .invokeMethod<void>('key', {'code': adbKeycodes[k]})
+          .timeout(const Duration(seconds: 3));
       return true;
     } on PlatformException {
+      return false;
+    } on TimeoutException {
       return false;
     }
   }

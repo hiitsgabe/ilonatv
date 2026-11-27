@@ -55,11 +55,14 @@ class _RemotePageState extends State<RemotePage> {
   bool _adbTried = false;
   bool _adbNote = false;
   AdbResult? _adbFail;
+  int _adbGen = 0;
+  late final AppLifecycleListener _life;
 
   @override
   void initState() {
     super.initState();
     widget.tvs.hold();
+    _life = AppLifecycleListener(onPause: _adbPause, onResume: _adbIfKnown);
     widget.updates?.latest.then((v) {
       if (mounted && v != null) setState(() => _latest = v);
     });
@@ -71,6 +74,7 @@ class _RemotePageState extends State<RemotePage> {
     widget.tvs.release();
     _sub?.cancel();
     _retry?.cancel();
+    _life.dispose();
     if (_adbUsed) _adb.close();
     super.dispose();
   }
@@ -98,12 +102,25 @@ class _RemotePageState extends State<RemotePage> {
     if (await _adb.knows(widget.tv.host)) await _adbConnect();
   }
 
+  // The phone app went away: no connection held open behind it.
+  void _adbPause() {
+    _adbGen++;
+    if (_adbUsed) _adb.close();
+    _adbUsed = false;
+    setState(() {
+      _adbUp = false;
+      _adbBusy = false;
+      _adbTried = false;
+    });
+  }
+
   Future<void> _adbConnect() async {
     if (_adbBusy || _adbUp || !mounted) return;
     setState(() => _adbBusy = true);
     _adbUsed = true;
+    final gen = _adbGen;
     final r = await _adb.connect(widget.tv.host, kAdbPort);
-    if (!mounted) return;
+    if (!mounted || gen != _adbGen) return;
     setState(() {
       _adbBusy = false;
       _adbUp = r == AdbResult.ok;
@@ -112,12 +129,12 @@ class _RemotePageState extends State<RemotePage> {
     });
   }
 
-  Future<bool> _sendAdb(RemoteKey k) async {
+  Future<bool> _sendAdb(RemoteKey k, {bool note = true}) async {
     if (_adbUp && await _adb.key(k)) return true;
     if (mounted) {
       setState(() {
         _adbUp = false;
-        _adbNote = true;
+        if (note) _adbNote = true;
       });
     }
     return false;
@@ -186,15 +203,20 @@ class _RemotePageState extends State<RemotePage> {
       final i = _info;
       final outside = i?.keysOutside;
       // Before the first state event nothing is known: the TV's server first.
-      if (i != null && useAdb(k, inFront: i.inFront, keysOutside: outside)) {
-        await _sendAdb(k);
-        continue;
+      if (i != null &&
+          useAdb(k, inFront: i.inFront, keysOutside: outside, adbUp: _adbUp)) {
+        // A media key that ADB dropped still has the TV's own way.
+        if (await _sendAdb(k, note: !i.inFront) || !mediaKeys.contains(k)) {
+          continue;
+        }
       }
       final r = await widget.client.key(k);
-      // The TV left Ilona TV before its event said so.
+      // The TV left Ilona TV before its event said so; ADB is the way, so no
+      // Open Ilona TV on top of its note.
       if (r is NotInFront &&
-          useAdb(k, inFront: false, keysOutside: outside) &&
-          await _sendAdb(k)) {
+          outside != null &&
+          useAdb(k, inFront: false, keysOutside: outside, adbUp: _adbUp)) {
+        await _sendAdb(k);
         continue;
       }
       await _handle(r);
@@ -669,6 +691,8 @@ class _PadState extends State<_Pad> {
                   t('volumeDown'),
                   RemoteKey.volumeDown,
                 ),
+                const SizedBox(width: 8),
+                _round(Icons.volume_off, t('mute'), RemoteKey.mute),
                 const SizedBox(width: 8),
                 _round(Icons.play_arrow, t('playPause'), RemoteKey.playPause),
                 const SizedBox(width: 8),

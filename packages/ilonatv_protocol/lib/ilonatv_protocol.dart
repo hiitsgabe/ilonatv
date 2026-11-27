@@ -4,7 +4,7 @@ const kCompanionPort = 8642;
 const kProtocolVersion = 1;
 const kServiceType = '_ilonatv._tcp';
 
-enum RemoteKey { up, down, left, right, ok, back, home, volumeUp, volumeDown, playPause }
+enum RemoteKey { up, down, left, right, ok, back, home, volumeUp, volumeDown, mute, playPause }
 
 RemoteKey? remoteKeyByName(String name) {
   for (final k in RemoteKey.values) {

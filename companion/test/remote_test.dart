@@ -228,6 +228,98 @@ void main() {
     expect(adb.keys, [RemoteKey.ok]);
   });
 
+  testWidgets('on an older Android with ADB up, volume and play/pause go '
+      'over ADB, in front or not', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside('backHome'));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-volumeUp')));
+    await t.tap(find.byKey(const Key('key-mute')));
+    await t.pumpAndSettle();
+    client.events$.add(
+      const TvInfo(
+        protocol: 1,
+        version: '1',
+        inFront: true,
+        launcherMode: true,
+        keysOutside: 'backHome',
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-playPause')));
+    await t.tapAt(
+      t.getCenter(find.byKey(const Key('pad'))) - const Offset(0, 100),
+    );
+    await t.pumpAndSettle();
+    expect(adb.keys, [RemoteKey.volumeUp, RemoteKey.mute, RemoteKey.playPause]);
+    expect(client.keys, [RemoteKey.up]);
+  });
+
+  testWidgets('a 409 the phone sends over ADB shows no Open Ilona TV', (
+    t,
+  ) async {
+    await open(t);
+    client.events$.add(
+      const TvInfo(
+        protocol: 1,
+        version: '1',
+        inFront: true,
+        launcherMode: true,
+        keysOutside: 'backHome',
+      ),
+    );
+    await t.pumpAndSettle();
+    client.keyResult = const NotInFront(launcherMode: true);
+    await t.tapAt(
+      t.getCenter(find.byKey(const Key('pad'))) - const Offset(0, 100),
+    );
+    await t.pumpAndSettle();
+    expect(find.text(t0('notInFront')), findsNothing);
+    expect(find.text(t0('adbNote')), findsOneWidget);
+  });
+
+  testWidgets('an older TV with Ilona TV in front gets no ADB note', (t) async {
+    await open(t);
+    client.events$.add(info(null));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-volumeUp')));
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(client.keys, [RemoteKey.volumeUp, RemoteKey.ok]);
+    expect(find.text(t0('adbNote')), findsNothing);
+  });
+
+  testWidgets('ADB closes while the phone app is away and reconnects on '
+      'return', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside('backHome'));
+    await t.pumpAndSettle();
+    expect(adb.hosts, hasLength(1));
+    for (final s in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+    }
+    await t.pumpAndSettle();
+    expect(adb.closes, 1);
+    for (final s in [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+    }
+    await t.pumpAndSettle();
+    expect(adb.hosts, hasLength(2));
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(adb.keys, [RemoteKey.ok]);
+  });
+
   testWidgets('the note goes when Ilona TV is back in front', (t) async {
     await open(t);
     client.events$.add(outside('none'));

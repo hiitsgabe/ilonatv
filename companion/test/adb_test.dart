@@ -104,6 +104,7 @@ void main() {
       RemoteKey.home: 3,
       RemoteKey.volumeUp: 24,
       RemoteKey.volumeDown: 25,
+      RemoteKey.mute: 164,
       RemoteKey.playPause: 85,
     });
     expect(adbKeycodes.keys, containsAll(RemoteKey.values));
@@ -116,6 +117,16 @@ void main() {
     expect(calls.single.arguments, {'code': 22});
     answer = (_) => throw PlatformException(code: 'adb', message: 'closed');
     expect(await Adb().key(RemoteKey.ok), isFalse);
+  });
+
+  testWidgets('a key with no answer in 3 s is false', (tester) async {
+    answer = (_) => Completer<void>().future;
+    bool? got;
+    Adb().key(RemoteKey.up).then((r) => got = r);
+    await tester.pump(const Duration(seconds: 2));
+    expect(got, isNull);
+    await tester.pump(const Duration(seconds: 2));
+    expect(got, isFalse);
   });
 
   test('a TV is known once a connect to it took', () async {
@@ -139,36 +150,50 @@ void main() {
     const media = [
       RemoteKey.volumeUp,
       RemoteKey.volumeDown,
+      RemoteKey.mute,
       RemoteKey.playPause,
     ];
     const all = RemoteKey.values;
+    const nav = [...dpad, RemoteKey.back, RemoteKey.home];
 
-    test('never while Ilona TV is in front, but for media on an older TV', () {
-      for (final o in ['all', 'backHome', 'none']) {
-        for (final k in all) {
-          expect(useAdb(k, inFront: true, keysOutside: o), isFalse);
+    bool use(RemoteKey k, bool inFront, String? o, {bool up = false}) =>
+        useAdb(k, inFront: inFront, keysOutside: o, adbUp: up);
+
+    test('the D-pad never while Ilona TV is in front, even on an older TV', () {
+      for (final o in ['all', 'backHome', 'none', null]) {
+        for (final k in nav) {
+          expect(use(k, true, o), isFalse);
+          expect(use(k, true, o, up: true), isFalse);
         }
-      }
-      for (final k in all) {
-        expect(useAdb(k, inFront: true, keysOutside: null), media.contains(k));
       }
     });
 
     test('another app in front: only what the TV cannot do itself', () {
-      for (final k in all) {
-        expect(useAdb(k, inFront: false, keysOutside: 'all'), isFalse);
-        expect(
-          useAdb(k, inFront: false, keysOutside: 'none'),
-          !media.contains(k),
-        );
-        expect(useAdb(k, inFront: false, keysOutside: null), isTrue);
+      for (final k in nav) {
+        expect(use(k, false, 'all'), isFalse);
+        expect(use(k, false, 'none'), isTrue);
+        expect(use(k, false, null), isTrue);
       }
       for (final k in dpad) {
-        expect(useAdb(k, inFront: false, keysOutside: 'backHome'), isTrue);
+        expect(use(k, false, 'backHome'), isTrue);
       }
-      for (final k in [RemoteKey.back, RemoteKey.home, ...media]) {
-        expect(useAdb(k, inFront: false, keysOutside: 'backHome'), isFalse);
+      for (final k in [RemoteKey.back, RemoteKey.home]) {
+        expect(use(k, false, 'backHome'), isFalse);
       }
+    });
+
+    test('media over ADB only while it is up on a TV without API 33 actions, '
+        'so volume goes through the system (CEC)', () {
+      for (final k in media) {
+        for (final inFront in [true, false]) {
+          expect(use(k, inFront, 'backHome', up: true), isTrue);
+          expect(use(k, inFront, 'none', up: true), isTrue);
+          expect(use(k, inFront, 'backHome'), isFalse);
+          expect(use(k, inFront, 'all', up: true), isFalse);
+          expect(use(k, inFront, null, up: true), !inFront);
+        }
+      }
+      expect(all.length, nav.length + media.length);
     });
   });
 }

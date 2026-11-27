@@ -84,11 +84,11 @@ class CompanionServer {
 
   // A platform call: it can fail with no engine to answer, and the rest stands.
   Future<Map<String, dynamic>> _full() async {
-    final state = _state;
     try {
-      return {...state, ...?await outside?.call()};
+      final extra = await outside?.call();
+      return {..._state, ...?extra};
     } catch (_) {
-      return state;
+      return _state;
     }
   }
 

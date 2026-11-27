@@ -31,6 +31,7 @@ enum KeyRoute { window, global, audio, none }
 const _audioKeys = {
   RemoteKey.volumeUp,
   RemoteKey.volumeDown,
+  RemoteKey.mute,
   RemoteKey.playPause,
 };
 
