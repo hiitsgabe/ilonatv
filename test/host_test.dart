@@ -29,6 +29,26 @@ void main() {
     expect(await Host.injectKey(RemoteKey.ok), isFalse);
   });
 
+  test('globalKey and audioKey send the key name', () async {
+    reply(true);
+    expect(await Host.globalKey(RemoteKey.down), isTrue);
+    expect(received.method, 'globalKey');
+    expect(received.arguments, {'key': 'down'});
+    expect(await Host.audioKey(RemoteKey.volumeUp), isTrue);
+    expect(received.method, 'audioKey');
+    expect(received.arguments, {'key': 'volumeUp'});
+  });
+
+  test(
+    'keyAccess reads the API level and the service; none without a reply',
+    () async {
+      reply({'api': 33, 'service': true});
+      expect(await Host.keyAccess(), (api: 33, service: true));
+      reply(null);
+      expect(await Host.keyAccess(), (api: 0, service: false));
+    },
+  );
+
   test('injectKey home is false with no home to go to', () async {
     Host.onGoHome = null;
     expect(await Host.injectKey(RemoteKey.home), isFalse);

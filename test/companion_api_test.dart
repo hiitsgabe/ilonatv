@@ -61,6 +61,9 @@ late Settings _s;
 late Sources _sources;
 late IlonaTvApi _api;
 final _injected = <RemoteKey>[];
+final _global = <RemoteKey>[];
+final _audio = <RemoteKey>[];
+var _keyAccess = (api: 28, service: false);
 final _host = <String>[];
 
 /// No YouTube account unless [accounts]: a settings save would otherwise
@@ -107,6 +110,9 @@ Future<void> _setUp({
     sports: SportsSource(_s, store, fetch: fake({}).call),
   );
   _injected.clear();
+  _global.clear();
+  _audio.clear();
+  _keyAccess = (api: 28, service: false);
   _host.clear();
   _api = IlonaTvApi(
     _s,
@@ -115,6 +121,15 @@ Future<void> _setUp({
       _injected.add(k);
       return true;
     },
+    globalKey: (k) async {
+      _global.add(k);
+      return true;
+    },
+    audioKey: (k) async {
+      _audio.add(k);
+      return true;
+    },
+    keyAccess: () async => _keyAccess,
   );
 }
 
@@ -153,6 +168,113 @@ void main() {
     expect(status, 409);
     expect(body, {'error': 'notInFront'});
     expect(_injected, isEmpty);
+  });
+
+  test('keysOutside: the D-pad from API 33, Back and Home before, nothing '
+      'without the service', () {
+    expect(keysOutside(api: 33, service: true), 'all');
+    expect(keysOutside(api: 34, service: true), 'all');
+    expect(keysOutside(api: 32, service: true), 'backHome');
+    expect(keysOutside(api: 28, service: true), 'backHome');
+    expect(keysOutside(api: 34, service: false), 'none');
+  });
+
+  test('keyRoute by app in front and what the TV can do outside', () {
+    const dpad = [
+      RemoteKey.up,
+      RemoteKey.down,
+      RemoteKey.left,
+      RemoteKey.right,
+      RemoteKey.ok,
+    ];
+    const media = [
+      RemoteKey.volumeUp,
+      RemoteKey.volumeDown,
+      RemoteKey.playPause,
+    ];
+    for (final outside in ['all', 'backHome', 'none']) {
+      for (final k in [...dpad, RemoteKey.back, RemoteKey.home]) {
+        expect(
+          keyRoute(k, inFront: true, keysOutside: outside),
+          KeyRoute.window,
+        );
+      }
+      for (final k in media) {
+        expect(
+          keyRoute(k, inFront: true, keysOutside: outside),
+          KeyRoute.audio,
+        );
+        expect(
+          keyRoute(k, inFront: false, keysOutside: outside),
+          KeyRoute.audio,
+        );
+      }
+    }
+    for (final k in [...dpad, RemoteKey.back, RemoteKey.home]) {
+      expect(keyRoute(k, inFront: false, keysOutside: 'all'), KeyRoute.global);
+      expect(keyRoute(k, inFront: false, keysOutside: 'none'), KeyRoute.none);
+    }
+    for (final k in dpad) {
+      expect(
+        keyRoute(k, inFront: false, keysOutside: 'backHome'),
+        KeyRoute.none,
+      );
+    }
+    for (final k in [RemoteKey.back, RemoteKey.home]) {
+      expect(
+        keyRoute(k, inFront: false, keysOutside: 'backHome'),
+        KeyRoute.global,
+      );
+    }
+  });
+
+  test(
+    'another app in front on API 33: the D-pad goes to the service',
+    () async {
+      await _setUp();
+      _keyAccess = (api: 33, service: true);
+      companionState.setInFront(false);
+      final (status, _) = await _call('POST', '/api/key', body: {'key': 'up'});
+      expect(status, 204);
+      expect(_global, [RemoteKey.up]);
+      expect(_injected, isEmpty);
+    },
+  );
+
+  test(
+    'another app in front on API 28: Back goes to the service, OK is 409',
+    () async {
+      await _setUp();
+      _keyAccess = (api: 28, service: true);
+      companionState.setInFront(false);
+      expect((await _call('POST', '/api/key', body: {'key': 'back'})).$1, 204);
+      expect((await _call('POST', '/api/key', body: {'key': 'ok'})).$1, 409);
+      expect(_global, [RemoteKey.back]);
+    },
+  );
+
+  test(
+    'volume and play/pause go to the audio service, in front or not',
+    () async {
+      await _setUp();
+      expect(
+        (await _call('POST', '/api/key', body: {'key': 'volumeUp'})).$1,
+        204,
+      );
+      companionState.setInFront(false);
+      expect(
+        (await _call('POST', '/api/key', body: {'key': 'playPause'})).$1,
+        204,
+      );
+      expect(_audio, [RemoteKey.volumeUp, RemoteKey.playPause]);
+      expect(_injected, isEmpty);
+    },
+  );
+
+  test('outside reports keysOutside and the API level', () async {
+    await _setUp();
+    _keyAccess = (api: 30, service: true);
+    expect(await _api.outside(), {'keysOutside': 'backHome', 'api': 30});
   });
 
   test('key refused by the window is 409', () async {

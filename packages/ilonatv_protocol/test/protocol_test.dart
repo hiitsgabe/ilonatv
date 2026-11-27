@@ -5,6 +5,9 @@ void main() {
   test('remoteKeyByName', () {
     expect(remoteKeyByName('ok'), RemoteKey.ok);
     expect(remoteKeyByName('jump'), isNull);
+    expect(remoteKeyByName('volumeUp'), RemoteKey.volumeUp);
+    expect(remoteKeyByName('volumeDown'), RemoteKey.volumeDown);
+    expect(remoteKeyByName('playPause'), RemoteKey.playPause);
   });
 
   test('PairRequest round-trips', () {

@@ -24,14 +24,71 @@ final _countryCode = RegExp(r'^([A-Za-z]{2})?$');
 const _badRequest = (400, {'error': 'badRequest'});
 const _notFound = (404, {'error': 'notFound'});
 
+/// Where a remote key goes: Ilona TV's window, the accessibility service's
+/// global actions (another app in front), the audio service, or nowhere.
+enum KeyRoute { window, global, audio, none }
+
+const _audioKeys = {
+  RemoteKey.volumeUp,
+  RemoteKey.volumeDown,
+  RemoteKey.playPause,
+};
+
+/// What the remote reaches while another app is in front. The D-pad's global
+/// actions came in API 33; Back and Home are older. All need the service.
+String keysOutside({required int api, required bool service}) => !service
+    ? 'none'
+    : api >= 33
+    ? 'all'
+    : 'backHome';
+
+KeyRoute keyRoute(
+  RemoteKey k, {
+  required bool inFront,
+  required String keysOutside,
+}) {
+  if (_audioKeys.contains(k)) return KeyRoute.audio;
+  if (inFront) return KeyRoute.window;
+  return switch (keysOutside) {
+    'all' => KeyRoute.global,
+    'backHome' when k == RemoteKey.back || k == RemoteKey.home =>
+      KeyRoute.global,
+    _ => KeyRoute.none,
+  };
+}
+
 /// What a paired phone can do: what the TV's own screens do, with the TV's
 /// code. Answers carry display data only, never a key or a token.
 class IlonaTvApi implements CompanionApi {
-  IlonaTvApi(this.settings, this.sources, {this.injectKey = Host.injectKey});
+  IlonaTvApi(
+    this.settings,
+    this.sources, {
+    this.injectKey = Host.injectKey,
+    this.globalKey = Host.globalKey,
+    this.audioKey = Host.audioKey,
+    this.keyAccess = Host.keyAccess,
+  });
 
   final Settings settings;
   final Sources sources;
   final Future<bool> Function(RemoteKey) injectKey;
+  final Future<bool> Function(RemoteKey) globalKey;
+  final Future<bool> Function(RemoteKey) audioKey;
+  final Future<({int api, bool service})> Function() keyAccess;
+
+  Future<String> _keysOutside() async {
+    final a = await keyAccess();
+    return keysOutside(api: a.api, service: a.service);
+  }
+
+  /// For /api/info: the phone sends over ADB what the TV can't do itself.
+  Future<Map<String, Object>> outside() async {
+    final a = await keyAccess();
+    return {
+      'keysOutside': keysOutside(api: a.api, service: a.service),
+      'api': a.api,
+    };
+  }
 
   @override
   Future<(int, Object)> handle(
@@ -56,9 +113,19 @@ class IlonaTvApi implements CompanionApi {
   Future<(int, Object)> _key(Object? name) async {
     final key = name is String ? remoteKeyByName(name) : null;
     if (key == null) return _badRequest;
-    if (!companionState.inFront || !await injectKey(key)) {
-      return (409, {'error': 'notInFront'});
-    }
+    final inFront = companionState.inFront;
+    final route = keyRoute(
+      key,
+      inFront: inFront,
+      keysOutside: inFront ? 'none' : await _keysOutside(),
+    );
+    final sent = switch (route) {
+      KeyRoute.window => await injectKey(key),
+      KeyRoute.global => await globalKey(key),
+      KeyRoute.audio => await audioKey(key),
+      KeyRoute.none => false,
+    };
+    if (!sent) return (409, {'error': 'notInFront'});
     return (204, const {});
   }
 
