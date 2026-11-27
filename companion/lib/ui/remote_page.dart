@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
+import '../adb.dart';
 import '../i18n.dart';
 import '../releases.dart';
 import '../tv_client.dart';
@@ -18,12 +19,16 @@ class RemotePage extends StatefulWidget {
     required this.tvs,
     this.updates,
     this.onUpdate,
+    this.adb,
   });
 
   final Tv tv;
   final TvClient client;
   final Tvs tvs;
   final UpdateCheck? updates;
+
+  /// For the keys the TV can't reach while another app is in front.
+  final Adb? adb;
 
   /// Opens the installer, which sees the older version and offers Update.
   final VoidCallback? onUpdate;
@@ -43,6 +48,13 @@ class _RemotePageState extends State<RemotePage> {
   final _queue = <RemoteKey>[];
   bool _sending = false;
   String? _latest;
+  late final Adb _adb = widget.adb ?? Adb();
+  bool _adbUsed = false;
+  bool _adbUp = false;
+  bool _adbBusy = false;
+  bool _adbTried = false;
+  bool _adbNote = false;
+  AdbResult? _adbFail;
 
   @override
   void initState() {
@@ -59,6 +71,7 @@ class _RemotePageState extends State<RemotePage> {
     widget.tvs.release();
     _sub?.cancel();
     _retry?.cancel();
+    if (_adbUsed) _adb.close();
     super.dispose();
   }
 
@@ -71,8 +84,43 @@ class _RemotePageState extends State<RemotePage> {
         _info = i;
         _unreachable = false;
         _fails = 0;
+        if (i.inFront) _adbNote = false;
       });
+      _adbIfKnown();
     }, onDone: _ended);
+  }
+
+  // Only to a TV that allowed this phone before, so no prompt comes up unasked.
+  Future<void> _adbIfKnown() async {
+    final i = _info;
+    if (_adbTried || i == null || i.inFront || i.keysOutside == 'all') return;
+    _adbTried = true;
+    if (await _adb.knows(widget.tv.host)) await _adbConnect();
+  }
+
+  Future<void> _adbConnect() async {
+    if (_adbBusy || _adbUp || !mounted) return;
+    setState(() => _adbBusy = true);
+    _adbUsed = true;
+    final r = await _adb.connect(widget.tv.host, kAdbPort);
+    if (!mounted) return;
+    setState(() {
+      _adbBusy = false;
+      _adbUp = r == AdbResult.ok;
+      _adbFail = _adbUp ? null : r;
+      if (_adbUp) _adbNote = false;
+    });
+  }
+
+  Future<bool> _sendAdb(RemoteKey k) async {
+    if (_adbUp && await _adb.key(k)) return true;
+    if (mounted) {
+      setState(() {
+        _adbUp = false;
+        _adbNote = true;
+      });
+    }
+    return false;
   }
 
   // events() ends silently on a failed connect, so ask the TV why.
@@ -134,7 +182,22 @@ class _RemotePageState extends State<RemotePage> {
     if (_sending) return;
     _sending = true;
     while (_queue.isNotEmpty && mounted) {
-      await _handle(await widget.client.key(_queue.removeAt(0)));
+      final k = _queue.removeAt(0);
+      final i = _info;
+      final outside = i?.keysOutside;
+      // Before the first state event nothing is known: the TV's server first.
+      if (i != null && useAdb(k, inFront: i.inFront, keysOutside: outside)) {
+        await _sendAdb(k);
+        continue;
+      }
+      final r = await widget.client.key(k);
+      // The TV left Ilona TV before its event said so.
+      if (r is NotInFront &&
+          useAdb(k, inFront: false, keysOutside: outside) &&
+          await _sendAdb(k)) {
+        continue;
+      }
+      await _handle(r);
     }
     _sending = false;
   }
@@ -189,6 +252,22 @@ class _RemotePageState extends State<RemotePage> {
               _Banner(
                 text: t('notInFront'),
                 sub: _notInFront == false ? t('launcherTip') : null,
+              ),
+            if (_adbNote && !_adbUp)
+              _Banner(
+                text: t('adbNote'),
+                sub: t(
+                  _adbFail == AdbResult.unauthorized ? 'adbDenied' : 'adbHow',
+                ),
+                action: _adbBusy
+                    ? const SizedBox.square(
+                        dimension: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : TextButton(
+                        onPressed: _adbConnect,
+                        child: Text(t('adbConnect')),
+                      ),
               ),
             Expanded(
               child: TabBarView(
@@ -578,13 +657,26 @@ class _PadState extends State<_Pad> {
             ),
           ),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _round(Icons.arrow_back, t('back'), RemoteKey.back),
-              const SizedBox(width: 48),
-              _round(Icons.home_outlined, t('home'), RemoteKey.home),
-            ],
+          // Scaled down rather than overflowing on a narrow phone.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              children: [
+                _round(Icons.arrow_back, t('back'), RemoteKey.back),
+                const SizedBox(width: 24),
+                _round(
+                  Icons.volume_down,
+                  t('volumeDown'),
+                  RemoteKey.volumeDown,
+                ),
+                const SizedBox(width: 8),
+                _round(Icons.play_arrow, t('playPause'), RemoteKey.playPause),
+                const SizedBox(width: 8),
+                _round(Icons.volume_up, t('volumeUp'), RemoteKey.volumeUp),
+                const SizedBox(width: 24),
+                _round(Icons.home_outlined, t('home'), RemoteKey.home),
+              ],
+            ),
           ),
           const SizedBox(height: 32),
         ],

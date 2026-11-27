@@ -3,6 +3,7 @@ package tv.ilona.companion
 import android.os.Handler
 import android.os.Looper
 import dadb.AdbKeyPair
+import dadb.AdbShellStream
 import dadb.Dadb
 import dadb.InstallResult
 import io.flutter.plugin.common.MethodCall
@@ -27,6 +28,7 @@ class Adb(private val dir: File) {
     @Volatile private var dadb: Dadb? = null
     private var pending: Future<Dadb>? = null
     private var pendingAt = ""
+    private var keys: AdbShellStream? = null
 
     fun onCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
@@ -34,6 +36,10 @@ class Adb(private val dir: File) {
             "shell" -> off(result) {
                 val r = live().shell(call.argument<String>("cmd")!!)
                 mapOf("exitCode" to r.exitCode, "output" to r.allOutput)
+            }
+            "key" -> off(result) {
+                key(call.argument<Int>("code")!!)
+                null
             }
             "install" -> off(result) {
                 when (val r = live().install(File(call.argument<String>("path")!!))) {
@@ -47,6 +53,7 @@ class Adb(private val dir: File) {
     }
 
     fun close() {
+        closeKeys()
         drop(pending)
         pending = null
         dadb?.close()
@@ -76,7 +83,10 @@ class Adb(private val dir: File) {
             main.post {
                 if (answer is Dadb) {
                     if (pending === attempt) pending = null
-                    if (dadb !== answer) dadb?.close()
+                    if (dadb !== answer) {
+                        closeKeys()
+                        dadb?.close()
+                    }
                     dadb = answer
                     result.success("ok")
                 } else {
@@ -116,6 +126,27 @@ class Adb(private val dir: File) {
         if (private.exists() && public.exists()) runCatching { return AdbKeyPair.read(private, public) }
         AdbKeyPair.generate(private, public)
         return AdbKeyPair.read(private, public)
+    }
+
+    // One shell for every key: no stream to open per press. Its output is dropped so nothing waits on a reader.
+    @Synchronized
+    private fun key(code: Int) {
+        try {
+            val shell = keys ?: live().openShell("sh").also {
+                it.write("exec >/dev/null 2>&1\n")
+                keys = it
+            }
+            shell.write("input keyevent $code\n")
+        } catch (e: Throwable) {
+            closeKeys()
+            throw e
+        }
+    }
+
+    @Synchronized
+    private fun closeKeys() {
+        runCatching { keys?.close() }
+        keys = null
     }
 
     private fun live() = dadb ?: throw IOException("not connected")
