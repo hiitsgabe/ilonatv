@@ -112,6 +112,15 @@ Pick this in the setup or in Settings > Open with, separately for movies and ser
 
 Streaming apps open on their own home, not at the title: the services don't publish links into their apps. Videos and trailers open in the YouTube app you choose; SmartTube and the official app both work.
 
+## Tested TVs
+
+| Device | Model | System | Status |
+|---|---|---|---|
+| [TCL 75" M7LF](https://www.bestbuy.ca/en-ca/product/tcl-75-m7lf-series-4k-uhd-hdr-mini-led-fire-tv-smart-tv-75m7lf-2026-great-for-movies-gaming/19972888) Mini-LED Fire TV (4K, MediaTek MT5896) | `75M7LF` (`AFTDEC012E`) | Fire OS 8.1.8.6 (Android 11) | Used every day: launcher, Companion, remote, sports rows |
+| Fire TV Stick 4K | | Fire OS 7 (Android 9) | Used every day |
+
+Google TV and other Android TV devices should work but haven't been tried on real hardware yet. If you run Ilona TV on another device, please open an issue with its model (Settings > My Fire TV > About, or `adb shell getprop ro.product.model`) so it can be added here.
+
 ## FAQ
 
 <details>
@@ -129,7 +138,7 @@ To install an app that isn't in the store, and, on Fire TV, to grant the one per
 <details>
 <summary><b>Will it work on my device?</b></summary>
 
-It runs day to day on a Fire TV Stick 4K (Fire OS 7) and a Fire TV Edition TV (Fire OS 8). Google TV and other Android TV devices should work but haven't been tried on real hardware yet. Reports are very welcome.
+See [Tested TVs](#tested-tvs). Google TV and other Android TV devices should work but haven't been tried on real hardware yet. Reports are very welcome.
 
 Fire TV devices that run Amazon's Vega OS instead of Fire OS (such as the Fire TV Stick 4K Select) don't run Android apps, so Ilona TV can't be installed on them. See [AFTVnews' list of Fire TVs without sideloading](https://www.aftvnews.com/these-are-the-fire-tvs-that-dont-support-sideloading-or-downloader-due-to-vega-os-replacing-fire-os/).
 </details>
