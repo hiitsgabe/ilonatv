@@ -46,13 +46,16 @@ A short setup on the TV gets everything in place, and anything that needs typing
 The Ilona TV Companion is an Android app that does the computer steps below from your phone, then stays on as a remote.
 
 - **Install** Ilona TV on a Fire TV: it finds the TV on your Wi-Fi, asks for the "Allow debugging?" prompt, downloads the right APK from the latest [release](../../releases) (checking its SHA-256), installs it, grants the permissions Launcher mode and Processes need, and starts it.
-- **Pair** with the QR code or the code from Settings > Companion.
-- **Remote:** the keys, Back and Home, search and browse with Watch, and typing during the setup.
+- **Pair** with the QR code or the code from Settings > Companion. Home lists your paired TVs with a live status dot and the Ilona TVs found on the Wi-Fi; with exactly one paired TV online, it opens its remote straight away.
+- **Remote:** a four-way D-pad with OK (hold an arrow to repeat), or a swipe pad if you pick Swipe in the ⋮ menu; Back, Home and Keyboard; volume, mute and play/pause, which hide on a TV that has no way to do them. While the remote is open, the phone's volume buttons change the TV's volume. Tap the TV's name at the top to switch TVs, add one or forget this one. Vibration can be turned off in the ⋮ menu.
+- **Explore:** search and the TV's rows in one tab, with filters for movies, series and YouTube. Watch names the TV and takes you back to the remote.
+- **Type on the TV:** Keyboard sends text from your phone into the field selected on the TV, in any app (through the accessibility service Launcher mode uses), and fills in the TMDB key and city during the setup; it opens by itself when the setup asks.
+- The Companion takes on the accent colour picked on the TV.
 - **Updates:** once per launch it checks the latest release and says when the Companion, or the TV you are controlling, has a newer version; Update on the remote runs the installer again. Both apps also update themselves from About (Settings > About on the TV, the info button on the Companion's home): Check for updates, then Update downloads the release's APK, checks its SHA-256 and hands it to the system installer.
 
 Download `ilonatv-companion.apk` from the [Releases](../../releases) page, sideload it on your phone, then choose "Install Ilona TV on a TV". To build it yourself, see [development](docs/development.md#companion).
 
-Before you start, turn on ADB debugging on the TV (see step 1 of Get started, with video walkthroughs). The phone installer works on Fire TV and on Android TV devices that offer ADB network debugging on port 5555. Google TV and Android 11+ only offer "Wireless debugging", which needs pairing from a computer: follow Get started below. Once Ilona TV is installed you can turn ADB debugging off; the remote does not use it.
+Before you start, turn on ADB debugging on the TV (see step 1 of Get started, with video walkthroughs). The phone installer works on Fire TV and on Android TV devices that offer ADB network debugging on port 5555. Google TV and Android 11+ only offer "Wireless debugging", which needs pairing from a computer: follow Get started below. Once Ilona TV is installed you can turn ADB debugging off; the remote uses it only for the keys the TV can't send itself while another app is in front (the D-pad below Android 13, and every key without Launcher mode's accessibility service).
 
 ## Get started
 
