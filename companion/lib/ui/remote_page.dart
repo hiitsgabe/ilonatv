@@ -73,13 +73,17 @@ class _RemotePageState extends State<RemotePage> {
   bool _swipe = false;
   bool _haptics = true;
   bool _volumeKeys = false;
+  void _rocker(bool up) =>
+      _press(up ? RemoteKey.volumeUp : RemoteKey.volumeDown, repeat: true);
+
+  // A remote that replaced this one (another TV) holds the rocker now.
+  bool get _ownsRocker => widget.tvs.onVolumeKey == _rocker;
 
   @override
   void initState() {
     super.initState();
     widget.tvs.hold();
-    widget.tvs.onVolumeKey = (up) =>
-        _press(up ? RemoteKey.volumeUp : RemoteKey.volumeDown, repeat: true);
+    widget.tvs.onVolumeKey = _rocker;
     SharedPreferences.getInstance().then((p) {
       if (!mounted) return;
       setState(() {
@@ -96,8 +100,10 @@ class _RemotePageState extends State<RemotePage> {
 
   @override
   void dispose() {
-    if (_volumeKeys) hardwareVolume(false);
-    widget.tvs.onVolumeKey = null;
+    if (_ownsRocker) {
+      if (_volumeKeys) hardwareVolume(false);
+      widget.tvs.onVolumeKey = null;
+    }
     widget.tvs.release();
     _sub?.cancel();
     _retry?.cancel();
@@ -422,7 +428,9 @@ class _RemotePageState extends State<RemotePage> {
     // gives the rocker back to the phone.
     final volumeKeys =
         _media && _tab == 0 && (ModalRoute.of(context)?.isCurrent ?? false);
-    if (volumeKeys != _volumeKeys) {
+    if (!_ownsRocker) {
+      _volumeKeys = false;
+    } else if (volumeKeys != _volumeKeys) {
       _volumeKeys = volumeKeys;
       hardwareVolume(volumeKeys);
     }

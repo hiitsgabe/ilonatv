@@ -518,6 +518,59 @@ void main() {
     expect(rocker, [true, false, true, false]);
   });
 
+  testWidgets('switching TVs in the picker moves the remote and the rocker '
+      'to the other TV', (t) async {
+    final rocker = <Object?>[];
+    const channel = MethodChannel('tv.ilona.companion/host');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      c,
+    ) async {
+      if (c.method == 'volumeKeys') rocker.add(c.arguments);
+      return null;
+    });
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    SharedPreferences.setMockInitialValues({});
+    client = Fake();
+    tvs = Tvs();
+    await tvs.savePaired(tv, 'x');
+    final other = Tv(host: '5.6.7.8', port: 8642, name: 'Bedroom');
+    await tvs.savePaired(other, 'y');
+    final second = Fake();
+    await t.pumpWidget(
+      MaterialApp(
+        home: RemotePage(
+          tv: tv,
+          client: client,
+          tvs: tvs,
+          adb: FakeAdb(),
+          clientFor: (_) => second,
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('device')));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Bedroom'));
+    await t.pumpAndSettle();
+    expect(find.text('Bedroom'), findsOneWidget);
+    expect(rocker.last, true);
+    await t.binding.defaultBinaryMessenger.handlePlatformMessage(
+      channel.name,
+      channel.codec.encodeMethodCall(
+        const MethodCall('volumeKey', {'up': false}),
+      ),
+      (_) {},
+    );
+    await t.pumpAndSettle();
+    expect(second.keys, [RemoteKey.volumeDown]);
+    expect(client.keys, isEmpty);
+  });
+
   testWidgets('the TV name opens the picker, whose Forget forgets it', (
     t,
   ) async {
