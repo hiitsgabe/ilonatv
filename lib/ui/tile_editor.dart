@@ -18,8 +18,9 @@ const _maxTiles = 5;
 
 /// A newly chosen app's icon: its own, or for a pseudo package the painted
 /// icon its suffix names (`apps`, `settings`), never a grey box.
-String newTileIcon(String package) =>
-    package.startsWith('ilonatv:') ? package.replaceFirst('ilonatv:', '') : 'app';
+String newTileIcon(String package) => package.startsWith('ilonatv:')
+    ? package.replaceFirst('ilonatv:', '')
+    : 'app';
 
 /// The custom image entry of the icon picker.
 const _custom = 'ilonatv:image';

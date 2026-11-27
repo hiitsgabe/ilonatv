@@ -19,6 +19,7 @@ const _maxQuery = 200;
 const _maxKey = 64;
 const _maxName = 100;
 const _maxItem = 8 * 1024;
+const _maxText = 500;
 // Empty as Open-Meteo leaves it for a place with no country.
 final _countryCode = RegExp(r'^([A-Za-z]{2})?$');
 const _badRequest = (400, {'error': 'badRequest'});
@@ -68,6 +69,7 @@ class IlonaTvApi implements CompanionApi {
     this.globalKey = Host.globalKey,
     this.audioKey = Host.audioKey,
     this.keyAccess = Host.keyAccess,
+    this.typeText = Host.typeText,
   });
 
   final Settings settings;
@@ -76,6 +78,10 @@ class IlonaTvApi implements CompanionApi {
   final Future<bool> Function(RemoteKey) globalKey;
   final Future<bool> Function(RemoteKey) audioKey;
   final Future<({int api, bool service})> Function() keyAccess;
+
+  /// Replaces the text of the focused field, in whatever app is in front;
+  /// false when none has focus.
+  final Future<bool> Function(String) typeText;
 
   Future<String> _keysOutside() async {
     final a = await keyAccess();
@@ -101,6 +107,7 @@ class IlonaTvApi implements CompanionApi {
     final b = body is Map ? body : const {};
     return switch ((method, path)) {
       ('POST', '/api/key') => _key(b['key']),
+      ('POST', '/api/text') => _text(b['text']),
       ('GET', '/api/search') => _search(query['q']?.trim() ?? ''),
       ('GET', '/api/rows') => (200, _rows()),
       ('POST', '/api/open') => _open(b['item']),
@@ -127,6 +134,12 @@ class IlonaTvApi implements CompanionApi {
       KeyRoute.none => false,
     };
     if (!sent) return (409, {'error': 'notInFront'});
+    return (204, const {});
+  }
+
+  Future<(int, Object)> _text(Object? text) async {
+    if (text is! String || text.length > _maxText) return _badRequest;
+    if (!await typeText(text)) return (409, {'error': 'noField'});
     return (204, const {});
   }
 

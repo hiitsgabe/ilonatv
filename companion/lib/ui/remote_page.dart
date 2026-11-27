@@ -534,7 +534,6 @@ class _RemotePageState extends State<RemotePage> {
                     dim: _unreachable,
                     swipe: _swipe,
                     media: _media,
-                    canType: isSetupStep(_info?.step),
                     onKey: _press,
                     onKeyboard: _keyboard,
                   ),
@@ -584,7 +583,6 @@ class _Controls extends StatelessWidget {
     required this.dim,
     required this.swipe,
     required this.media,
-    required this.canType,
     required this.onKey,
     required this.onKeyboard,
   });
@@ -592,7 +590,6 @@ class _Controls extends StatelessWidget {
   final bool dim;
   final bool swipe;
   final bool media;
-  final bool canType;
   final OnKey onKey;
   final VoidCallback onKeyboard;
 
@@ -641,7 +638,7 @@ class _Controls extends StatelessWidget {
                 Icons.keyboard_outlined,
                 t('keyboard'),
                 const Key('key-keyboard'),
-                canType ? onKeyboard : null,
+                onKeyboard,
               ),
             ],
           ),

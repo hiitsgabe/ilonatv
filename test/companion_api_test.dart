@@ -63,6 +63,8 @@ late IlonaTvApi _api;
 final _injected = <RemoteKey>[];
 final _global = <RemoteKey>[];
 final _audio = <RemoteKey>[];
+final _typed = <String>[];
+var _field = true;
 var _keyAccess = (api: 28, service: false);
 final _host = <String>[];
 
@@ -112,6 +114,8 @@ Future<void> _setUp({
   _injected.clear();
   _global.clear();
   _audio.clear();
+  _typed.clear();
+  _field = true;
   _keyAccess = (api: 28, service: false);
   _host.clear();
   _api = IlonaTvApi(
@@ -130,6 +134,10 @@ Future<void> _setUp({
       return true;
     },
     keyAccess: () async => _keyAccess,
+    typeText: (s) async {
+      _typed.add(s);
+      return _field;
+    },
   );
 }
 
@@ -284,6 +292,42 @@ void main() {
     final (status, _) = await _call('POST', '/api/key', body: {'key': 'up'});
     expect(status, 409);
   });
+
+  test('text goes to the focused field; none focused is 409', () async {
+    await _setUp();
+    expect(
+      (await _call('POST', '/api/text', body: {'text': 'lisbon'})).$1,
+      204,
+    );
+    expect(_typed, ['lisbon']);
+    _field = false;
+    final (status, body) = await _call(
+      'POST',
+      '/api/text',
+      body: {'text': 'x'},
+    );
+    expect(status, 409);
+    expect(body, {'error': 'noField'});
+  });
+
+  test(
+    'text that is not a string, or too long, is 400 and types nothing',
+    () async {
+      await _setUp();
+      for (final body in [
+        null,
+        {'text': 5},
+        {'text': 'a' * 501},
+      ]) {
+        expect((await _call('POST', '/api/text', body: body)).$1, 400);
+      }
+      expect(
+        (await _call('POST', '/api/text', body: {'text': 'a' * 500})).$1,
+        204,
+      );
+      expect(_typed, ['a' * 500]);
+    },
+  );
 
   test('key jump is 400', () async {
     await _setUp();

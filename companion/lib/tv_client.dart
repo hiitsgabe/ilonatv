@@ -237,6 +237,11 @@ class TvClient {
     on409: _notInFront,
   );
 
+  /// Into the field focused on the TV, in any app; a TV older than this
+  /// refuses it with 404, and with no field focused with noField.
+  Future<TvResult<void>> text(String s) =>
+      _call<void>('POST', '/api/text', (_) {}, body: {'text': s});
+
   Future<TvResult<SearchResults>> search(String q) =>
       _call('GET', '/api/search', (j) {
         final m = j as Map;

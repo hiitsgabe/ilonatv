@@ -33,20 +33,23 @@ void main() {
     await s.delete('x'); // already gone: a no-op, not an error
   });
 
-  test('readBytes and writeBytes keep a file as is, under its own name', () async {
-    final s = Store(dir);
-    expect(await s.readBytes('icon-x.png'), isNull);
-    final png = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 0, 1, 2]);
-    await s.writeBytes('icon-x.png', png);
-    expect(await s.readBytes('icon-x.png'), png);
-    expect(
-      Directory('${dir.path}/cache').listSync().single.path,
-      endsWith('/icon-x.png'),
-    );
-    // Over an old one, whole.
-    await s.writeBytes('icon-x.png', Uint8List.fromList([1]));
-    expect(await s.readBytes('icon-x.png'), [1]);
-  });
+  test(
+    'readBytes and writeBytes keep a file as is, under its own name',
+    () async {
+      final s = Store(dir);
+      expect(await s.readBytes('icon-x.png'), isNull);
+      final png = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 0, 1, 2]);
+      await s.writeBytes('icon-x.png', png);
+      expect(await s.readBytes('icon-x.png'), png);
+      expect(
+        Directory('${dir.path}/cache').listSync().single.path,
+        endsWith('/icon-x.png'),
+      );
+      // Over an old one, whole.
+      await s.writeBytes('icon-x.png', Uint8List.fromList([1]));
+      expect(await s.readBytes('icon-x.png'), [1]);
+    },
+  );
 
   test('freshOrNull gives the entry only while it is young', () async {
     final s = Store(dir);

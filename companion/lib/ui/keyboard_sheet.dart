@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../i18n.dart';
 import '../tv_client.dart';
+import 'theme.dart';
 
 bool isSetupStep(String? step) => step == 'tmdb' || step == 'location';
 
-/// Every kind of typing for the TV, in one sheet: the setup step it is on.
+/// Every kind of typing for the TV, in one sheet: the setup step it is on,
+/// else whatever field has focus there.
 Future<void> showKeyboardSheet(
   BuildContext context, {
   required TvClient client,
@@ -60,13 +62,103 @@ class KeyboardSheet extends StatelessWidget {
               if (step == 'tmdb')
                 TmdbForm(client: client, onResult: onResult)
               else if (step == 'location')
-                CityForm(client: client, onResult: onResult),
+                CityForm(client: client, onResult: onResult)
+              else
+                TextForm(client: client, onResult: onResult),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class TextForm extends StatefulWidget {
+  const TextForm({super.key, required this.client, required this.onResult});
+
+  final TvClient client;
+  final Future<void> Function(TvResult) onResult;
+
+  @override
+  State<TextForm> createState() => _TextFormState();
+}
+
+class _TextFormState extends State<TextForm> {
+  // As the TV caps it.
+  static const _max = 500;
+  final _text = TextEditingController();
+  String? _why;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _why = null;
+    });
+    final nav = Navigator.of(context);
+    final r = await widget.client.text(_text.text);
+    if (!mounted) return;
+    if (r is Ok) {
+      nav.pop();
+      return;
+    }
+    setState(() {
+      _busy = false;
+      _why = switch (r) {
+        Refused(error: 'noField') => t('noField'),
+        Refused(status: 404) => t('textNeedsUpdate'),
+        _ => t('cantReach'),
+      };
+    });
+    if (r is! Refused) await widget.onResult(r);
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      TextField(
+        controller: _text,
+        autofocus: true,
+        maxLength: _max,
+        textInputAction: TextInputAction.send,
+        onSubmitted: (_) => _send(),
+        decoration: InputDecoration(hintText: t('typeHint'), counterText: ''),
+      ),
+      if (_why != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Strip(
+            kind: StripKind.warn,
+            icon: Icons.keyboard_outlined,
+            text: _why!,
+          ),
+        ),
+      const SizedBox(height: 10),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(t('cancel')),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: _busy ? null : _send,
+            icon: const Icon(Icons.send, size: 18),
+            label: Text(t('send')),
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 class TmdbForm extends StatefulWidget {

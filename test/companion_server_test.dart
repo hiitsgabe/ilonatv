@@ -123,6 +123,7 @@ void main() {
     expect((await send('GET', '/api/info')).$1, 401);
     expect((await send('GET', '/api/info', token: 'nope')).$1, 401);
     expect((await send('GET', '/api/other')).$1, 401);
+    expect((await send('POST', '/api/text')).$1, 401);
     expect(api.calls, isEmpty);
   });
 

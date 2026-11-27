@@ -105,6 +105,11 @@ void main() {
           ]);
         case '/api/setup/city':
           return reply(req.response, 204);
+        case '/api/text':
+          final b = jsonDecode(await utf8.decoder.bind(req).join()) as Map;
+          return b['text'] == 'dune'
+              ? reply(req.response, 204)
+              : reply(req.response, 409, {'error': 'noField'});
         default:
           return reply(req.response, 404, {'error': 'notFound'});
       }
@@ -198,6 +203,12 @@ void main() {
     expect(((await client.open(item)) as Ok<bool>).value, true);
     inFront = false;
     expect(await client.open(item), isA<NotInFront<bool>>());
+  });
+
+  test('text: 204 is Ok, no field is a refusal that says so', () async {
+    expect(await client.text('dune'), isA<Ok<void>>());
+    final r = await client.text('x');
+    expect((r as Refused).error, 'noField');
   });
 
   test('setup calls', () async {

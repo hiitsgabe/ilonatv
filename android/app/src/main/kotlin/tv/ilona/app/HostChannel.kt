@@ -249,6 +249,7 @@ object HostChannel {
                     result.success(action != null && HomeWatcher.instance?.performGlobalAction(action) == true)
                 }
                 "audioKey" -> result.success(audioKey(activity, call.argument<String>("key")))
+                "typeText" -> result.success(HomeWatcher.instance?.typeText(call.argument<String>("text") ?: "") == true)
                 "keyAccess" -> result.success(
                     mapOf("api" to Build.VERSION.SDK_INT, "service" to (HomeWatcher.instance != null)),
                 )

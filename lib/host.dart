@@ -141,6 +141,10 @@ class Host {
   static Future<bool> audioKey(RemoteKey key) =>
       _bool('audioKey', {'key': key.name});
 
+  /// Through the accessibility service, into the focused field of any app.
+  static Future<bool> typeText(String text) =>
+      _bool('typeText', {'text': text});
+
   static Future<({int api, bool service})> keyAccess() async {
     final m = await _channel.invokeMapMethod<String, Object?>('keyAccess');
     return (api: m?['api'] as int? ?? 0, service: m?['service'] == true);

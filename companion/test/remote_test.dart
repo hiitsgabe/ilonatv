@@ -50,6 +50,15 @@ class Fake extends TvClient {
     return const Ok('keyOk');
   }
 
+  final texts = <String>[];
+  TvResult<void> textResult = const Ok(null);
+
+  @override
+  Future<TvResult<void>> text(String s) async {
+    texts.add(s);
+    return textResult;
+  }
+
   Completer<void>? cityGate;
   List<Place>? cityResult;
 
@@ -618,6 +627,38 @@ void main() {
       RemoteKey.up,
     ]);
   });
+
+  testWidgets('Keyboard types into the field focused on the TV', (t) async {
+    await open(t);
+    await t.tap(find.byKey(const Key('key-keyboard')));
+    await t.pumpAndSettle();
+    expect(find.text(t0('typeOnTv')), findsOneWidget);
+    await t.enterText(find.byType(TextField), 'dune');
+    await t.tap(find.text(t0('send')));
+    await t.pumpAndSettle();
+    expect(client.texts, ['dune']);
+    expect(find.byType(TextField), findsNothing);
+  });
+
+  for (final (r, key) in [
+    (const Refused<void>(409, 'noField'), 'noField'),
+    (const Refused<void>(404, 'notFound'), 'textNeedsUpdate'),
+  ]) {
+    testWidgets('a refused text says why ($key) and keeps the sheet', (
+      t,
+    ) async {
+      await open(t);
+      client.textResult = r;
+      await t.tap(find.byKey(const Key('key-keyboard')));
+      await t.pumpAndSettle();
+      await t.enterText(find.byType(TextField), 'dune');
+      await t.testTextInput.receiveAction(TextInputAction.send);
+      await t.pumpAndSettle();
+      expect(client.texts, ['dune']);
+      expect(find.text(t0(key)), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+    });
+  }
 
   testWidgets('the tmdb key field is obscured', (t) async {
     await open(t);

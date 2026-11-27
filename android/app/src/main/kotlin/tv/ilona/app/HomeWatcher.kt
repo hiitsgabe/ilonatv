@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -497,6 +498,16 @@ class HomeWatcher : AccessibilityService() {
      * Ilona TV's own task to the front: Back could land on another settings page, under the app's. No new intent, so
      * the Settings screen stays where it was. Back only if Ilona TV has no task.
      */
+    /** The phone's text replaces the focused field's, in the app in front. */
+    fun typeText(text: String): Boolean {
+        val field = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            ?.takeIf { it.isEditable } ?: return false
+        val args = Bundle().apply {
+            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+        }
+        return field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+    }
+
     private fun backToIlonaTv() {
         val task = (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).appTasks.firstOrNull {
             it.taskInfo.baseActivity?.className == MainActivity::class.java.name
