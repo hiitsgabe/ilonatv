@@ -127,4 +127,25 @@ void main() {
     await tvs.load();
     expect(tvs.all, isEmpty);
   });
+
+  test(
+    'the volume rocker reaches the listener, with discovery off too',
+    () async {
+      final tvs = Tvs();
+      final got = <bool>[];
+      tvs.onVolumeKey = got.add;
+      await native('volumeKey', {'up': true});
+      await native('volumeKey', {'up': false});
+      expect(got, [true, false]);
+      await hardwareVolume(true);
+      expect(calls, ['volumeKeys']);
+    },
+  );
+
+  test('a found after discovery stopped is ignored', () async {
+    final tvs = await make();
+    tvs.stopDiscovery();
+    await native('found', {'name': 'A', 'host': '10.0.0.1', 'port': 8642});
+    expect(tvs.all, isEmpty);
+  });
 }

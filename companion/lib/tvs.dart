@@ -83,9 +83,28 @@ Future<bool> openUrl(String url) async {
   }
 }
 
+/// Whether the phone's volume rocker drives the TV ([Tvs.onVolumeKey]) rather
+/// than the phone.
+Future<void> hardwareVolume(bool on) async {
+  try {
+    await Tvs._channel.invokeMethod<void>('volumeKeys', on);
+  } on PlatformException {
+    return;
+  } on MissingPluginException {
+    return;
+  }
+}
+
 class Tvs extends ChangeNotifier {
+  Tvs() {
+    _channel.setMethodCallHandler(_fromHost);
+  }
+
   static const _key = 'tvs';
   static const _channel = MethodChannel('tv.ilona.companion/host');
+
+  /// The rocker pressed while [hardwareVolume] is on: true for up.
+  void Function(bool up)? onVolumeKey;
 
   final _paired = <String, Tv>{};
   final _seen = <String, Tv>{};
@@ -182,11 +201,9 @@ class Tvs extends ChangeNotifier {
     if (on == _running) return;
     _running = on;
     if (on) {
-      _channel.setMethodCallHandler(_fromHost);
       _channel.invokeMethod<void>('discoverStart');
       return;
     }
-    _channel.setMethodCallHandler(null);
     _channel.invokeMethod<void>('discoverStop');
     _seen.clear();
     _hostByService.clear();
@@ -199,6 +216,8 @@ class Tvs extends ChangeNotifier {
 
   Future<void> _fromHost(MethodCall call) async {
     final a = call.arguments as Map;
+    if (call.method == 'volumeKey') return onVolumeKey?.call(a['up'] == true);
+    if (!_running) return;
     final name = a['name'] as String;
     if (call.method == 'found') {
       final tv = Tv(

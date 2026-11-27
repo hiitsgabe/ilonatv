@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilonatv_companion/adb.dart';
 import 'package:ilonatv_companion/i18n.dart';
@@ -36,8 +37,12 @@ class Fake extends TvClient {
   }
 
   bool endNow = false;
+  int eventCalls = 0;
   @override
-  Stream<TvInfo> events() => endNow ? const Stream.empty() : events$.stream;
+  Stream<TvInfo> events() {
+    eventCalls++;
+    return endNow ? const Stream.empty() : events$.stream;
+  }
 
   @override
   Future<TvResult<String>> setupTmdb(String key, {bool save = true}) async {
@@ -126,8 +131,11 @@ void main() {
     token: 'x',
   );
 
-  Future<void> open(WidgetTester t) async {
-    SharedPreferences.setMockInitialValues({});
+  Future<void> open(
+    WidgetTester t, {
+    Map<String, Object> prefs = const {},
+  }) async {
+    SharedPreferences.setMockInitialValues(prefs);
     client = Fake();
     adb = FakeAdb();
     tvs = Tvs();
@@ -280,15 +288,27 @@ void main() {
     expect(find.text(t0('adbNote')), findsOneWidget);
   });
 
-  testWidgets('an older TV with Ilona TV in front gets no ADB note', (t) async {
+  testWidgets('an older TV with Ilona TV in front gets no ADB note, and no '
+      'volume, which it has no way to do', (t) async {
     await open(t);
+    expect(find.byKey(const Key('key-volumeUp')), findsOneWidget);
     client.events$.add(info(null));
     await t.pumpAndSettle();
-    await t.tap(find.byKey(const Key('key-volumeUp')));
+    expect(find.byKey(const Key('key-volumeUp')), findsNothing);
+    expect(find.byKey(const Key('key-playPause')), findsNothing);
     await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
     await t.pumpAndSettle();
-    expect(client.keys, [RemoteKey.volumeUp, RemoteKey.ok]);
+    expect(client.keys, [RemoteKey.ok]);
     expect(find.text(t0('adbNote')), findsNothing);
+  });
+
+  testWidgets('an older TV with ADB up shows volume again', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside(null));
+    await t.pumpAndSettle();
+    expect(adb.hosts, hasLength(1));
+    expect(find.byKey(const Key('key-volumeUp')), findsOneWidget);
   });
 
   testWidgets('ADB closes while the phone app is away and reconnects on '
@@ -367,10 +387,171 @@ void main() {
     );
   });
 
-  testWidgets('swipe moves', (t) async {
-    await open(t);
+  testWidgets('swipe mode, kept from last time: a swipe moves, a tap is OK', (
+    t,
+  ) async {
+    await open(t, prefs: {'remoteMode': 'swipe'});
+    expect(find.text(t0('swipeHint')), findsOneWidget);
     await t.drag(find.byKey(const Key('pad')), const Offset(-60, 0));
+    await t.tap(find.byKey(const Key('pad')));
+    await t.pumpAndSettle();
+    expect(client.keys, [RemoteKey.left, RemoteKey.ok]);
+  });
+
+  testWidgets('the menu switches to swipe and keeps it', (t) async {
+    await open(t);
+    await t.tap(find.byKey(const Key('more')));
+    await t.pumpAndSettle();
+    await t.tap(find.text(t0('swipeMode')));
+    await t.pumpAndSettle();
+    expect(find.text(t0('swipeHint')), findsOneWidget);
+    final p = await SharedPreferences.getInstance();
+    expect(p.getString('remoteMode'), 'swipe');
+  });
+
+  testWidgets('Vibration off: keys stop buzzing, and it stays off', (t) async {
+    await open(t);
+    var buzz = 0;
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (c) async {
+        if (c.method == 'HapticFeedback.vibrate') buzz++;
+        return null;
+      },
+    );
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await t.tap(find.byKey(const Key('key-back')));
+    expect(buzz, 1);
+    await t.tap(find.byKey(const Key('more')));
+    await t.pumpAndSettle();
+    await t.tap(find.text(t0('vibration')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-back')));
+    expect(buzz, 1);
+    expect((await SharedPreferences.getInstance()).getBool('haptics'), false);
+  });
+
+  testWidgets('a held arrow repeats after a pause', (t) async {
+    await open(t);
+    final c = t.getCenter(find.byKey(const Key('pad')));
+    final r = t.getSize(find.byKey(const Key('pad'))).width / 2;
+    final g = await t.startGesture(c + Offset(r * 0.8, 0));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(client.keys, [RemoteKey.right]);
+    await t.pump(const Duration(milliseconds: 100));
+    for (var i = 0; i < 3; i++) {
+      await t.pump(const Duration(milliseconds: 120));
+    }
+    await g.up();
+    await t.pump(const Duration(seconds: 1));
+    expect(client.keys, List.filled(4, RemoteKey.right));
+  });
+
+  testWidgets('a held arrow on a slow TV queues one key at most', (t) async {
+    await open(t);
+    client.gate = Completer();
+    final c = t.getCenter(find.byKey(const Key('pad')));
+    final r = t.getSize(find.byKey(const Key('pad'))).width / 2;
+    final g = await t.startGesture(c - Offset(r * 0.8, 0));
+    for (var i = 0; i < 20; i++) {
+      await t.pump(const Duration(milliseconds: 120));
+    }
+    await g.up();
     expect(client.keys, [RemoteKey.left]);
+    final gate = client.gate!;
+    client.gate = null;
+    gate.complete();
+    await t.pumpAndSettle();
+    expect(client.keys, [RemoteKey.left, RemoteKey.left]);
+  });
+
+  testWidgets('the phone rocker drives the TV only while the remote is in '
+      'front', (t) async {
+    final rocker = <Object?>[];
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('tv.ilona.companion/host'),
+      (c) async {
+        if (c.method == 'volumeKeys') rocker.add(c.arguments);
+        return null;
+      },
+    );
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('tv.ilona.companion/host'),
+        null,
+      ),
+    );
+    await open(t);
+    expect(rocker, [true]);
+    const channel = MethodChannel('tv.ilona.companion/host');
+    await t.binding.defaultBinaryMessenger.handlePlatformMessage(
+      channel.name,
+      channel.codec.encodeMethodCall(
+        const MethodCall('volumeKey', {'up': true}),
+      ),
+      (_) {},
+    );
+    await t.pumpAndSettle();
+    expect(client.keys, [RemoteKey.volumeUp]);
+    await t.tap(find.byKey(const Key('more')));
+    await t.pumpAndSettle();
+    expect(rocker, [true, false]);
+    await t.tapAt(const Offset(5, 5));
+    await t.pumpAndSettle();
+    expect(rocker, [true, false, true]);
+    await t.tap(find.byType(BackButton));
+    await t.pumpAndSettle();
+    expect(rocker, [true, false, true, false]);
+  });
+
+  testWidgets('the TV name opens the picker, whose Forget forgets it', (
+    t,
+  ) async {
+    await open(t);
+    await tvs.savePaired(tv, 'x');
+    await t.tap(find.byKey(const Key('device')));
+    await t.pumpAndSettle();
+    expect(find.text(t0('whichTv')), findsOneWidget);
+    await t.tap(find.text(t0('forgetTv')));
+    await t.pumpAndSettle();
+    expect(find.text('go'), findsOneWidget);
+    expect(tvs.all.where((e) => e.token != null), isEmpty);
+  });
+
+  testWidgets('another app in front without Launcher mode: a calm note, and '
+      'Explore waits for Ilona TV', (t) async {
+    await open(t);
+    client.events$.add(
+      const TvInfo(
+        protocol: 1,
+        version: '1',
+        inFront: false,
+        launcherMode: false,
+        keysOutside: 'all',
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(find.text(t0('otherAppInFront')), findsOneWidget);
+    await t.tap(find.text(t0('tabExplore')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('pad')), findsOneWidget);
+  });
+
+  testWidgets('a TV out of reach is retried quietly', (t) async {
+    await open(t);
+    client.infoResult = const Unreachable('x');
+    client.endNow = true;
+    await client.events$.close();
+    await t.pumpAndSettle();
+    expect(find.text("Can't reach Ilona TV"), findsOneWidget);
+    final before = client.eventCalls;
+    await t.pump(const Duration(seconds: 16));
+    expect(client.eventCalls, before + 1);
   });
 
   testWidgets('409 shows the banner and the launcher tip', (t) async {
@@ -467,17 +648,22 @@ void main() {
     await t.pumpAndSettle();
   });
 
-  testWidgets('with the card shown, a vertical swipe on the pad sends a key', (
-    t,
-  ) async {
+  testWidgets('a setup step opens the typing sheet once; the strip opens it '
+      'again', (t) async {
     await open(t);
     client.events$.add(info('tmdb'));
     await t.pumpAndSettle();
-    final before = t.getTopLeft(find.byType(TextField));
-    await t.drag(find.byKey(const Key('pad')), const Offset(0, 80));
+    expect(find.text(t0('typeOnTv')), findsOneWidget);
+    await t.tapAt(const Offset(5, 5));
     await t.pumpAndSettle();
-    expect(client.keys, contains(RemoteKey.down));
-    expect(t.getTopLeft(find.byType(TextField)), before);
+    expect(find.byType(TextField), findsNothing);
+    client.events$.add(info('tmdb'));
+    await t.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text(t0('tvAsksTmdb')), findsOneWidget);
+    await t.tap(find.text(t0('type')));
+    await t.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
   });
 
   testWidgets('step tmdb shows the key card; Save saves', (t) async {

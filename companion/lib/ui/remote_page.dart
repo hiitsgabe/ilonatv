@@ -8,11 +8,14 @@ import '../adb.dart';
 import '../i18n.dart';
 
 import 'package:ilonatv_protocol/releases.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../tv_client.dart';
 import '../tvs.dart';
 import 'browse.dart';
-import 'pair_page.dart' show ClientFor;
+import 'device_sheet.dart';
+import 'keyboard_sheet.dart';
+import 'pair_page.dart';
 import 'theme.dart';
 
 class RemotePage extends StatefulWidget {
@@ -65,11 +68,25 @@ class _RemotePageState extends State<RemotePage> {
   AdbResult? _adbFail;
   int _adbGen = 0;
   late final AppLifecycleListener _life;
+  int _tab = 0;
+  bool _explored = false;
+  bool _swipe = false;
+  bool _haptics = true;
+  bool _volumeKeys = false;
 
   @override
   void initState() {
     super.initState();
     widget.tvs.hold();
+    widget.tvs.onVolumeKey = (up) =>
+        _press(up ? RemoteKey.volumeUp : RemoteKey.volumeDown, repeat: true);
+    SharedPreferences.getInstance().then((p) {
+      if (!mounted) return;
+      setState(() {
+        _swipe = p.getString(_modePref) == 'swipe';
+        _haptics = p.getBool(_hapticsPref) ?? true;
+      });
+    });
     _life = AppLifecycleListener(onPause: _adbPause, onResume: _adbIfKnown);
     widget.updates?.latest.then((v) {
       if (mounted && v != null) setState(() => _latest = v);
@@ -79,6 +96,8 @@ class _RemotePageState extends State<RemotePage> {
 
   @override
   void dispose() {
+    if (_volumeKeys) hardwareVolume(false);
+    widget.tvs.onVolumeKey = null;
     widget.tvs.release();
     _sub?.cancel();
     _retry?.cancel();
@@ -93,12 +112,15 @@ class _RemotePageState extends State<RemotePage> {
     _sub = widget.client.events().listen((i) {
       if (!mounted) return;
       if (i.accent case final a?) accent.value = Color(a);
+      final asks = isSetupStep(i.step) && i.step != _info?.step;
       setState(() {
         _info = i;
         _unreachable = false;
         _fails = 0;
         if (i.inFront) _adbNote = false;
+        if (!_exploreOk) _tab = 0;
       });
+      if (asks && (ModalRoute.of(context)?.isCurrent ?? false)) _keyboard();
       _adbIfKnown();
     }, onDone: _ended);
   }
@@ -157,18 +179,21 @@ class _RemotePageState extends State<RemotePage> {
       case Unpaired():
         await _forgotten();
       case Ok(:final value):
-        if (++_fails >= 3) {
-          setState(() => _unreachable = true);
-          return;
-        }
+        if (++_fails >= 3) return _down();
         setState(() {
           _info = value;
           _unreachable = false;
         });
         _retry = Timer(const Duration(seconds: 2), _connect);
       default:
-        setState(() => _unreachable = true);
+        _down();
     }
+  }
+
+  // Quietly, until the TV answers; the first state event clears the strip.
+  void _down() {
+    setState(() => _unreachable = true);
+    _retry = Timer(const Duration(seconds: 15), _connect);
   }
 
   Future<void> _forgotten() async {
@@ -201,9 +226,15 @@ class _RemotePageState extends State<RemotePage> {
     }
   }
 
-  Future<void> _press(RemoteKey k) async {
-    HapticFeedback.lightImpact();
-    if (_queue.length >= 3) return;
+  /// A [repeat] (a held arrow, the rocker) waits for the queue to empty, so
+  /// keys never pile up behind a slow TV and run on after the finger lifts.
+  Future<void> _press(RemoteKey k, {bool repeat = false}) async {
+    if (_haptics) {
+      k == RemoteKey.ok || k == RemoteKey.playPause
+          ? HapticFeedback.lightImpact()
+          : HapticFeedback.selectionClick();
+    }
+    if (_queue.length >= 3 || (repeat && _queue.isNotEmpty)) return;
     _queue.add(k);
     if (_sending) return;
     _sending = true;
@@ -239,481 +270,767 @@ class _RemotePageState extends State<RemotePage> {
     _connect();
   }
 
+  static const _modePref = 'remoteMode';
+  static const _hapticsPref = 'haptics';
+
+  // Browsing works with another app in front; opening a title needs Ilona TV
+  // in front, or Launcher mode.
+  bool get _exploreOk {
+    final i = _info;
+    return i == null || i.inFront || i.launcherMode;
+  }
+
+  // A TV older than keysOutside has no media keys of its own.
+  bool get _media => _info == null || _info!.keysOutside != null || _adbUp;
+
+  Future<void> _setMode(bool swipe) async {
+    setState(() => _swipe = swipe);
+    await (await SharedPreferences.getInstance()).setString(
+      _modePref,
+      swipe ? 'swipe' : 'buttons',
+    );
+  }
+
+  Future<void> _setHaptics(bool on) async {
+    setState(() => _haptics = on);
+    await (await SharedPreferences.getInstance()).setBool(_hapticsPref, on);
+  }
+
+  void _keyboard() => showKeyboardSheet(
+    context,
+    client: widget.client,
+    step: _info?.step,
+    onResult: _handle,
+  );
+
+  Future<void> _devices() async {
+    final cs = Theme.of(context).colorScheme;
+    final nav = Navigator.of(context);
+    final clientFor = widget.clientFor;
+    final r = await showDeviceSheet(
+      context,
+      tvs: widget.tvs,
+      current: widget.tv,
+      currentDot: _dot(cs),
+      canSwitch: clientFor != null,
+    );
+    if (!mounted || r == null) return;
+    if (r == DeviceChoice.forget) {
+      await widget.tvs.forget(widget.tv.host);
+      if (nav.mounted) nav.popUntil((r) => r.isFirst);
+    } else if (r == DeviceChoice.add && clientFor != null) {
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => PairPage(tvs: widget.tvs, clientFor: clientFor),
+        ),
+      );
+    } else if (r is Tv && r.host != widget.tv.host && clientFor != null) {
+      nav.pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => RemotePage(
+            tv: r,
+            client: clientFor(r),
+            tvs: widget.tvs,
+            updates: widget.updates,
+            onUpdate: widget.onUpdate,
+            clientFor: clientFor,
+          ),
+        ),
+      );
+    }
+  }
+
+  Color _dot(ColorScheme cs) => _unreachable
+      ? cs.error
+      : _info != null
+      ? Tones.ok
+      : cs.onSurfaceVariant;
+
+  Widget? _strip() {
+    final i = _info;
+    if (_unreachable) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Strip(
+            kind: StripKind.error,
+            icon: Icons.wifi_off,
+            text: t('cantReachTv').replaceAll('{name}', widget.tv.label),
+            sub: t('cantReachHint'),
+          ),
+          const SizedBox(height: 8),
+          FilledButton.tonalIcon(
+            onPressed: _retryNow,
+            icon: const Icon(Icons.refresh),
+            label: Text(t('retry')),
+          ),
+        ],
+      );
+    }
+    if (_adbNote && !_adbUp) {
+      return Strip(
+        kind: StripKind.warn,
+        icon: Icons.developer_mode,
+        text: t('adbNote'),
+        sub: t(_adbFail == AdbResult.unauthorized ? 'adbDenied' : 'adbHow'),
+        action: _adbBusy
+            ? const Padding(
+                padding: EdgeInsets.all(8),
+                child: SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : TextButton(onPressed: _adbConnect, child: Text(t('adbConnect'))),
+      );
+    }
+    if (_notInFront != null) {
+      return Strip(
+        kind: StripKind.warn,
+        icon: Icons.open_in_new,
+        text: t('notInFront'),
+        sub: _notInFront == false ? t('launcherTip') : null,
+      );
+    }
+    if (isSetupStep(i?.step)) {
+      return Strip(
+        kind: StripKind.info,
+        icon: Icons.keyboard_outlined,
+        text: t(i!.step == 'tmdb' ? 'tvAsksTmdb' : 'tvAsksCity'),
+        action: TextButton(onPressed: _keyboard, child: Text(t('type'))),
+      );
+    }
+    if (i != null && !i.inFront) {
+      return Strip(
+        kind: StripKind.info,
+        icon: Icons.info_outline,
+        text: t(_exploreOk ? 'otherAppInFrontLauncher' : 'otherAppInFront'),
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final step = _info?.step;
-    final setup = step == 'tmdb' || step == 'location';
+    final cs = Theme.of(context).colorScheme;
     final tvUpdate =
         widget.onUpdate != null &&
         _latest != null &&
         _info != null &&
         isOlder(_info!.version, _latest!);
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.tv.label),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: t('tabRemote')),
-              Tab(text: t('tabSearch')),
-              Tab(text: t('tabBrowse')),
-            ],
+    // Only while the remote is what's on screen: a sheet or a page over it
+    // gives the rocker back to the phone.
+    final volumeKeys =
+        _media && _tab == 0 && (ModalRoute.of(context)?.isCurrent ?? false);
+    if (volumeKeys != _volumeKeys) {
+      _volumeKeys = volumeKeys;
+      hardwareVolume(volumeKeys);
+    }
+    final strip = _strip();
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Material(
+            color: cs.surfaceContainerHigh,
+            shape: const StadiumBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: const Key('device'),
+              onTap: _devices,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    StatusDot(_dot(cs)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        widget.tv.label,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.expand_more, size: 20),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-        body: Column(
+        actions: [
+          if (tvUpdate)
+            Tooltip(
+              message: t('tvUpdate').replaceAll('{version}', _latest!),
+              child: ActionChip(
+                key: const Key('tvUpdate'),
+                onPressed: widget.onUpdate,
+                avatar: Icon(
+                  Icons.arrow_upward,
+                  size: 16,
+                  color: cs.onPrimaryContainer,
+                ),
+                label: Text(
+                  t('tvUpdatePill').replaceAll('{version}', _latest!),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onPrimaryContainer,
+                  ),
+                ),
+                backgroundColor: cs.primaryContainer,
+                side: BorderSide.none,
+                shape: const StadiumBorder(),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          PopupMenuButton<String>(
+            key: const Key('more'),
+            onSelected: (v) => switch (v) {
+              'buttons' => _setMode(false),
+              'swipe' => _setMode(true),
+              _ => _setHaptics(!_haptics),
+            },
+            itemBuilder: (_) => [
+              CheckedPopupMenuItem(
+                value: 'buttons',
+                checked: !_swipe,
+                child: Text(t('buttonsMode')),
+              ),
+              CheckedPopupMenuItem(
+                value: 'swipe',
+                checked: _swipe,
+                child: Text(t('swipeMode')),
+              ),
+              const PopupMenuDivider(),
+              CheckedPopupMenuItem(
+                value: 'haptics',
+                checked: _haptics,
+                child: Text(t('vibration')),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: SafeArea(
+        top: false,
+        child: Column(
           children: [
-            if (_unreachable)
-              _Banner(
-                text: t('cantReachTv').replaceAll('{name}', widget.tv.label),
-                action: TextButton(
-                  onPressed: _retryNow,
-                  child: Text(t('retry')),
-                ),
-              ),
-            if (tvUpdate)
-              _Banner(
-                text: t('tvUpdate').replaceAll('{version}', _latest!),
-                action: TextButton(
-                  onPressed: widget.onUpdate,
-                  child: Text(t('instUpdate')),
-                ),
-              ),
-            if (_notInFront != null)
-              _Banner(
-                text: t('notInFront'),
-                sub: _notInFront == false ? t('launcherTip') : null,
-              ),
-            if (_adbNote && !_adbUp)
-              _Banner(
-                text: t('adbNote'),
-                sub: t(
-                  _adbFail == AdbResult.unauthorized ? 'adbDenied' : 'adbHow',
-                ),
-                action: _adbBusy
-                    ? const SizedBox.square(
-                        dimension: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : TextButton(
-                        onPressed: _adbConnect,
-                        child: Text(t('adbConnect')),
-                      ),
+            if (strip != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: strip,
               ),
             Expanded(
-              child: TabBarView(
-                physics: const NeverScrollableScrollPhysics(),
+              child: IndexedStack(
+                index: _tab,
                 children: [
-                  LayoutBuilder(
-                    builder: (context, c) => Column(
-                      children: [
-                        if (setup)
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxHeight: c.maxHeight > 250
-                                  ? c.maxHeight - 250
-                                  : 0,
-                            ),
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.all(16),
-                              child: step == 'tmdb'
-                                  ? _TmdbCard(
-                                      client: widget.client,
-                                      onResult: _handle,
-                                    )
-                                  : _CityCard(
-                                      client: widget.client,
-                                      onResult: _handle,
-                                    ),
-                            ),
-                          ),
-                        Expanded(child: _Pad(onKey: _press)),
-                      ],
-                    ),
+                  _Controls(
+                    dim: _unreachable,
+                    swipe: _swipe,
+                    media: _media,
+                    canType: isSetupStep(_info?.step),
+                    onKey: _press,
+                    onKeyboard: _keyboard,
                   ),
-                  SearchTab(client: widget.client, onResult: _handle),
-                  BrowseTab(client: widget.client, onResult: _handle),
+                  if (_explored)
+                    _Explore(client: widget.client, onResult: _handle)
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
             ),
           ],
         ),
       ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() {
+          _tab = i;
+          if (i == 1) _explored = true;
+        }),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.settings_remote_outlined),
+            selectedIcon: const Icon(Icons.settings_remote),
+            label: t('tabRemote'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.grid_view_outlined),
+            selectedIcon: const Icon(Icons.grid_view),
+            label: t('tabExplore'),
+            enabled: _exploreOk,
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _Banner extends StatelessWidget {
-  const _Banner({required this.text, this.sub, this.action});
-
-  final String text;
-  final String? sub;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
-                if (sub != null)
-                  Text(sub!, style: const TextStyle(fontSize: 13)),
-              ],
-            ),
-          ),
-          ?action,
-        ],
-      ),
-    ),
-  );
-}
-
-class _TmdbCard extends StatefulWidget {
-  const _TmdbCard({required this.client, required this.onResult});
+// Search and Browse, until they become one Explore.
+class _Explore extends StatelessWidget {
+  const _Explore({required this.client, required this.onResult});
 
   final TvClient client;
   final Future<void> Function(TvResult) onResult;
 
   @override
-  State<_TmdbCard> createState() => _TmdbCardState();
+  Widget build(BuildContext context) => DefaultTabController(
+    length: 2,
+    child: Column(
+      children: [
+        TabBar(
+          tabs: [
+            Tab(text: t('tabSearch')),
+            Tab(text: t('tabBrowse')),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              SearchTab(client: client, onResult: onResult),
+              BrowseTab(client: client, onResult: onResult),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
-class _TmdbCardState extends State<_TmdbCard> {
-  final _key = TextEditingController();
-  String? _message;
-  bool _busy = false;
-  bool _hidden = true;
+typedef OnKey = void Function(RemoteKey k, {bool repeat});
+
+class _Controls extends StatelessWidget {
+  const _Controls({
+    required this.dim,
+    required this.swipe,
+    required this.media,
+    required this.canType,
+    required this.onKey,
+    required this.onKeyboard,
+  });
+
+  final bool dim;
+  final bool swipe;
+  final bool media;
+  final bool canType;
+  final OnKey onKey;
+  final VoidCallback onKeyboard;
 
   @override
-  void dispose() {
-    _key.dispose();
-    super.dispose();
-  }
-
-  Future<void> _run(bool save) async {
-    final k = _key.text.trim();
-    if (k.isEmpty || _busy) return;
-    setState(() => _busy = true);
-    final r = await widget.client.setupTmdb(k, save: save);
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _message = switch (r) {
-        Ok(value: 'keyOk') when save => t('keySaved'),
-        Ok(:final value) => t(value),
-        Unreachable() || Refused() => t('networkError'),
-        _ => null,
-      };
-    });
-    if (r is! Ok) await widget.onResult(r);
-  }
-
-  @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => AnimatedOpacity(
+    // Dimmed, not disabled: a press is also how a reachable TV comes back.
+    opacity: dim ? 0.35 : 1,
+    duration: const Duration(milliseconds: 200),
     child: Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: _key,
-            autocorrect: false,
-            enableSuggestions: false,
-            obscureText: _hidden,
-            decoration: InputDecoration(
-              labelText: t('tmdbKey'),
-              suffixIcon: IconButton(
-                icon: Icon(_hidden ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _hidden = !_hidden),
-              ),
-            ),
+          Expanded(
+            child: swipe
+                ? _TouchPad(onKey: onKey)
+                : LayoutBuilder(
+                    builder: (context, c) {
+                      final w = c.maxWidth * 0.78;
+                      final size = (w < c.maxHeight ? w : c.maxHeight).clamp(
+                        0.0,
+                        320.0,
+                      );
+                      return Center(
+                        child: _DPad(size: size, onKey: onKey),
+                      );
+                    },
+                  ),
           ),
-          if (_message != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_message!),
-            ),
+          const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              TextButton(
-                onPressed: _busy ? null : () => _run(false),
-                child: Text(t('test')),
+              _RoundKey(
+                Icons.arrow_back,
+                t('back'),
+                const Key('key-back'),
+                () => onKey(RemoteKey.back),
               ),
-              FilledButton(
-                onPressed: _busy ? null : () => _run(true),
-                child: Text(t('save')),
+              _RoundKey(
+                Icons.home_outlined,
+                t('home'),
+                const Key('key-home'),
+                () => onKey(RemoteKey.home),
+              ),
+              _RoundKey(
+                Icons.keyboard_outlined,
+                t('keyboard'),
+                const Key('key-keyboard'),
+                canType ? onKeyboard : null,
               ),
             ],
           ),
+          if (media) ...[const SizedBox(height: 16), _Media(onKey: onKey)],
         ],
       ),
     ),
   );
 }
 
-class _CityCard extends StatefulWidget {
-  const _CityCard({required this.client, required this.onResult});
+class _RoundKey extends StatelessWidget {
+  const _RoundKey(this.icon, this.label, this.keyId, this.onTap);
 
-  final TvClient client;
-  final Future<void> Function(TvResult) onResult;
-
-  @override
-  State<_CityCard> createState() => _CityCardState();
-}
-
-class _CityCardState extends State<_CityCard> {
-  final _q = TextEditingController();
-  List<Place>? _places;
-  bool _busy = false;
-  String? _set;
+  final IconData icon;
+  final String label;
+  final Key keyId;
+  final VoidCallback? onTap;
 
   @override
-  void dispose() {
-    _q.dispose();
-    super.dispose();
-  }
-
-  Future<void> _search() async {
-    final q = _q.text.trim();
-    if (q.isEmpty || _busy) return;
-    setState(() {
-      _busy = true;
-      _set = null;
-    });
-    final r = await widget.client.cities(q);
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (r is Ok<List<Place>>) {
-      setState(() => _places = r.value);
-    } else {
-      await widget.onResult(r);
-    }
-  }
-
-  Future<void> _pick(Place p) async {
-    final r = await widget.client.setCity(p);
-    if (mounted && r is Ok) {
-      setState(() {
-        _places = null;
-        _set = p.name;
-      });
-    }
-    await widget.onResult(r);
-  }
-
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(14),
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final fg = onTap == null ? cs.onSurface.withValues(alpha: 0.38) : null;
+    return Semantics(
+      label: label,
+      button: true,
+      excludeSemantics: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-            controller: _q,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _search(),
-            decoration: InputDecoration(
-              labelText: t('city'),
-              hintText: t('searchCity'),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: _search,
+          Material(
+            color: cs.surfaceContainerHigh,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: keyId,
+              onTap: onTap,
+              child: SizedBox.square(
+                dimension: 56,
+                child: Icon(icon, color: fg),
               ),
             ),
           ),
-          if (_busy)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: LinearProgressIndicator(),
-            )
-          else if (_places?.isEmpty ?? false)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(t('noResults')),
-            )
-          else if (_set case final city?)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(t('citySet').replaceAll('{city}', city)),
-            ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 160),
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final p in _places ?? const <Place>[])
-                  ListTile(
-                    dense: true,
-                    title: Text(p.name),
-                    subtitle: Text(
-                      [
-                        p.region,
-                        p.country,
-                      ].where((s) => s.isNotEmpty).join(', '),
-                    ),
-                    onTap: () => _pick(p),
-                  ),
-              ],
-            ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
-class _Pad extends StatefulWidget {
-  const _Pad({required this.onKey});
+class _Media extends StatelessWidget {
+  const _Media({required this.onKey});
 
-  final void Function(RemoteKey) onKey;
+  final OnKey onKey;
 
   @override
-  State<_Pad> createState() => _PadState();
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    Widget part(IconData icon, String label, RemoteKey k) => Semantics(
+      label: label,
+      button: true,
+      excludeSemantics: true,
+      child: InkWell(
+        key: Key('key-${k.name}'),
+        customBorder: const CircleBorder(),
+        onTap: () => onKey(k),
+        child: SizedBox.square(dimension: 52, child: Icon(icon)),
+      ),
+    );
+    final line = Container(width: 1, height: 24, color: cs.outline);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Material(
+          color: cs.surfaceContainerHigh,
+          shape: const StadiumBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              part(Icons.remove, t('volumeDown'), RemoteKey.volumeDown),
+              line,
+              part(Icons.volume_off_outlined, t('mute'), RemoteKey.mute),
+              line,
+              part(Icons.add, t('volumeUp'), RemoteKey.volumeUp),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Semantics(
+          label: t('playPause'),
+          button: true,
+          excludeSemantics: true,
+          child: Material(
+            color: cs.primary,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: const Key('key-playPause'),
+              onTap: () => onKey(RemoteKey.playPause),
+              child: SizedBox.square(
+                dimension: 60,
+                child: Icon(Icons.play_arrow, color: cs.onPrimary, size: 28),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _PadState extends State<_Pad> {
-  static const _swipe = 40.0;
-  Offset _drag = Offset.zero;
+/// Four wedges and OK. A held arrow repeats after [_delay], every [_every].
+class _DPad extends StatefulWidget {
+  const _DPad({required this.size, required this.onKey});
 
-  void _tap(Offset p, double size) {
-    final d = p - Offset(size / 2, size / 2);
-    if (d.distance < size * 0.2) {
-      HapticFeedback.selectionClick();
-      widget.onKey(RemoteKey.ok);
-    } else if (d.dx.abs() > d.dy.abs()) {
-      widget.onKey(d.dx > 0 ? RemoteKey.right : RemoteKey.left);
-    } else {
-      widget.onKey(d.dy > 0 ? RemoteKey.down : RemoteKey.up);
+  final double size;
+  final OnKey onKey;
+
+  @override
+  State<_DPad> createState() => _DPadState();
+}
+
+class _DPadState extends State<_DPad> {
+  static const _delay = Duration(milliseconds: 400);
+  static const _every = Duration(milliseconds: 120);
+  static const _ok = 0.205;
+  RemoteKey? _down;
+  Timer? _hold;
+
+  RemoteKey _at(Offset p) {
+    final s = widget.size;
+    final d = p - Offset(s / 2, s / 2);
+    if (d.distance < s * _ok) return RemoteKey.ok;
+    if (d.dx.abs() > d.dy.abs()) {
+      return d.dx > 0 ? RemoteKey.right : RemoteKey.left;
+    }
+    return d.dy > 0 ? RemoteKey.down : RemoteKey.up;
+  }
+
+  void _start(Offset p) {
+    final k = _at(p);
+    setState(() => _down = k);
+    widget.onKey(k);
+    if (k == RemoteKey.ok) return;
+    _hold = Timer(_delay, () {
+      _hold = Timer.periodic(_every, (_) => widget.onKey(k, repeat: true));
+    });
+  }
+
+  void _end() {
+    _hold?.cancel();
+    _hold = null;
+    if (mounted) setState(() => _down = null);
+  }
+
+  @override
+  void dispose() {
+    _hold?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final s = widget.size;
+    Widget arrow(Alignment a, IconData i, RemoteKey k) => Align(
+      alignment: a,
+      child: Icon(
+        i,
+        size: s * 0.13,
+        color: _down == k ? cs.primary : cs.onSurfaceVariant,
+      ),
+    );
+    return Semantics(
+      label: t('dpad'),
+      child: GestureDetector(
+        key: const Key('pad'),
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (d) => _start(d.localPosition),
+        onTapUp: (_) => _end(),
+        onTapCancel: _end,
+        child: SizedBox.square(
+          dimension: s,
+          child: CustomPaint(
+            painter: _Wedges(
+              fill: cs.surfaceContainer,
+              line: cs.surface,
+              pressed: cs.primary.withValues(alpha: 0.18),
+              down: _down,
+            ),
+            child: Stack(
+              children: [
+                arrow(
+                  const Alignment(0, -0.8),
+                  Icons.keyboard_arrow_up,
+                  RemoteKey.up,
+                ),
+                arrow(
+                  const Alignment(0, 0.8),
+                  Icons.keyboard_arrow_down,
+                  RemoteKey.down,
+                ),
+                arrow(
+                  const Alignment(-0.8, 0),
+                  Icons.keyboard_arrow_left,
+                  RemoteKey.left,
+                ),
+                arrow(
+                  const Alignment(0.8, 0),
+                  Icons.keyboard_arrow_right,
+                  RemoteKey.right,
+                ),
+                Center(
+                  child: Container(
+                    width: s * _ok * 2,
+                    height: s * _ok * 2,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _down == RemoteKey.ok
+                          ? Color.alphaBlend(
+                              cs.primary.withValues(alpha: 0.18),
+                              cs.surfaceContainerHighest,
+                            )
+                          : cs.surfaceContainerHighest,
+                      border: Border.all(color: cs.surface, width: s * 0.027),
+                    ),
+                    child: Text(
+                      'OK',
+                      style: TextStyle(
+                        fontSize: s * 0.075,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Wedges extends CustomPainter {
+  const _Wedges({
+    required this.fill,
+    required this.line,
+    required this.pressed,
+    required this.down,
+  });
+
+  final Color fill, line, pressed;
+  final RemoteKey? down;
+
+  static const _angles = {
+    RemoteKey.right: 0.0,
+    RemoteKey.down: 1.5708,
+    RemoteKey.left: 3.1416,
+    RemoteKey.up: 4.7124,
+  };
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.width / 2;
+    final circle = Rect.fromCircle(center: c, radius: r);
+    canvas.drawOval(circle, Paint()..color = fill);
+    if (_angles[down] case final a?) {
+      canvas.drawArc(
+        circle,
+        a - 0.7854,
+        1.5708,
+        true,
+        Paint()..color = pressed,
+      );
+    }
+    final p = Paint()
+      ..color = line
+      ..strokeWidth = size.width * 0.018;
+    for (final a in [0.7854, 2.3562, 3.927, 5.4978]) {
+      final d = Offset.fromDirection(a);
+      canvas.drawLine(c + d * r * 0.3, c + d * r, p);
     }
   }
 
+  @override
+  bool shouldRepaint(_Wedges old) =>
+      old.down != down || old.fill != fill || old.pressed != pressed;
+}
+
+/// Swipe mode: each [_step] of a drag is one arrow, a tap is OK.
+class _TouchPad extends StatefulWidget {
+  const _TouchPad({required this.onKey});
+
+  final OnKey onKey;
+
+  @override
+  State<_TouchPad> createState() => _TouchPadState();
+}
+
+class _TouchPadState extends State<_TouchPad> {
+  static const _step = 40.0;
+  Offset _drag = Offset.zero;
+  int _steps = 0;
+
   void _pan(Offset delta) {
     _drag += delta;
-    if (_drag.distance < _swipe) return;
+    if (_drag.distance < _step) return;
     final d = _drag;
     _drag = Offset.zero;
     widget.onKey(
       d.dx.abs() > d.dy.abs()
           ? (d.dx > 0 ? RemoteKey.right : RemoteKey.left)
           : (d.dy > 0 ? RemoteKey.down : RemoteKey.up),
+      repeat: _steps++ > 0,
     );
   }
 
-  Widget _round(IconData icon, String label, RemoteKey k) => Semantics(
-    label: label,
-    button: true,
-    child: Material(
-      color: const Color(0x2EFFFFFF),
-      shape: const CircleBorder(side: BorderSide(color: Color(0x66FFFFFF))),
-      child: InkResponse(
-        key: Key('key-${k.name}'),
-        onTap: () {
-          HapticFeedback.selectionClick();
-          widget.onKey(k);
-        },
-        child: SizedBox(width: 64, height: 64, child: Icon(icon, size: 28)),
-      ),
-    ),
-  );
-
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, c) {
-      final size =
-          (c.maxWidth < c.maxHeight - 130 ? c.maxWidth : c.maxHeight - 130)
-              .clamp(120.0, 340.0);
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          GestureDetector(
-            key: const Key('pad'),
-            behavior: HitTestBehavior.opaque,
-            onTapUp: (d) => _tap(d.localPosition, size),
-            onPanStart: (_) => _drag = Offset.zero,
-            onPanUpdate: (d) => _pan(d.delta),
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0x14FFFFFF),
-                border: Border.all(color: const Color(0x66FFFFFF), width: 2),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Align(
-                    alignment: Alignment(0, -0.78),
-                    child: Icon(Icons.keyboard_arrow_up, size: 40),
-                  ),
-                  const Align(
-                    alignment: Alignment(0, 0.78),
-                    child: Icon(Icons.keyboard_arrow_down, size: 40),
-                  ),
-                  const Align(
-                    alignment: Alignment(-0.78, 0),
-                    child: Icon(Icons.keyboard_arrow_left, size: 40),
-                  ),
-                  const Align(
-                    alignment: Alignment(0.78, 0),
-                    child: Icon(Icons.keyboard_arrow_right, size: 40),
-                  ),
-                  Container(
-                    width: size * 0.36,
-                    height: size * 0.36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: Colors.white54, width: 3),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'OK',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      label: t('swipeHint'),
+      child: GestureDetector(
+        key: const Key('pad'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => widget.onKey(RemoteKey.ok),
+        onPanStart: (_) {
+          _drag = Offset.zero;
+          _steps = 0;
+        },
+        onPanUpdate: (d) => _pan(d.delta),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: cs.surfaceContainer,
+            borderRadius: BorderRadius.circular(28),
           ),
-          const SizedBox(height: 24),
-          // Scaled down rather than overflowing on a narrow phone.
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              children: [
-                _round(Icons.arrow_back, t('back'), RemoteKey.back),
-                const SizedBox(width: 24),
-                _round(
-                  Icons.volume_down,
-                  t('volumeDown'),
-                  RemoteKey.volumeDown,
+          alignment: Alignment.bottomCenter,
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.swipe, size: 18, color: cs.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  t('swipeHint'),
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                 ),
-                const SizedBox(width: 8),
-                _round(Icons.volume_off, t('mute'), RemoteKey.mute),
-                const SizedBox(width: 8),
-                _round(Icons.play_arrow, t('playPause'), RemoteKey.playPause),
-                const SizedBox(width: 8),
-                _round(Icons.volume_up, t('volumeUp'), RemoteKey.volumeUp),
-                const SizedBox(width: 24),
-                _round(Icons.home_outlined, t('home'), RemoteKey.home),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 32),
-        ],
-      );
-    },
-  );
+        ),
+      ),
+    );
+  }
 }

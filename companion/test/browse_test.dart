@@ -87,6 +87,8 @@ void main() {
         home: RemotePage(tv: tv, client: client, tvs: Tvs()),
       ),
     );
+    await t.tap(find.text('Explore'));
+    await t.pumpAndSettle();
     await t.tap(find.text(tab));
     await t.pumpAndSettle();
   }
@@ -103,6 +105,11 @@ void main() {
     expect(client.queries, ['dune']);
     expect(find.text('Movies'), findsOneWidget);
     expect(find.text('Series'), findsNothing);
+    await t.dragUntilVisible(
+      find.text('YouTube'),
+      find.byType(CustomScrollView),
+      const Offset(0, -200),
+    );
     expect(find.text('YouTube'), findsOneWidget);
     expect(find.text('Dune'), findsOneWidget);
   });
@@ -203,6 +210,8 @@ void main() {
       ),
     );
     await t.tap(find.text('go'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Explore'));
     await t.pumpAndSettle();
     await t.tap(find.text('Browse'));
     await t.pumpAndSettle();

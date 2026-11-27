@@ -70,6 +70,8 @@ void main() {
         .setMockMethodCallHandler(
           const MethodChannel('tv.ilona.companion/host'),
           (c) async {
+            // The remote's hold on the volume rocker, not discovery.
+            if (c.method == 'volumeKeys') return null;
             calls.add(c.method);
             args.add(c.arguments);
             return null;
@@ -278,8 +280,8 @@ void main() {
       );
       await t.tap(find.text('Living'));
       await t.pumpAndSettle();
-      expect(find.text(tvBanner), findsOneWidget);
-      await t.tap(find.text(t0('instUpdate')));
+      expect(find.byTooltip(tvBanner), findsOneWidget);
+      await t.tap(find.byKey(const Key('tvUpdate')));
       await t.pumpAndSettle();
       expect(find.byType(InstallFlow), findsOneWidget);
     },
@@ -290,7 +292,7 @@ void main() {
       await withUpdates(t, check('0.7.0'), clientFor: (_) => Versioned(v));
       await t.tap(find.text('Living'));
       await t.pumpAndSettle();
-      expect(find.text(tvBanner), findsNothing);
+      expect(find.byKey(const Key('tvUpdate')), findsNothing);
       expect(find.textContaining('is available'), findsNothing);
     });
   }
@@ -308,7 +310,7 @@ void main() {
     for (var i = 0; i < 2; i++) {
       await t.tap(find.text('Living'));
       await t.pumpAndSettle();
-      expect(find.text(tvBanner), findsOneWidget);
+      expect(find.byKey(const Key('tvUpdate')), findsOneWidget);
       await t.tap(find.byTooltip('Back'));
       await t.pumpAndSettle();
     }
