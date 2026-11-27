@@ -13,6 +13,7 @@ import '../../tv_client.dart';
 import '../../tvs.dart';
 import '../pair_page.dart';
 import '../remote_page.dart';
+import '../theme.dart';
 import 'scan.dart';
 
 const readmeUrl = 'https://github.com/hiitsgabe/ilonatv#get-started';
@@ -425,8 +426,12 @@ class _InstallFlowState extends State<InstallFlow> {
     final tv = widget.tvs.all.firstWhere((t) => t.host == _host);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) =>
-            RemotePage(tv: tv, client: widget.clientFor(tv), tvs: widget.tvs),
+        builder: (_) => RemotePage(
+          tv: tv,
+          client: widget.clientFor(tv),
+          tvs: widget.tvs,
+          clientFor: widget.clientFor,
+        ),
       ),
     );
   }
@@ -445,6 +450,7 @@ class _InstallFlowState extends State<InstallFlow> {
       'instDoneTitle',
     ];
     final (body, action) = _content();
+    final cs = Theme.of(context).colorScheme;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -453,29 +459,45 @@ class _InstallFlowState extends State<InstallFlow> {
       child: Scaffold(
         appBar: AppBar(
           leading: BackButton(onPressed: _back),
-          title: Text(t('instStepOf').replaceAll('{n}', '${_step + 1}')),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(4),
-            child: LinearProgressIndicator(
-              value: (_step + 1) / _steps,
-              backgroundColor: const Color(0x14FFFFFF),
-            ),
+          titleSpacing: 0,
+          title: Text(
+            t('instStepOf').replaceAll('{n}', '${_step + 1}'),
+            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
           ),
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Row(
+                  spacing: 4,
+                  children: [
+                    for (var i = 0; i < _steps; i++)
+                      Expanded(
+                        child: Container(
+                          key: Key(i <= _step ? 'stepDone' : 'stepToDo'),
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: i <= _step
+                                ? cs.primary
+                                : cs.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 18),
                 Text(
                   t(titles[_step]),
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Expanded(
                   child: ListView(
                     children: [...body, if (_error != null) _Error(_error!)],
@@ -517,7 +539,9 @@ class _InstallFlowState extends State<InstallFlow> {
               const SizedBox(height: 8),
               SelectableText(
                 readmeUrl,
-                style: const TextStyle(color: Color(0xB3FFFFFF)),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
             _Primary(t('instOpenReadme'), () => openUrl(readmeUrl)),
@@ -544,9 +568,10 @@ class _InstallFlowState extends State<InstallFlow> {
               _Note(t('instNoneFound')),
             for (final h in _hits) _Choice(h, Icons.tv, () => _pick(h)),
             if (!_busy)
-              TextButton(
+              TextButton.icon(
                 onPressed: _startScan,
-                child: Text(t('instScanAgain')),
+                icon: const Icon(Icons.refresh),
+                label: Text(t('instScanAgain')),
               ),
             const SizedBox(height: 12),
             TextField(
@@ -649,15 +674,7 @@ class _InstallFlowState extends State<InstallFlow> {
     child: Center(child: CircularProgressIndicator()),
   );
 
-  InputDecoration _field(String hint) => InputDecoration(
-    hintText: hint,
-    filled: true,
-    fillColor: const Color(0x14FFFFFF),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0x66FFFFFF)),
-    ),
-  );
+  InputDecoration _field(String hint) => InputDecoration(hintText: hint);
 }
 
 /// A numbered step; [image] is for the screenshots in assets/install/*.webp once they exist.
@@ -688,8 +705,10 @@ class InstallStepCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context)
+                    .colorScheme
+                    .onPrimaryContainer,
                 child: Text(
                   '$number',
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -718,32 +737,43 @@ class _Choice extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: 12),
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Icon(icon, size: 30),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: cs.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            const Icon(Icons.chevron_right),
-          ],
+              Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _Note extends StatelessWidget {
@@ -758,7 +788,7 @@ class _Note extends StatelessWidget {
     child: Text(
       text,
       style: TextStyle(
-        fontSize: big ? 20 : 16,
+        fontSize: big ? 18 : 15,
         height: 1.4,
         fontWeight: big ? FontWeight.w600 : FontWeight.w400,
       ),
@@ -774,10 +804,7 @@ class _Error extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 8),
-    child: Text(
-      text,
-      style: const TextStyle(fontSize: 16, color: Color(0xFFFF8A80)),
-    ),
+    child: Strip(kind: StripKind.error, icon: Icons.error_outline, text: text),
   );
 }
 
@@ -790,11 +817,7 @@ class _Primary extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FilledButton(
     onPressed: onPressed,
-    style: FilledButton.styleFrom(
-      minimumSize: const Size.fromHeight(60),
-      textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    ),
+    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
     child: Text(label),
   );
 }

@@ -182,7 +182,10 @@ void main() {
     final adb = FakeAdb();
     await pump(tester, adb);
     expect(find.text(t('instStepOf').replaceAll('{n}', '1')), findsOneWidget);
+    expect(find.byKey(const Key('stepDone')), findsOneWidget);
+    expect(find.byKey(const Key('stepToDo')), findsNWidgets(8));
     await toConnect(tester);
+    expect(find.byKey(const Key('stepDone')), findsNWidgets(5));
     expect(
       find.text(t('instRelease').replaceAll('{version}', 'v0.6.1')),
       findsOneWidget,
