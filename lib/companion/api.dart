@@ -139,6 +139,7 @@ class IlonaTvApi implements CompanionApi {
 
   Future<(int, Object)> _text(Object? text) async {
     if (text is! String || text.length > _maxText) return _badRequest;
+    if (!(await keyAccess()).service) return (409, {'error': 'noService'});
     if (!await typeText(text)) return (409, {'error': 'noField'});
     return (204, const {});
   }

@@ -121,6 +121,14 @@ const _lisbon = [
   ),
 ];
 
+const modern = TvInfo(
+  protocol: 1,
+  version: '1',
+  inFront: true,
+  launcherMode: false,
+  keysOutside: 'all',
+);
+
 TvInfo info(String? step) => TvInfo(
   protocol: 1,
   version: '1',
@@ -445,6 +453,32 @@ void main() {
     expect((await SharedPreferences.getInstance()).getBool('haptics'), false);
   });
 
+  testWidgets('a dropped key does not buzz', (t) async {
+    await open(t);
+    var buzz = 0;
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (c) async {
+        if (c.method == 'HapticFeedback.vibrate') buzz++;
+        return null;
+      },
+    );
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    client.gate = Completer();
+    for (var i = 0; i < 5; i++) {
+      await t.tap(find.byKey(const Key('key-back')));
+    }
+    expect(buzz, 4, reason: 'one sent, three queued, one dropped');
+    client.gate!.complete();
+    client.gate = null;
+    await t.pumpAndSettle();
+  });
+
   testWidgets('a held arrow repeats after a pause', (t) async {
     await open(t);
     final c = t.getCenter(find.byKey(const Key('pad')));
@@ -496,6 +530,9 @@ void main() {
       ),
     );
     await open(t);
+    expect(rocker, isEmpty, reason: 'nothing known about the TV yet');
+    client.events$.add(modern);
+    await t.pumpAndSettle();
     expect(rocker, [true]);
     const channel = MethodChannel('tv.ilona.companion/host');
     await t.binding.defaultBinaryMessenger.handlePlatformMessage(
@@ -552,10 +589,13 @@ void main() {
         ),
       ),
     );
+    client.events$.add(modern);
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('device')));
     await t.pumpAndSettle();
     await t.tap(find.text('Bedroom'));
+    await t.pumpAndSettle();
+    second.events$.add(modern);
     await t.pumpAndSettle();
     expect(find.text('Bedroom'), findsOneWidget);
     expect(rocker.last, true);
@@ -571,6 +611,106 @@ void main() {
     expect(client.keys, isEmpty);
   });
 
+  testWidgets('a remote opened over this one gives the rocker back when it '
+      'closes', (t) async {
+    final rocker = <Object?>[];
+    const channel = MethodChannel('tv.ilona.companion/host');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      c,
+    ) async {
+      if (c.method == 'volumeKeys') rocker.add(c.arguments);
+      return null;
+    });
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    await open(t);
+    client.events$.add(modern);
+    await t.pumpAndSettle();
+    final top = Fake();
+    t
+        .state<NavigatorState>(find.byType(Navigator))
+        .push(
+          MaterialPageRoute<void>(
+            builder: (_) => RemotePage(tv: tv, client: top, tvs: tvs, adb: adb),
+          ),
+        );
+    await t.pumpAndSettle();
+    top.events$.add(modern);
+    await t.pumpAndSettle();
+    Future<void> rock() async {
+      await t.binding.defaultBinaryMessenger.handlePlatformMessage(
+        channel.name,
+        channel.codec.encodeMethodCall(
+          const MethodCall('volumeKey', {'up': true}),
+        ),
+        (_) {},
+      );
+      await t.pumpAndSettle();
+    }
+
+    await rock();
+    expect(top.keys, [RemoteKey.volumeUp]);
+    t.state<NavigatorState>(find.byType(Navigator)).pop();
+    await t.pumpAndSettle();
+    await rock();
+    expect(client.keys, [RemoteKey.volumeUp]);
+    expect(rocker.last, true);
+  });
+
+  testWidgets('a TV out of reach leaves the rocker to the phone', (t) async {
+    final rocker = <Object?>[];
+    const channel = MethodChannel('tv.ilona.companion/host');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      c,
+    ) async {
+      if (c.method == 'volumeKeys') rocker.add(c.arguments);
+      return null;
+    });
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    await open(t);
+    client.events$.add(modern);
+    await t.pumpAndSettle();
+    client.keyResult = const Unreachable('x');
+    await t.tap(find.byKey(const Key('key-back')));
+    await t.pumpAndSettle();
+    expect(rocker, [true, false]);
+  });
+
+  testWidgets('a held arrow stops when the pointer is cancelled', (t) async {
+    await open(t);
+    final c = t.getCenter(find.byKey(const Key('pad')));
+    final r = t.getSize(find.byKey(const Key('pad'))).width / 2;
+    final g = await t.startGesture(c + Offset(0, r * 0.8));
+    await t.pump(const Duration(milliseconds: 100));
+    await g.cancel();
+    await t.pump(const Duration(seconds: 2));
+    expect(client.keys, [RemoteKey.down]);
+  });
+
+  testWidgets('the TMDB sheet closes when the TV moves to the city, whose '
+      'sheet opens', (t) async {
+    await open(t);
+    client.events$.add(info('tmdb'));
+    await t.pumpAndSettle();
+    expect(find.text(t0('setupTmdb')), findsOneWidget);
+    client.events$.add(info('location'));
+    await t.pumpAndSettle();
+    expect(find.text(t0('setupTmdb')), findsNothing);
+    expect(find.text(t0('setupCity')), findsOneWidget);
+    client.events$.add(info(null));
+    await t.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+  });
+
   testWidgets('the TV name opens the picker, whose Forget forgets it', (
     t,
   ) async {
@@ -580,6 +720,15 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text(t0('whichTv')), findsOneWidget);
     await t.tap(find.text(t0('forgetTv')));
+    await t.pumpAndSettle();
+    await t.tap(find.text(t0('cancel')));
+    await t.pumpAndSettle();
+    expect(tvs.all.where((e) => e.token != null), hasLength(1));
+    await t.tap(find.byKey(const Key('device')));
+    await t.pumpAndSettle();
+    await t.tap(find.text(t0('forgetTv')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('forgetYes')));
     await t.pumpAndSettle();
     expect(find.text('go'), findsOneWidget);
     expect(tvs.all.where((e) => e.token != null), isEmpty);
@@ -686,7 +835,10 @@ void main() {
     await t.tap(find.byKey(const Key('key-keyboard')));
     await t.pumpAndSettle();
     expect(find.text(t0('typeOnTv')), findsOneWidget);
+    await t.tap(find.text(t0('send')));
+    expect(client.texts, isEmpty, reason: 'Send waits for some text');
     await t.enterText(find.byType(TextField), 'dune');
+    await t.pump();
     await t.tap(find.text(t0('send')));
     await t.pumpAndSettle();
     expect(client.texts, ['dune']);
@@ -696,6 +848,8 @@ void main() {
   for (final (r, key) in [
     (const Refused<void>(409, 'noField'), 'noField'),
     (const Refused<void>(404, 'notFound'), 'textNeedsUpdate'),
+    (const Refused<void>(409, 'noService'), 'noService'),
+    (const Refused<void>(400, 'badRequest'), 'tooLong'),
   ]) {
     testWidgets('a refused text says why ($key) and keeps the sheet', (
       t,
@@ -712,6 +866,19 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
   }
+
+  testWidgets('text over 500 UTF-16 units is not sent', (t) async {
+    await open(t);
+    await t.tap(find.byKey(const Key('key-keyboard')));
+    await t.pumpAndSettle();
+    // 300 characters the field counts as 300, the TV as 600.
+    await t.enterText(find.byType(TextField), '😀' * 300);
+    await t.pump();
+    await t.tap(find.text(t0('send')));
+    await t.pumpAndSettle();
+    expect(client.texts, isEmpty);
+    expect(find.text(t0('tooLong')), findsOneWidget);
+  });
 
   testWidgets('the tmdb key field is obscured', (t) async {
     await open(t);

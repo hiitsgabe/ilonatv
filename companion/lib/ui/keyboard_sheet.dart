@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../i18n.dart';
@@ -7,11 +8,12 @@ import 'theme.dart';
 bool isSetupStep(String? step) => step == 'tmdb' || step == 'location';
 
 /// Every kind of typing for the TV, in one sheet: the setup step it is on,
-/// else whatever field has focus there.
+/// else whatever field has focus there. It closes when the TV moves to
+/// another step, so the next one can open its own.
 Future<void> showKeyboardSheet(
   BuildContext context, {
   required TvClient client,
-  required String? step,
+  required ValueListenable<String?> step,
   required Future<void> Function(TvResult) onResult,
 }) => showModalBottomSheet<void>(
   context: context,
@@ -19,7 +21,7 @@ Future<void> showKeyboardSheet(
   builder: (_) => KeyboardSheet(client: client, step: step, onResult: onResult),
 );
 
-class KeyboardSheet extends StatelessWidget {
+class KeyboardSheet extends StatefulWidget {
   const KeyboardSheet({
     super.key,
     required this.client,
@@ -28,12 +30,44 @@ class KeyboardSheet extends StatelessWidget {
   });
 
   final TvClient client;
-  final String? step;
+  final ValueListenable<String?> step;
   final Future<void> Function(TvResult) onResult;
+
+  @override
+  State<KeyboardSheet> createState() => _KeyboardSheetState();
+}
+
+class _KeyboardSheetState extends State<KeyboardSheet> {
+  late final String? _step = widget.step.value;
+  bool _closed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.step.addListener(_moved);
+  }
+
+  @override
+  void dispose() {
+    widget.step.removeListener(_moved);
+    super.dispose();
+  }
+
+  // Its own route only: a pop could close whatever is on top of it.
+  void _moved() {
+    if (_closed || widget.step.value == _step) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isActive) return;
+    _closed = true;
+    Navigator.of(context).removeRoute(route);
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final step = _step;
+    final client = widget.client;
+    final onResult = widget.onResult;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
@@ -97,7 +131,9 @@ class _TextFormState extends State<TextForm> {
   }
 
   Future<void> _send() async {
-    if (_busy) return;
+    if (_busy || _text.text.isEmpty) return;
+    // The TV counts UTF-16 units; the field's own limit counts characters.
+    if (_text.text.length > _max) return setState(() => _why = t('tooLong'));
     setState(() {
       _busy = true;
       _why = null;
@@ -113,6 +149,8 @@ class _TextFormState extends State<TextForm> {
       _busy = false;
       _why = switch (r) {
         Refused(error: 'noField') => t('noField'),
+        Refused(error: 'noService') => t('noService'),
+        Refused(status: 400) => t('tooLong'),
         Refused(status: 404) => t('textNeedsUpdate'),
         _ => t('cantReach'),
       };
@@ -127,7 +165,10 @@ class _TextFormState extends State<TextForm> {
       TextField(
         controller: _text,
         autofocus: true,
+        autocorrect: false,
+        enableSuggestions: false,
         maxLength: _max,
+        onChanged: (_) => setState(() {}),
         textInputAction: TextInputAction.send,
         onSubmitted: (_) => _send(),
         decoration: InputDecoration(hintText: t('typeHint'), counterText: ''),
@@ -151,7 +192,7 @@ class _TextFormState extends State<TextForm> {
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
-            onPressed: _busy ? null : _send,
+            onPressed: _busy || _text.text.isEmpty ? null : _send,
             icon: const Icon(Icons.send, size: 18),
             label: Text(t('send')),
           ),

@@ -494,10 +494,6 @@ class HomeWatcher : AccessibilityService() {
         return dispatchGesture(gesture, null, null)
     }
 
-    /**
-     * Ilona TV's own task to the front: Back could land on another settings page, under the app's. No new intent, so
-     * the Settings screen stays where it was. Back only if Ilona TV has no task.
-     */
     /** The phone's text replaces the focused field's, in the app in front. */
     fun typeText(text: String): Boolean {
         val field = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
@@ -508,6 +504,10 @@ class HomeWatcher : AccessibilityService() {
         return field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
     }
 
+    /**
+     * Ilona TV's own task to the front: Back could land on another settings page, under the app's. No new intent, so
+     * the Settings screen stays where it was. Back only if Ilona TV has no task.
+     */
     private fun backToIlonaTv() {
         val task = (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).appTasks.firstOrNull {
             it.taskInfo.baseActivity?.className == MainActivity::class.java.name

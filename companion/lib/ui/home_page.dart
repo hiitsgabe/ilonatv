@@ -87,40 +87,44 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _open(Tv tv) {
+  // Anything opened from Home ends the auto-open: Back must land on Home.
+  void _push(Widget page) {
     _autoOpened = true;
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
+
+  void _open(Tv tv) {
     final Widget page = tv.token != null
         ? RemotePage(
             tv: tv,
             client: widget.clientFor(tv),
             tvs: widget.tvs,
             updates: widget.updates,
-            onUpdate: widget.onInstall ?? _install,
+            onUpdate: _install,
             clientFor: widget.clientFor,
           )
         : PairPage(tvs: widget.tvs, clientFor: widget.clientFor, host: tv.host);
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    _push(page);
   }
 
-  void _pair({bool scan = false}) => Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) =>
-          PairPage(tvs: widget.tvs, clientFor: widget.clientFor, scan: scan),
-    ),
-  );
+  void _pair({bool scan = false}) =>
+      _push(PairPage(tvs: widget.tvs, clientFor: widget.clientFor, scan: scan));
 
-  void _install() => Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) =>
-          InstallFlow(adb: Adb(), tvs: widget.tvs, clientFor: widget.clientFor),
-    ),
-  );
+  void _install() {
+    if (widget.onInstall case final f?) {
+      _autoOpened = true;
+      return f();
+    }
+    _push(
+      InstallFlow(adb: Adb(), tvs: widget.tvs, clientFor: widget.clientFor),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final install = TextButton.icon(
-      onPressed: widget.onInstall ?? _install,
+      onPressed: _install,
       icon: const Icon(Icons.download_outlined),
       label: Text(t('installOnTv')),
     );

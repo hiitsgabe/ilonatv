@@ -53,17 +53,14 @@ void main() {
       f.setLastModifiedSync(DateTime.now().subtract(Duration(hours: 3 - i)));
     }
     await DiskImages.prune();
-    expect(dir.listSync().map((f) => f.path.split('/').last).toList()..sort(), [
-      'mid',
-      'new',
-    ]);
+    expect(
+      dir.listSync().map((f) => f.path.split('/').last).toList()..sort(),
+      ['mid', 'new'],
+    );
   });
 
   test('DiskImage providers are equal by URL', () {
-    expect(
-      const DiskImage('https://x/a.jpg'),
-      const DiskImage('https://x/a.jpg'),
-    );
+    expect(const DiskImage('https://x/a.jpg'), const DiskImage('https://x/a.jpg'));
     expect(
       const DiskImage('https://x/a.jpg').hashCode,
       const DiskImage('https://x/a.jpg').hashCode,

@@ -188,6 +188,21 @@ void main() {
     expect(find.byType(RemotePage), findsNothing);
   });
 
+  testWidgets('back from pairing, a TV found opens nothing by itself', (
+    t,
+  ) async {
+    await home(t);
+    await t.tap(find.text(t0('addTv')));
+    await t.pumpAndSettle();
+    expect(find.byType(PairPage), findsOneWidget);
+    await t.tap(find.byTooltip('Back'));
+    await t.pumpAndSettle();
+    await found('10.0.0.5', 'Ilona TV on Living');
+    await t.pump(const Duration(seconds: 1));
+    await t.pumpAndSettle();
+    expect(find.byType(RemotePage), findsNothing);
+  });
+
   testWidgets('two paired TVs online open nothing by themselves', (t) async {
     await tvs.savePaired(
       Tv(host: '10.0.0.6', port: 8642, name: 'Bedroom'),

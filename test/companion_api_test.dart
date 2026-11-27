@@ -295,6 +295,7 @@ void main() {
 
   test('text goes to the focused field; none focused is 409', () async {
     await _setUp();
+    _keyAccess = (api: 30, service: true);
     expect(
       (await _call('POST', '/api/text', body: {'text': 'lisbon'})).$1,
       204,
@@ -314,6 +315,7 @@ void main() {
     'text that is not a string, or too long, is 400 and types nothing',
     () async {
       await _setUp();
+      _keyAccess = (api: 30, service: true);
       for (final body in [
         null,
         {'text': 5},
@@ -328,6 +330,18 @@ void main() {
       expect(_typed, ['a' * 500]);
     },
   );
+
+  test('text without the accessibility service is 409 noService', () async {
+    await _setUp();
+    final (status, body) = await _call(
+      'POST',
+      '/api/text',
+      body: {'text': 'x'},
+    );
+    expect(status, 409);
+    expect(body, {'error': 'noService'});
+    expect(_typed, isEmpty);
+  });
 
   test('key jump is 400', () async {
     await _setUp();

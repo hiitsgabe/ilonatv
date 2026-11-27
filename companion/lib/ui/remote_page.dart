@@ -73,6 +73,7 @@ class _RemotePageState extends State<RemotePage> {
   bool _swipe = false;
   bool _haptics = true;
   bool _volumeKeys = false;
+  final _step = ValueNotifier<String?>(null);
   void _rocker(bool up) =>
       _press(up ? RemoteKey.volumeUp : RemoteKey.volumeDown, repeat: true);
 
@@ -105,6 +106,7 @@ class _RemotePageState extends State<RemotePage> {
       widget.tvs.onVolumeKey = null;
     }
     widget.tvs.release();
+    _step.dispose();
     _sub?.cancel();
     _retry?.cancel();
     _life.dispose();
@@ -126,6 +128,7 @@ class _RemotePageState extends State<RemotePage> {
         if (i.inFront) _adbNote = false;
         if (!_exploreOk) _tab = 0;
       });
+      _step.value = i.step;
       if (asks && (ModalRoute.of(context)?.isCurrent ?? false)) _keyboard();
       _adbIfKnown();
     }, onDone: _ended);
@@ -235,12 +238,12 @@ class _RemotePageState extends State<RemotePage> {
   /// A [repeat] (a held arrow, the rocker) waits for the queue to empty, so
   /// keys never pile up behind a slow TV and run on after the finger lifts.
   Future<void> _press(RemoteKey k, {bool repeat = false}) async {
+    if (_queue.length >= 3 || (repeat && _queue.isNotEmpty)) return;
     if (_haptics) {
       k == RemoteKey.ok || k == RemoteKey.playPause
           ? HapticFeedback.lightImpact()
           : HapticFeedback.selectionClick();
     }
-    if (_queue.length >= 3 || (repeat && _queue.isNotEmpty)) return;
     _queue.add(k);
     if (_sending) return;
     _sending = true;
@@ -305,7 +308,7 @@ class _RemotePageState extends State<RemotePage> {
   void _keyboard() => showKeyboardSheet(
     context,
     client: widget.client,
-    step: _info?.step,
+    step: _step,
     onResult: _handle,
   );
 
@@ -322,6 +325,25 @@ class _RemotePageState extends State<RemotePage> {
     );
     if (!mounted || r == null) return;
     if (r == DeviceChoice.forget) {
+      final sure = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(t('forgetAsk').replaceAll('{name}', widget.tv.label)),
+          content: Text(t('forgetWhy')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(c).pop(false),
+              child: Text(t('cancel')),
+            ),
+            TextButton(
+              key: const Key('forgetYes'),
+              onPressed: () => Navigator.of(c).pop(true),
+              child: Text(t('forget')),
+            ),
+          ],
+        ),
+      );
+      if (sure != true || !mounted) return;
       await widget.tvs.forget(widget.tv.host);
       if (nav.mounted) nav.popUntil((r) => r.isFirst);
     } else if (r == DeviceChoice.add && clientFor != null) {
@@ -426,8 +448,11 @@ class _RemotePageState extends State<RemotePage> {
         isOlder(_info!.version, _latest!);
     // Only while the remote is what's on screen: a sheet or a page over it
     // gives the rocker back to the phone.
+    final current = ModalRoute.of(context)?.isCurrent ?? false;
+    // Back on top after a remote pushed over this one (Add TV) is gone.
+    if (current) widget.tvs.onVolumeKey = _rocker;
     final volumeKeys =
-        _media && _tab == 0 && (ModalRoute.of(context)?.isCurrent ?? false);
+        current && _info != null && !_unreachable && _media && _tab == 0;
     if (!_ownsRocker) {
       _volumeKeys = false;
     } else if (volumeKeys != _volumeKeys) {
@@ -550,7 +575,9 @@ class _RemotePageState extends State<RemotePage> {
                       client: widget.client,
                       onResult: _handle,
                       tvLabel: widget.tv.label,
-                      onWatched: () => setState(() => _tab = 0),
+                      onWatched: () {
+                        if (mounted) setState(() => _tab = 0);
+                      },
                     )
                   else
                     const SizedBox.shrink(),
@@ -791,6 +818,7 @@ class _DPadState extends State<_DPad> {
   }
 
   void _start(Offset p) {
+    _hold?.cancel();
     final k = _at(p);
     setState(() => _down = k);
     widget.onKey(k);
