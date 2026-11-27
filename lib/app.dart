@@ -8,7 +8,7 @@ import 'ui/home_screen.dart';
 import 'ui/setup_wizard.dart';
 
 /// Shown in Settings, under About; the release workflow bumps it with pubspec.yaml.
-const kVersion = '0.6.2';
+const kVersion = '0.6.3';
 
 /// The home screen's repaint boundary, which `SnapshotObserver` captures.
 final homeBoundaryKey = GlobalKey();
