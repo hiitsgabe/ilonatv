@@ -131,7 +131,7 @@ class DesktopAdb implements AdbBackend {
   Future<String?> pair(String host, int port, String code) async {
     if (!RegExp(r'^\d{6}$').hasMatch(code)) return 'bad code';
     final r = await _run(['pair', '$host:$port', code]);
-    return r.exitCode == -1 ? r.output.trim() : pairFailure(r.output);
+    return pairFailure(r.output);
   }
 
   @override
