@@ -12,7 +12,17 @@ void main() {
     expect(a.colorScheme.brightness, Brightness.dark);
     expect(a.colorScheme.surface, const Color(0xFF0F1115));
     expect(a.scaffoldBackgroundColor, const Color(0xFF0F1115));
-    expect(a.colorScheme.primary, isNot(b.colorScheme.primary));
+    expect(a.colorScheme.primary, isNot(b.colorScheme.primary));  });
+
+  test('button labels keep Inter', () {
+    final th = companionTheme(kDefaultAccent);
+    for (final style in [
+      th.filledButtonTheme.style,
+      th.outlinedButtonTheme.style,
+      th.textButtonTheme.style,
+    ]) {
+      expect(style!.textStyle!.resolve({})!.fontFamily, 'Inter');
+    }
   });
 
   testWidgets('the app follows the accent', (t) async {

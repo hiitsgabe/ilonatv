@@ -28,7 +28,12 @@ ThemeData companionTheme(Color seed) {
         errorContainer: const Color(0xFF4A1E1A),
         onErrorContainer: const Color(0xFFFFDAD5),
       );
-  const label = TextStyle(fontSize: 15, fontWeight: FontWeight.w600);
+  // A button's textStyle replaces the theme's, family included.
+  const label = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+  );
   const shape = StadiumBorder();
   return ThemeData(
     useMaterial3: true,
