@@ -80,6 +80,8 @@ class CompanionServer {
     'step': companionState.step?.name,
     'inFront': companionState.inFront,
     'launcherMode': pairing.settings.fireTvMode,
+    // ARGB, so the phone takes on the colour picked on the TV.
+    'accent': pairing.settings.assistantColor,
   };
 
   // A platform call: it can fail with no engine to answer, and the rest stands.

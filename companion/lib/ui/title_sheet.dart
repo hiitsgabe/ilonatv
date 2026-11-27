@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../i18n.dart';
 import '../tv_client.dart';
+import 'theme.dart';
 
 String? _s(Item i, String k) {
   final v = i[k];
@@ -36,10 +37,11 @@ class Poster extends StatelessWidget {
         ? (_s(item, 'backdropUrl') ?? _s(item, 'posterUrl'))
         : _s(item, 'posterUrl');
     final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cs = Theme.of(context).colorScheme;
     final placeholder = Container(
-      color: const Color(0x14FFFFFF),
+      color: cs.surfaceContainerHigh,
       alignment: Alignment.center,
-      child: const Icon(Icons.movie_outlined, color: Colors.white38),
+      child: Icon(Icons.movie_outlined, color: cs.onSurfaceVariant),
     );
     return SizedBox(
       width: width,
@@ -85,9 +87,6 @@ Future<void> showTitleSheet(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-  ),
   builder: (_) => TitleSheet(item: item, client: client, onResult: onResult),
 );
 
@@ -147,6 +146,7 @@ class _TitleSheetState extends State<TitleSheet> {
       if (i['rating'] is num) '★ ${(i['rating'] as num).toStringAsFixed(1)}',
     ].join('  ·  ');
     final w = MediaQuery.sizeOf(context).width;
+    final cs = Theme.of(context).colorScheme;
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -164,7 +164,7 @@ class _TitleSheetState extends State<TitleSheet> {
                     cacheWidth: (w * MediaQuery.devicePixelRatioOf(context))
                         .round(),
                     errorBuilder: (_, _, _) =>
-                        Container(color: const Color(0x14FFFFFF)),
+                        Container(color: cs.surfaceContainerHigh),
                   ),
                 ),
               ),
@@ -176,35 +176,30 @@ class _TitleSheetState extends State<TitleSheet> {
             if (_s(i, 'subtitle') != null)
               Text(
                 _s(i, 'subtitle')!,
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: cs.onSurfaceVariant),
               ),
             if (meta.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  meta,
-                  style: const TextStyle(color: Colors.white70),
-                ),
+                child: Text(meta, style: TextStyle(color: cs.onSurfaceVariant)),
               ),
             if (_s(i, 'overview') != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
                   _s(i, 'overview')!,
-                  style: const TextStyle(height: 1.4),
+                  style: TextStyle(height: 1.4, color: cs.onSurfaceVariant),
                 ),
               ),
             const SizedBox(height: 20),
             if (_failed)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  t('cantOpen'),
+                child: Strip(
                   key: const Key('cantOpen'),
-                  style: const TextStyle(
-                    color: Color(0xFFFF8A80),
-                    fontWeight: FontWeight.w600,
-                  ),
+                  kind: StripKind.error,
+                  icon: Icons.error_outline,
+                  text: t('cantOpen'),
                 ),
               ),
             SizedBox(
@@ -224,13 +219,6 @@ class _TitleSheetState extends State<TitleSheet> {
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),

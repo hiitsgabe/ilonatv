@@ -9,6 +9,7 @@ import 'package:ilonatv_protocol/releases.dart';
 import 'tv_client.dart';
 import 'tvs.dart';
 import 'ui/home_page.dart';
+import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,31 +34,17 @@ class CompanionApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: t('appName'),
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: 'Inter',
-        scaffoldBackgroundColor: Colors.black,
-        colorScheme: const ColorScheme.dark(
-          primary: Colors.white,
-          onPrimary: Colors.black,
-          surface: Color(0x14FFFFFF),
+    return ValueListenableBuilder(
+      valueListenable: accent,
+      builder: (context, seed, _) => MaterialApp(
+        title: t('appName'),
+        debugShowCheckedModeBanner: false,
+        theme: companionTheme(seed),
+        home: HomePage(
+          tvs: tvs,
+          clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token),
+          updates: updates,
         ),
-        cardTheme: CardThemeData(
-          color: const Color(0x2EFFFFFF),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: const BorderSide(color: Color(0x66FFFFFF)),
-          ),
-        ),
-      ),
-      home: HomePage(
-        tvs: tvs,
-        clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token),
-        updates: updates,
       ),
     );
   }

@@ -7,6 +7,7 @@ import '../i18n.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
 import 'remote_page.dart';
+import 'theme.dart';
 
 ({String host, int port, String secret})? parsePairUrl(String s) {
   final u = Uri.tryParse(s.trim());
@@ -152,14 +153,7 @@ class _PairPageState extends State<PairPage> {
               icon: const Icon(Icons.qr_code_scanner),
               label: Text(t('scanQr')),
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(64),
-                textStyle: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(22),
-                ),
+                minimumSize: const Size.fromHeight(56),
               ),
             ),
             const SizedBox(height: 28),
@@ -169,10 +163,7 @@ class _PairPageState extends State<PairPage> {
             ),
             const SizedBox(height: 14),
             if (widget.host == null && tvs.isNotEmpty) ...[
-              Text(
-                t('chooseTv'),
-                style: TextStyle(color: cs.onSurface.withAlpha(180)),
-              ),
+              Text(t('chooseTv'), style: TextStyle(color: cs.onSurfaceVariant)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -212,9 +203,10 @@ class _PairPageState extends State<PairPage> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: Color(0xFFFF8A80)),
+                child: Strip(
+                  kind: StripKind.error,
+                  icon: Icons.error_outline,
+                  text: _error!,
                 ),
               ),
             const SizedBox(height: 16),
@@ -224,10 +216,7 @@ class _PairPageState extends State<PairPage> {
                   ? null
                   : _submit,
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
+                minimumSize: const Size.fromHeight(52),
               ),
               child: _busy
                   ? const SizedBox(
@@ -243,15 +232,7 @@ class _PairPageState extends State<PairPage> {
     );
   }
 
-  InputDecoration _field(String hint) => InputDecoration(
-    hintText: hint,
-    filled: true,
-    fillColor: const Color(0x14FFFFFF),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0x66FFFFFF)),
-    ),
-  );
+  InputDecoration _field(String hint) => InputDecoration(hintText: hint);
 }
 
 class _ScanPage extends StatefulWidget {
@@ -308,8 +289,9 @@ class _ScanPageState extends State<_ScanPage> {
               margin: const EdgeInsets.all(24),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xB3000000),
-                borderRadius: BorderRadius.circular(22),
+                color: Theme.of(context).colorScheme.surface
+                    .withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Text(t('scanHint'), textAlign: TextAlign.center),
             ),

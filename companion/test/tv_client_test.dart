@@ -146,6 +146,11 @@ void main() {
     expect((old.keysOutside, old.api), (null, null));
   });
 
+  test('info reads the accent; an older TV has none', () {
+    expect(TvInfo.fromJson({'accent': 0xFF9B6CFF}).accent, 0xFF9B6CFF);
+    expect(TvInfo.fromJson({'protocol': 1}).accent, isNull);
+  });
+
   test('info parses every field', () async {
     final i = ((await client.info()) as Ok<TvInfo>).value;
     expect(

@@ -149,7 +149,12 @@ class _AboutSheetState extends State<AboutSheet> {
           if (_note case final n?)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(n, style: const TextStyle(color: Color(0xB3FFFFFF))),
+              child: Text(
+                n,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
         ],
       ),

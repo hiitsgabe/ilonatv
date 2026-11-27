@@ -12,6 +12,7 @@ import 'package:ilonatv_protocol/releases.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
 import 'browse.dart';
+import 'theme.dart';
 
 class RemotePage extends StatefulWidget {
   const RemotePage({
@@ -86,6 +87,7 @@ class _RemotePageState extends State<RemotePage> {
     _sub?.cancel();
     _sub = widget.client.events().listen((i) {
       if (!mounted) return;
+      if (i.accent case final a?) accent.value = Color(a);
       setState(() {
         _info = i;
         _unreachable = false;

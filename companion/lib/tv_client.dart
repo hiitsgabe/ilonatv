@@ -44,6 +44,7 @@ class TvInfo {
     required this.launcherMode,
     this.keysOutside,
     this.api,
+    this.accent,
   });
 
   final int protocol;
@@ -57,6 +58,9 @@ class TvInfo {
   final String? keysOutside;
   final int? api;
 
+  /// The colour picked on the TV, ARGB; null from a TV older than this field.
+  final int? accent;
+
   factory TvInfo.fromJson(Map j) => TvInfo(
     protocol: j['protocol'] as int? ?? 0,
     version: j['version'] as String? ?? '',
@@ -65,6 +69,7 @@ class TvInfo {
     launcherMode: j['launcherMode'] as bool? ?? false,
     keysOutside: j['keysOutside'] as String?,
     api: j['api'] as int?,
+    accent: j['accent'] as int?,
   );
 }
 

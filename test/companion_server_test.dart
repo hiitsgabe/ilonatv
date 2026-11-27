@@ -143,6 +143,7 @@ void main() {
         'step': null,
         'inFront': true,
         'launcherMode': false,
+        'accent': 0xFF4F8CFF,
       });
     },
   );

@@ -7,6 +7,7 @@ import 'package:ilonatv_companion/i18n.dart';
 import 'package:ilonatv_companion/tv_client.dart';
 import 'package:ilonatv_companion/tvs.dart';
 import 'package:ilonatv_companion/ui/remote_page.dart';
+import 'package:ilonatv_companion/ui/theme.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -341,6 +342,29 @@ void main() {
     await t.tap(find.byKey(const Key('key-back')));
     await t.pumpAndSettle();
     expect(find.text(t0('adbNote')), findsOneWidget);
+  });
+
+  testWidgets('the phone takes on the accent the TV reports', (t) async {
+    addTearDown(() => accent.value = kDefaultAccent);
+    await open(t);
+    client.events$.add(
+      const TvInfo(
+        protocol: 1,
+        version: '1',
+        inFront: true,
+        launcherMode: false,
+        accent: 0xFFFF5EC7,
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(accent.value, const Color(0xFFFF5EC7));
+    client.events$.add(info(null));
+    await t.pumpAndSettle();
+    expect(
+      accent.value,
+      const Color(0xFFFF5EC7),
+      reason: 'an older TV keeps it',
+    );
   });
 
   testWidgets('swipe moves', (t) async {
