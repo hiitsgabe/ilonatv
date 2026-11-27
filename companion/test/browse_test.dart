@@ -69,8 +69,7 @@ void main() {
   );
 
   Future<void> start(
-    WidgetTester t,
-    String tab, {
+    WidgetTester t, {
     double scale = 1,
     bool fail = false,
   }) async {
@@ -89,12 +88,21 @@ void main() {
     );
     await t.tap(find.text('Explore'));
     await t.pumpAndSettle();
-    await t.tap(find.text(tab));
+  }
+
+  Finder inResults(String text) => find.descendant(
+    of: find.byType(CustomScrollView),
+    matching: find.text(text),
+  );
+
+  Future<void> search(WidgetTester t, String q) async {
+    await t.enterText(find.byType(TextField), q);
+    await t.pump(const Duration(milliseconds: 450));
     await t.pumpAndSettle();
   }
 
   testWidgets('search debounces and shows only non-empty sections', (t) async {
-    await start(t, 'Search');
+    await start(t);
     await t.enterText(find.byType(TextField), 'd');
     await t.pump(const Duration(milliseconds: 200));
     await t.enterText(find.byType(TextField), 'dune');
@@ -103,37 +111,55 @@ void main() {
     await t.pump(const Duration(milliseconds: 2));
     await t.pumpAndSettle();
     expect(client.queries, ['dune']);
-    expect(find.text('Movies'), findsOneWidget);
-    expect(find.text('Series'), findsNothing);
+    expect(inResults('Movies'), findsOneWidget);
+    expect(find.text('Series'), findsNothing, reason: 'no chip, no section');
+    expect(find.text('Dune'), findsOneWidget);
     await t.dragUntilVisible(
-      find.text('YouTube'),
+      inResults('YouTube'),
       find.byType(CustomScrollView),
       const Offset(0, -200),
     );
-    expect(find.text('YouTube'), findsOneWidget);
-    expect(find.text('Dune'), findsOneWidget);
+    expect(inResults('YouTube'), findsOneWidget);
+  });
+
+  testWidgets('the rows show while the field is empty, results once it is '
+      'not, and a chip keeps one kind', (t) async {
+    await start(t);
+    expect(find.text('Trending now'), findsOneWidget);
+    await search(t, 'dune');
+    expect(find.text('Trending now'), findsNothing);
+    await t.tap(find.byKey(const Key('filter-videos')));
+    await t.pumpAndSettle();
+    expect(inResults('Movies'), findsNothing);
+    expect(inResults('YouTube'), findsOneWidget);
+    await t.tap(find.byTooltip('Clear'));
+    await t.pumpAndSettle();
+    expect(find.text('Trending now'), findsOneWidget);
   });
 
   testWidgets('browse renders rows', (t) async {
-    await start(t, 'Browse');
+    await start(t);
     expect(find.text('Trending now'), findsOneWidget);
     expect(find.text('Alien'), findsOneWidget);
   });
 
-  testWidgets('watch opens the same item map and closes the sheet', (t) async {
-    await start(t, 'Browse');
+  testWidgets('watch opens the same item map, closes the sheet and goes back '
+      'to the remote', (t) async {
+    await start(t);
     await t.tap(find.text('Alien'));
     await t.pumpAndSettle();
     expect(find.text('About Alien'), findsOneWidget);
+    expect(find.text('Watch on Ilona TV'), findsOneWidget);
     await t.tap(find.byKey(const Key('watch')));
     await t.pumpAndSettle();
     expect(client.opened.single, item('Alien'));
-    expect(find.text('Opening on the TV'), findsOneWidget);
+    expect(find.text('Opening on Ilona TV'), findsOneWidget);
     expect(find.text('About Alien'), findsNothing);
+    expect(find.byKey(const Key('pad')), findsOneWidget);
   });
 
   testWidgets('open false says the TV could not open it', (t) async {
-    await start(t, 'Browse');
+    await start(t);
     client.openResult = const Ok(false);
     await t.tap(find.text('Alien'));
     await t.pumpAndSettle();
@@ -143,7 +169,7 @@ void main() {
   });
 
   testWidgets('409 on watch shows the banner', (t) async {
-    await start(t, 'Browse');
+    await start(t);
     client.openResult = const NotInFront(launcherMode: false);
     await t.tap(find.text('Alien'));
     await t.pumpAndSettle();
@@ -153,13 +179,13 @@ void main() {
   });
 
   testWidgets('rows with videos do not overflow, even at 1.5x text', (t) async {
-    await start(t, 'Browse', scale: 1.5);
+    await start(t, scale: 1.5);
     expect(t.takeException(), isNull);
     expect(find.text('Clip'), findsOneWidget);
   });
 
   testWidgets('search grids do not overflow at 1.5x text', (t) async {
-    await start(t, 'Search', scale: 1.5);
+    await start(t, scale: 1.5);
     await t.enterText(find.byType(TextField), 'dune');
     await t.pump(const Duration(milliseconds: 450));
     await t.pumpAndSettle();
@@ -169,7 +195,7 @@ void main() {
   testWidgets(
     'open false shows the message inside the sheet, which stays open',
     (t) async {
-      await start(t, 'Browse');
+      await start(t);
       client.openResult = const Ok(false);
       await t.tap(find.text('Alien'));
       await t.pumpAndSettle();
@@ -181,7 +207,7 @@ void main() {
   );
 
   testWidgets('a failed first load shows Retry, and Retry loads', (t) async {
-    await start(t, 'Browse', fail: true);
+    await start(t, fail: true);
     expect(find.byType(CircularProgressIndicator), findsNothing);
     client.rowsFail = null;
     await t.tap(find.text('Retry').last);
@@ -213,8 +239,6 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('Explore'));
     await t.pumpAndSettle();
-    await t.tap(find.text('Browse'));
-    await t.pumpAndSettle();
     await t.tap(find.text('Alien'));
     await t.pumpAndSettle();
     client.gate = Completer();
@@ -236,7 +260,7 @@ void main() {
   });
 
   testWidgets('a running search shows progress', (t) async {
-    await start(t, 'Search');
+    await start(t);
     client.gate = Completer();
     await t.enterText(find.byType(TextField), 'dune');
     await t.pump(const Duration(milliseconds: 450));
@@ -247,19 +271,15 @@ void main() {
     expect(find.text('Dune'), findsOneWidget);
   });
 
-  testWidgets('Search and Browse keep their state across tabs', (t) async {
-    await start(t, 'Search');
-    await t.enterText(find.byType(TextField), 'dune');
-    await t.pump(const Duration(milliseconds: 450));
+  testWidgets('Explore keeps its state across tabs', (t) async {
+    await start(t);
+    await search(t, 'dune');
+    await t.tap(find.text('Remote'));
     await t.pumpAndSettle();
-    await t.tap(find.text('Browse'));
-    await t.pumpAndSettle();
-    await t.tap(find.text('Search'));
+    await t.tap(find.text('Explore'));
     await t.pumpAndSettle();
     expect(find.text('Dune'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'dune'), findsOneWidget);
-    await t.tap(find.text('Browse'));
-    await t.pumpAndSettle();
     expect(client.rowCalls, 1);
   });
 }

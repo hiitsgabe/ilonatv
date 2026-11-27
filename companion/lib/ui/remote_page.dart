@@ -539,7 +539,12 @@ class _RemotePageState extends State<RemotePage> {
                     onKeyboard: _keyboard,
                   ),
                   if (_explored)
-                    _Explore(client: widget.client, onResult: _handle)
+                    ExploreTab(
+                      client: widget.client,
+                      onResult: _handle,
+                      tvLabel: widget.tv.label,
+                      onWatched: () => setState(() => _tab = 0),
+                    )
                   else
                     const SizedBox.shrink(),
                 ],
@@ -570,38 +575,6 @@ class _RemotePageState extends State<RemotePage> {
       ),
     );
   }
-}
-
-// Search and Browse, until they become one Explore.
-class _Explore extends StatelessWidget {
-  const _Explore({required this.client, required this.onResult});
-
-  final TvClient client;
-  final Future<void> Function(TvResult) onResult;
-
-  @override
-  Widget build(BuildContext context) => DefaultTabController(
-    length: 2,
-    child: Column(
-      children: [
-        TabBar(
-          tabs: [
-            Tab(text: t('tabSearch')),
-            Tab(text: t('tabBrowse')),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              SearchTab(client: client, onResult: onResult),
-              BrowseTab(client: client, onResult: onResult),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 typedef OnKey = void Function(RemoteKey k, {bool repeat});

@@ -82,12 +82,19 @@ Future<void> showTitleSheet(
   BuildContext context,
   Item item,
   TvClient client,
-  Future<void> Function(TvResult) onResult,
-) => showModalBottomSheet<void>(
+  Future<void> Function(TvResult) onResult, {
+  required String tvLabel,
+  VoidCallback? onWatched,
+}) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  showDragHandle: true,
-  builder: (_) => TitleSheet(item: item, client: client, onResult: onResult),
+  builder: (_) => TitleSheet(
+    item: item,
+    client: client,
+    onResult: onResult,
+    tvLabel: tvLabel,
+    onWatched: onWatched,
+  ),
 );
 
 class TitleSheet extends StatefulWidget {
@@ -96,11 +103,17 @@ class TitleSheet extends StatefulWidget {
     required this.item,
     required this.client,
     required this.onResult,
+    required this.tvLabel,
+    this.onWatched,
   });
 
   final Item item;
   final TvClient client;
   final Future<void> Function(TvResult) onResult;
+  final String tvLabel;
+
+  /// After the TV took it: the remote comes back, for play/pause and volume.
+  final VoidCallback? onWatched;
 
   @override
   State<TitleSheet> createState() => _TitleSheetState();
@@ -129,10 +142,15 @@ class _TitleSheetState extends State<TitleSheet> {
       return;
     }
     if (r is Ok<bool>) {
-      messenger.showSnackBar(SnackBar(content: Text(t('openingOnTv'))));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(t('openingOn').replaceAll('{tv}', widget.tvLabel)),
+        ),
+      );
     }
     // Only this sheet's own route: if it was dismissed meanwhile, a pop would close the remote.
     if (mounted) nav.pop();
+    if (r is Ok<bool>) widget.onWatched?.call();
     await widget.onResult(r);
   }
 
@@ -215,12 +233,19 @@ class _TitleSheetState extends State<TitleSheet> {
                       )
                     : const Icon(Icons.tv),
                 label: Text(
-                  t('watchOnTv'),
+                  t('watchOn').replaceAll('{tv}', widget.tvLabel),
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                t('watchHint'),
+                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
               ),
             ),
           ],
