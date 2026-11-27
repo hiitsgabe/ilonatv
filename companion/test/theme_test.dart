@@ -23,7 +23,8 @@ void main() {
         Theme.of(t.element(find.byType(Scaffold).first)).colorScheme.primary;
     final before = primary();
     accent.value = const Color(0xFF34D07A);
-    await t.pumpAndSettle();
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
     expect(primary(), isNot(before));
     expect(
       primary(),

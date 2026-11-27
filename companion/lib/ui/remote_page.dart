@@ -12,6 +12,7 @@ import 'package:ilonatv_protocol/releases.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
 import 'browse.dart';
+import 'pair_page.dart' show ClientFor;
 import 'theme.dart';
 
 class RemotePage extends StatefulWidget {
@@ -23,7 +24,11 @@ class RemotePage extends StatefulWidget {
     this.updates,
     this.onUpdate,
     this.adb,
+    this.clientFor,
   });
+
+  /// For the device picker's other TVs.
+  final ClientFor? clientFor;
 
   final Tv tv;
   final TvClient client;

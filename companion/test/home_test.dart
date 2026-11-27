@@ -43,6 +43,19 @@ class Versioned extends TvClient {
   Future<TvResult<List<TvRow>>> rows() async => const Ok([]);
 }
 
+Future<void> native(String method, Map<String, Object?> args) async {
+  const channel = MethodChannel('tv.ilona.companion/host');
+  await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .handlePlatformMessage(
+        channel.name,
+        channel.codec.encodeMethodCall(MethodCall(method, args)),
+        (_) {},
+      );
+}
+
+Future<void> found(String host, String name) =>
+    native('found', {'name': name, 'host': host, 'port': 8642});
+
 void main() {
   final calls = <String>[];
   final args = <Object?>[];
@@ -94,7 +107,7 @@ void main() {
 
   testWidgets('discovery stays on for pairing', (t) async {
     await home(t);
-    await t.tap(find.text(t0('pairWithCode')));
+    await t.tap(find.text(t0('addTv')));
     await t.pumpAndSettle();
     expect(find.byType(PairPage), findsOneWidget);
     expect(calls, isEmpty);
@@ -137,6 +150,67 @@ void main() {
       t.binding.handleAppLifecycleStateChanged(s);
     }
     expect(calls, ['discoverStop']);
+  });
+
+  testWidgets('paired TVs come first with their status, found ones after', (
+    t,
+  ) async {
+    await home(t);
+    expect(find.text(t0('yourTvs')), findsOneWidget);
+    expect(find.text(t0('offline')), findsOneWidget);
+    expect(find.text(t0('foundHere')), findsNothing);
+    await found('10.0.0.9', 'Ilona TV on Office');
+    await found('10.0.0.5', 'Ilona TV on Living');
+    await t.pump();
+    expect(find.text(t0('online')), findsOneWidget);
+    expect(find.text(t0('foundHere')), findsOneWidget);
+    expect(find.text('Ilona TV'), findsOneWidget);
+    expect(find.text(t0('pairNow')), findsOneWidget);
+    expect(find.text('10.0.0.5'), findsNothing, reason: 'no raw IPs');
+    expect(find.text(t0('installOnTv')), findsOneWidget);
+  });
+
+  testWidgets('the one paired TV online opens the remote, once per launch', (
+    t,
+  ) async {
+    await home(t);
+    await found('10.0.0.5', 'Ilona TV on Living');
+    await t.pump(const Duration(seconds: 1));
+    await t.pumpAndSettle();
+    expect(find.byType(RemotePage), findsOneWidget);
+    await t.tap(find.byTooltip('Back'));
+    await t.pumpAndSettle();
+    await found('10.0.0.5', 'Ilona TV on Living');
+    await t.pump(const Duration(seconds: 1));
+    await t.pumpAndSettle();
+    expect(find.byType(RemotePage), findsNothing);
+  });
+
+  testWidgets('two paired TVs online open nothing by themselves', (t) async {
+    await tvs.savePaired(
+      Tv(host: '10.0.0.6', port: 8642, name: 'Bedroom'),
+      'tok',
+    );
+    await home(t);
+    await found('10.0.0.5', 'Ilona TV on Living');
+    await found('10.0.0.6', 'Ilona TV on Bedroom');
+    await t.pump(const Duration(seconds: 1));
+    await t.pumpAndSettle();
+    expect(find.byType(RemotePage), findsNothing);
+  });
+
+  testWidgets('with no TV, Home says it is looking and offers QR, code and '
+      'install', (t) async {
+    await tvs.forget('10.0.0.5');
+    await home(t);
+    expect(find.text(t0('searchingTvs')), findsOneWidget);
+    expect(find.text(t0('searchingHint')), findsOneWidget);
+    expect(find.text(t0('scanQr')), findsOneWidget);
+    expect(find.text(t0('installOnTv')), findsOneWidget);
+    await t.tap(find.text(t0('typeCode')));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(PairPage), findsOneWidget);
   });
 
   Future<void> withUpdates(

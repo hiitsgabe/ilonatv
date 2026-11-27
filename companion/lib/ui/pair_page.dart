@@ -47,11 +47,15 @@ class PairPage extends StatefulWidget {
     required this.tvs,
     required this.clientFor,
     this.host,
+    this.scan = false,
   });
 
   final Tvs tvs;
   final ClientFor clientFor;
   final String? host;
+
+  /// Opens the camera straight away, for Home's Scan the QR.
+  final bool scan;
 
   @override
   State<PairPage> createState() => _PairPageState();
@@ -62,6 +66,14 @@ class _PairPageState extends State<PairPage> {
   final _code = TextEditingController();
   String? _error;
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.scan) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scan());
+    }
+  }
 
   @override
   void dispose() {
@@ -100,6 +112,7 @@ class _PairPageState extends State<PairPage> {
               tv: paired,
               client: widget.clientFor(paired),
               tvs: widget.tvs,
+              clientFor: widget.clientFor,
             ),
           ),
         );
