@@ -43,7 +43,7 @@ A short setup on the TV gets everything in place, and anything that needs typing
 
 ## Phone remote and installer
 
-The Ilona TV Companion is an Android app that does the computer steps below from your phone, then stays on as a remote.
+The Ilona TV Companion is an Android app that does the computer steps below from your phone, then stays on as a remote. It also runs on a Mac or a Windows PC: see [Companion on a computer](#companion-on-a-computer).
 
 - **Install** Ilona TV on a Fire TV: it finds the TV on your Wi-Fi, asks for the "Allow debugging?" prompt, downloads the right APK from the latest [release](../../releases) (checking its SHA-256), installs it, grants the permissions Launcher mode and Processes need, and starts it.
 - **Pair** with the QR code or the code from Settings > Companion. Home lists your paired TVs with a live status dot and the Ilona TVs found on the Wi-Fi; with exactly one paired TV online, it opens its remote straight away.
@@ -55,7 +55,22 @@ The Ilona TV Companion is an Android app that does the computer steps below from
 
 Download `ilonatv-companion.apk` from the [Releases](../../releases) page, sideload it on your phone, then choose "Install Ilona TV on a TV". To build it yourself, see [development](docs/development.md#companion).
 
-Before you start, turn on ADB debugging on the TV (see step 1 of Get started, with video walkthroughs). The phone installer works on Fire TV and on Android TV devices that offer ADB network debugging on port 5555. Google TV and Android 11+ only offer "Wireless debugging", which needs pairing from a computer: follow Get started below. Once Ilona TV is installed you can turn ADB debugging off; the remote uses it only for the keys the TV can't send itself while another app is in front (the D-pad below Android 13, and every key without Launcher mode's accessibility service).
+Before you start, turn on ADB debugging on the TV (see step 1 of Get started, with video walkthroughs). The phone installer works on Fire TV and on Android TV devices that offer ADB network debugging on port 5555. Google TV and Android 11+ only offer "Wireless debugging", which needs pairing from a computer: use the Companion on a computer, or follow Get started below. Once Ilona TV is installed you can turn ADB debugging off; the remote uses it only for the keys the TV can't send itself while another app is in front (the D-pad below Android 13, and every key without Launcher mode's accessibility service).
+
+### Companion on a computer
+
+The same Companion runs on macOS and Windows, with the same remote, Explore, typing and installer. Download `ilonatv-companion-macos.zip` or `ilonatv-companion-windows.zip` from the [Releases](../../releases) page and unzip it.
+
+- **macOS:** move `Ilona TV Companion.app` to Applications. The app is not signed, so the first time, right-click it and choose Open, then Open again. If macOS still refuses, open System Settings > Privacy & Security and click Open Anyway next to Ilona TV Companion. When macOS asks to find devices on your local network, choose Allow: that is how it finds your TVs.
+- **Windows:** open the `Ilona TV Companion` folder and run `ilonatv_companion.exe`. The app is not signed, so SmartScreen may say "Windows protected your PC": click More info, then Run anyway. If Windows Firewall asks, allow it on private networks so it can find your TVs.
+
+What differs from the phone:
+
+- **Pairing** is with the code from Settings > Companion; there is no QR scanning. If your TV doesn't show up by itself, type its IP address next to the code.
+- **adb** comes from Google. The Companion can't include it, because Google's licence doesn't allow passing it on. The first time the installer (or a remote key that needs ADB) needs it, the Companion uses the `adb` already on your computer if there is one; otherwise it asks before downloading Google's [Android SDK Platform-Tools](https://developer.android.com/studio/releases/platform-tools) (about 10 to 17 MB) into its own folder (`~/Library/Application Support/tv.ilona.companion` on a Mac, `%LOCALAPPDATA%\Ilona TV Companion` on Windows). It takes the archive named in Google's SDK repository manifest and checks its SHA-1 before unpacking it. By downloading it you agree to [Google's terms](https://developer.android.com/studio/releases/platform-tools).
+- **Google TV and Android 11+** install through Wireless debugging: the installer shows where to turn it on, then asks for the pairing address and code from "Pair device with pairing code", and the IP address and port of the Wireless debugging screen.
+- **Keyboard:** while the remote is in front, the arrow keys, Enter and Esc (or Backspace) are the D-pad, OK and Back.
+- **Updates:** the banner and About open the release page; download the new zip from there.
 
 ## Get started
 
@@ -122,7 +137,7 @@ Fire TV devices that run Amazon's Vega OS instead of Fire OS (such as the Fire T
 <details>
 <summary><b>Is there a phone app?</b></summary>
 
-Yes, the [Ilona TV Companion](#phone-remote-and-installer) for Android. It talks to the TV only on the local network, never over the internet, and Ilona TV answers only phones you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
+Yes, the [Ilona TV Companion](#phone-remote-and-installer) for Android, which also runs on a [Mac or Windows PC](#companion-on-a-computer). It talks to the TV only on the local network, never over the internet, and Ilona TV answers only phones you paired. Settings > Companion shows the QR code and the code to pair with, and lists the paired phones, each with Remove.
 </details>
 
 <details>

@@ -100,10 +100,12 @@ jobs:
           sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml companion/pubspec.yaml
           sed -i "s/^const kVersion = .*/const kVersion = '${NEW_VERSION_NAME}';/" lib/app.dart
           grep -q "^const kVersion = '${NEW_VERSION_NAME}';" lib/app.dart
+          sed -i "s/^const kVersion = .*/const kVersion = '${NEW_VERSION_NAME}';/" companion/lib/version.dart
+          grep -q "^const kVersion = '${NEW_VERSION_NAME}';" companion/lib/version.dart
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add pubspec.yaml companion/pubspec.yaml lib/app.dart
+          git add pubspec.yaml companion/pubspec.yaml lib/app.dart companion/lib/version.dart
           git commit -m "chore: bump version to ${NEW_VERSION}"
           git push origin main
           git tag "$TAG"
@@ -175,16 +177,13 @@ jobs:
         working-directory: companion
         run: flutter build apk --release
 
-      - name: Rename and checksum
+      - name: Rename
         run: |
           set -euo pipefail
           mkdir dist
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk dist/ilonatv-armeabi-v7a.apk
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk dist/ilonatv-arm64-v8a.apk
           cp companion/build/app/outputs/flutter-apk/app-release.apk dist/ilonatv-companion.apk
-          cd dist
-          sha256sum ilonatv-armeabi-v7a.apk ilonatv-arm64-v8a.apk ilonatv-companion.apk > SHA256SUMS
-          cat SHA256SUMS
 
       - name: Upload APKs
         uses: actions/upload-artifact@v7
@@ -194,8 +193,81 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  # Unsigned: the README has the first-run steps for macOS and Windows.
+  build-macos:
+    needs: resolve-version
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-version.outputs.version }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+
+      - name: Build the companion for macOS
+        working-directory: companion
+        run: |
+          flutter pub get
+          flutter build macos --release
+
+      - name: Zip
+        run: |
+          set -euo pipefail
+          mkdir dist
+          ditto -c -k --keepParent "companion/build/macos/Build/Products/Release/Ilona TV Companion.app" dist/ilonatv-companion-macos.zip
+
+      - name: Upload the app
+        uses: actions/upload-artifact@v7
+        with:
+          name: companion-macos
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  build-windows:
+    needs: resolve-version
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-version.outputs.version }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+
+      - name: Build the companion for Windows
+        working-directory: companion
+        run: |
+          flutter pub get
+          flutter build windows --release
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory dist | Out-Null
+          Copy-Item -Recurse companion/build/windows/x64/runner/Release "Ilona TV Companion"
+          Compress-Archive -Path "Ilona TV Companion" -DestinationPath dist/ilonatv-companion-windows.zip
+
+      - name: Upload the app
+        uses: actions/upload-artifact@v7
+        with:
+          name: companion-windows
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
   release:
-    needs: [resolve-version, build-android]
+    needs: [resolve-version, build-android, build-macos, build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -205,11 +277,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download APKs
+      - name: Download the builds
         uses: actions/download-artifact@v8
         with:
-          name: android-apks
           path: dist/
+          merge-multiple: true
+
+      - name: Checksum
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          sha256sum ilonatv-armeabi-v7a.apk ilonatv-arm64-v8a.apk ilonatv-companion.apk ilonatv-companion-macos.zip ilonatv-companion-windows.zip > SHA256SUMS
+          cat SHA256SUMS
 
       - name: Release notes
         id: notes
@@ -256,16 +335,21 @@ jobs:
             | TV, 32-bit (most Fire TV) | `ilonatv-armeabi-v7a.apk` |
             | TV, 64-bit | `ilonatv-arm64-v8a.apk` |
             | Companion (Android phone) | `ilonatv-companion.apk` |
+            | Companion (Mac) | `ilonatv-companion-macos.zip` |
+            | Companion (Windows PC) | `ilonatv-companion-windows.zip` |
             | Checksums | `SHA256SUMS` |
 
             ### Install
 
             - **From your phone:** sideload `ilonatv-companion.apk`, open it and choose "Install Ilona TV on a TV". It downloads the right TV APK from this release and checks its SHA-256.
-            - **From a computer:** follow [Get started](https://github.com/${{ github.repository }}#get-started) in the README. `adb shell getprop ro.product.cpu.abilist` says which TV APK to use.
+            - **From a Mac or Windows PC:** unzip the companion for your computer and open it. It is not signed, so the first launch needs one extra step: see [the README](https://github.com/${{ github.repository }}#companion-on-a-computer). It installs Ilona TV on a TV the same way, including Google TV through Wireless debugging.
+            - **From a computer, by hand:** follow [Get started](https://github.com/${{ github.repository }}#get-started) in the README. `adb shell getprop ro.product.cpu.abilist` says which TV APK to use.
           files: |
             dist/ilonatv-armeabi-v7a.apk
             dist/ilonatv-arm64-v8a.apk
             dist/ilonatv-companion.apk
+            dist/ilonatv-companion-macos.zip
+            dist/ilonatv-companion-windows.zip
             dist/SHA256SUMS
           fail_on_unmatched_files: true
           draft: false
