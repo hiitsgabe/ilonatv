@@ -6,7 +6,9 @@ import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../../adb.dart';
 import '../../i18n.dart';
-import '../../releases.dart';
+
+import 'package:ilonatv_protocol/releases.dart';
+
 import '../../tv_client.dart';
 import '../../tvs.dart';
 import '../pair_page.dart';
@@ -21,14 +23,6 @@ const _minSdk = 28;
 const _steps = 9;
 
 enum _Kind { fireTv, androidTv, googleTv }
-
-String? pickAbi(String abilist) {
-  final abis = abilist.trim().split(',');
-  for (final a in ['arm64-v8a', 'armeabi-v7a']) {
-    if (abis.contains(a)) return a;
-  }
-  return null;
-}
 
 class InstallFlow extends StatefulWidget {
   const InstallFlow({

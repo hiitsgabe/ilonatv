@@ -51,6 +51,7 @@ Future<Settings> _open(
   Map<String, int> rowProviders = const {},
   Map<String, String> rowGenres = const {},
   bool gamesBySport = false,
+  bool cover = false,
 }) async {
   // The Fire TV's screen, in logical pixels.
   tester.view
@@ -118,7 +119,19 @@ Future<Settings> _open(
     ..popular = popular;
   await tester.pumpWidget(
     MaterialApp(
-      home: HomeScreen(settings, sources, pairing: Pairing(settings)),
+      // A screen over the home from its first frame: the home is built but
+      // not laid out.
+      home: !cover
+          ? HomeScreen(settings, sources, pairing: Pairing(settings))
+          : Navigator(
+              onGenerateInitialRoutes: (_, _) => [
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      HomeScreen(settings, sources, pairing: Pairing(settings)),
+                ),
+                MaterialPageRoute<void>(builder: (_) => const Scaffold()),
+              ],
+            ),
     ),
   );
   await tester.pumpAndSettle();
@@ -168,6 +181,19 @@ Future<void> _press(WidgetTester tester, LogicalKeyboardKey key) async {
 }
 
 void main() {
+  testWidgets('Home before the home was ever laid out (a screen over it from '
+      'the start) throws nothing', (tester) async {
+    await _open(tester, cover: true);
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'tv.ilona/host',
+      const StandardMethodCodec().encodeMethodCall(const MethodCall('goHome')),
+      (_) {},
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(_hint(tester), 1);
+  });
+
   testWidgets('one row on screen: the apps with a hint, then the content row', (
     tester,
   ) async {

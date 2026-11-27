@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../adb.dart';
 import '../i18n.dart';
-import '../releases.dart';
+
+import 'package:ilonatv_protocol/releases.dart';
+
 import '../tvs.dart';
+import 'about_sheet.dart';
 import 'install/install_flow.dart';
 import 'pair_page.dart';
 import 'remote_page.dart';
@@ -100,12 +103,26 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Text(
-                    t('appName'),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          t('appName'),
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: t('about'),
+                        icon: const Icon(Icons.info_outline),
+                        onPressed: () => showModalBottomSheet<void>(
+                          context: context,
+                          builder: (_) => const AboutSheet(),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   if (_appUpdate != null)

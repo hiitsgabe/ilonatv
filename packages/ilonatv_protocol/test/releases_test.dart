@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ilonatv_companion/releases.dart';
+import 'package:ilonatv_protocol/releases.dart';
+import 'package:test/test.dart';
 
 void main() {
   late HttpServer server;
@@ -67,7 +67,17 @@ void main() {
   });
 
   Future<ReleaseAsset?> latest(String abi) =>
-      latestTvApk(abi, url: base.resolve('/latest'));
+      latestTvApk(abi, url: base.resolve('/latest'), downloads: '$base/dl/');
+
+  test(
+    'an asset from anywhere but the repository\'s downloads is none',
+    () async {
+      await expectLater(
+        latestTvApk('arm64-v8a', url: base.resolve('/latest')),
+        throwsA(isA<NoAsset>()),
+      );
+    },
+  );
 
   test('latest picks the ABI asset with its digest', () async {
     final a = (await latest('arm64-v8a'))!;
@@ -212,5 +222,94 @@ void main() {
     );
     expect(await u.forApp, isNull);
     expect(await u.newerThan('0.6.1'), isNull);
+  });
+
+  test('latestApk finds any asset by name, the companion\'s too', () async {
+    release['assets'] = [
+      asset('ilonatv-companion.apk', digest: 'sha256:$apkSum'),
+    ];
+    final a = (await latestApk(
+      'ilonatv-companion.apk',
+      url: base.resolve('/latest'),
+      downloads: '$base/dl/',
+    ))!;
+    expect(a.url, base.resolve('/dl/ilonatv-companion.apk'));
+    expect(a.version, 'v0.6.1');
+    expect(a.sha256, apkSum);
+  });
+
+  test('the ABI is arm64 when the device has it, else 32-bit arm', () {
+    expect(pickAbi('arm64-v8a,armeabi-v7a,armeabi'), 'arm64-v8a');
+    expect(pickAbi('armeabi-v7a,armeabi\n'), 'armeabi-v7a');
+    expect(pickAbi('x86_64,x86'), isNull);
+    expect(pickAbi(''), isNull);
+  });
+
+  group('selfUpdate', () {
+    final installed = <String>[];
+    setUp(installed.clear);
+
+    Future<void> install(String path) async => installed.add(path);
+
+    test('installs the download once its digest matched', () async {
+      final a = (await latest('arm64-v8a'))!;
+      final seen = <int>[];
+      await selfUpdate(
+        const ReleaseSource(),
+        a,
+        dir.path,
+        install,
+        progress: (got, _) => seen.add(got),
+      );
+      expect(installed, ['${dir.path}/update.apk']);
+      expect(File(installed.single).readAsBytesSync(), apk);
+      expect(seen.last, apk.length);
+    });
+
+    test('a digest mismatch installs nothing and leaves no file', () async {
+      final a = (await latest('arm64-v8a'))!;
+      final bad = ReleaseAsset(
+        url: a.url,
+        size: a.size,
+        version: a.version,
+        sha256: '0' * 64,
+      );
+      await expectLater(
+        selfUpdate(const ReleaseSource(), bad, dir.path, install),
+        throwsA(isA<BadChecksum>()),
+      );
+      expect(installed, isEmpty);
+      expect(dir.listSync(), isEmpty);
+    });
+
+    test('a progress that throws (the page left) stops it, no file', () async {
+      final a = (await latest('arm64-v8a'))!;
+      await expectLater(
+        selfUpdate(
+          const ReleaseSource(),
+          a,
+          dir.path,
+          install,
+          progress: (_, _) => throw StateError('left'),
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(installed, isEmpty);
+      expect(dir.listSync(), isEmpty);
+    });
+
+    test('an install that fails deletes the download', () async {
+      final a = (await latest('arm64-v8a'))!;
+      await expectLater(
+        selfUpdate(
+          const ReleaseSource(),
+          a,
+          dir.path,
+          (_) async => throw StateError('declined'),
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(dir.listSync(), isEmpty);
+    });
   });
 }

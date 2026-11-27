@@ -17,6 +17,8 @@
          replaces READ_EXTERNAL_STORAGE from Android 13 (API 33). -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Settings > About's update installs the new release's APK over Ilona TV. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <application
         android:label="Ilona TV"
         android:allowBackup="false"
@@ -77,8 +79,10 @@
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
             </intent-filter>
         </receiver>
+        <receiver android:name=".SelfInstall" android:exported="false" />
         <!-- The companion's installer reads the pairing secret over adb, and a settings import is written over adb (see
              PairingProvider). DUMP is held by the adb shell and is signature|privileged|development, so no ordinary app
              can read or write it. -->

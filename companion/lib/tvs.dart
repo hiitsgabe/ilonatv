@@ -55,6 +55,24 @@ Future<String?> appVersion() async {
   }
 }
 
+/// The app's cache directory, where its update downloads.
+Future<String> cacheDir() async =>
+    (await Tvs._channel.invokeMethod<String>('cacheDir'))!;
+
+/// Whether the person allowed the companion to install apps.
+Future<bool> canInstall() async =>
+    await Tvs._channel.invokeMethod<bool>('canInstall') ?? false;
+
+/// Opens the setting that allows the companion to install apps.
+Future<void> allowInstalls() =>
+    Tvs._channel.invokeMethod<void>('allowInstalls');
+
+/// Installs the APK at [path] over the companion after the system's confirm.
+/// An update that went through ends this process, so the answer is only ever
+/// why it did not (declined, a bad APK), or null.
+Future<String?> installApk(String path) =>
+    Tvs._channel.invokeMethod<String>('installApk', {'path': path});
+
 Future<bool> openUrl(String url) async {
   try {
     return await Tvs._channel.invokeMethod<bool>('openUrl', url) ?? false;
