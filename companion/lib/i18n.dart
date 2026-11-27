@@ -36,6 +36,7 @@ const _strings = {
     'cantReach': "Can't reach the TV. Check it is on and on the same Wi-Fi.",
     'scanHint': 'Point the camera at the QR on the TV',
     'close': 'Close',
+    'live': 'LIVE',
     'badAddress':
         'That address is not valid. Use the TV IP, like 192.168.1.20.',
     'cameraDenied': 'The camera is not available. Allow camera access in Settings, or type the code instead.',
@@ -220,6 +221,7 @@ const _strings = {
     'cantReach': 'Não foi possível falar com a TV. Confira se ela está ligada e na mesma rede Wi-Fi.',
     'scanHint': 'Aponte a câmera para o QR da TV',
     'close': 'Fechar',
+    'live': 'AO VIVO',
     'badAddress':
         'Esse endereço não é válido. Use o IP da TV, como 192.168.1.20.',
     'cameraDenied': 'A câmera não está disponível. Permita o acesso à câmera nas Configurações do celular ou digite o código.',

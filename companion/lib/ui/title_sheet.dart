@@ -9,7 +9,7 @@ String? _s(Item i, String k) {
   return v is String && v.isNotEmpty ? v : null;
 }
 
-bool isWide(Item i) => i['type'] == 'video';
+bool isWide(Item i) => i['type'] == 'video' || i['game'] is Map;
 
 double posterWidth(Item i) => isWide(i) ? 240 : 110;
 
@@ -36,6 +36,7 @@ class Poster extends StatelessWidget {
     final url = wide
         ? (_s(item, 'backdropUrl') ?? _s(item, 'posterUrl'))
         : _s(item, 'posterUrl');
+    final game = item['game'];
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final cs = Theme.of(context).colorScheme;
     final placeholder = Container(
@@ -46,7 +47,8 @@ class Poster extends StatelessWidget {
     return SizedBox(
       width: width,
       child: GestureDetector(
-        onTap: onTap,
+        // A game opens nothing from the phone; the TV refuses it.
+        onTap: game is Map ? null : onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -54,7 +56,9 @@ class Poster extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child: AspectRatio(
                 aspectRatio: wide ? 16 / 9 : 2 / 3,
-                child: url == null
+                child: game is Map
+                    ? GameArt(game)
+                    : url == null
                     ? placeholder
                     : Image.network(
                         url,
@@ -250,6 +254,105 @@ class _TitleSheetState extends State<TitleSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A game's card: both teams' logos on their colours, the score or the time.
+class GameArt extends StatelessWidget {
+  const GameArt(this.game, {super.key});
+
+  final Map game;
+
+  static Color _color(Object? team, Color fallback) {
+    final hex = team is Map ? team['color'] : null;
+    final v = hex is String ? int.tryParse(hex, radix: 16) : null;
+    if (v == null || hex.length != 6) return fallback;
+    return Color.lerp(Color(0xFF000000 | v), const Color(0xFF000000), 0.45)!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final home = game['home'], away = game['away'];
+    String? s(Object? team, String k) {
+      final v = team is Map ? team[k] : null;
+      return v is String && v.isNotEmpty ? v : null;
+    }
+
+    final hs = s(home, 'score'), as = s(away, 'score');
+    final live = game['state'] == 'in';
+    final middle = hs != null && as != null
+        ? '$hs – $as'
+        : (game['detail'] is String ? game['detail'] as String : '');
+    Widget logo(Object? team) {
+      final url = s(team, 'logo');
+      final abbr = Text(
+        s(team, 'abbr') ?? '',
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+      );
+      return Expanded(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: url == null
+              ? Center(child: abbr)
+              : Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => Center(child: abbr),
+                ),
+        ),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _color(home, cs.surfaceContainerHigh),
+            _color(away, cs.surfaceContainerHighest),
+          ],
+        ),
+      ),
+      child: Row(
+        children: [
+          logo(home),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (live)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    t('live'),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 80),
+                child: Text(
+                  middle,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: hs != null ? 18 : 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          logo(away),
+        ],
       ),
     );
   }

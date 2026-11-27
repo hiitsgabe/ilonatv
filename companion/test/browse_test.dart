@@ -49,6 +49,17 @@ class Fake extends TvClient {
       Ok([
         TvRow('trending', 'Trending now', [item('Alien')]),
         TvRow('yt', 'Videos', [item('Clip', 'video')]),
+        TvRow('games:soccer', 'Games', [
+          {
+            ...item('Galo x Cruzeiro', 'game'),
+            'game': {
+              'state': 'in',
+              'detail': "62'",
+              'home': {'abbr': 'CAM', 'color': '000000', 'score': '2'},
+              'away': {'abbr': 'CRU', 'color': '0033A0', 'score': '1'},
+            },
+          },
+        ]),
       ]);
 
   @override
@@ -141,6 +152,27 @@ void main() {
     await start(t);
     expect(find.text('Trending now'), findsOneWidget);
     expect(find.text('Alien'), findsOneWidget);
+  });
+
+  testWidgets('a game shows both teams and the score, live, and opens '
+      'nothing', (t) async {
+    await start(t);
+    await t.scrollUntilVisible(
+      find.text('Galo x Cruzeiro'),
+      200,
+      scrollable: find
+          .byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          )
+          .last,
+    );
+    expect(find.text('CAM'), findsOneWidget);
+    expect(find.text('CRU'), findsOneWidget);
+    expect(find.text('2 – 1'), findsOneWidget);
+    expect(find.text('LIVE'), findsOneWidget);
+    await t.tap(find.text('Galo x Cruzeiro'));
+    await t.pumpAndSettle();
+    expect(find.text('Watch on Ilona TV on Box'), findsNothing);
   });
 
   testWidgets('watch opens the same item map, closes the sheet and goes back '
