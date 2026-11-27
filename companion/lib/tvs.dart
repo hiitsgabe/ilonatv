@@ -5,6 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'desktop/host.dart';
+import 'desktop/mdns.dart';
+import 'version.dart';
+
 class Tv {
   Tv({
     required this.host,
@@ -35,6 +39,7 @@ class Tv {
 }
 
 Future<String> deviceName() async {
+  if (isDesktop) return desktopName();
   try {
     return await Tvs._channel.invokeMethod<String>('deviceName') ?? 'Phone';
   } on PlatformException {
@@ -46,6 +51,7 @@ Future<String> deviceName() async {
 
 /// The installed versionName, like 0.6.1; null when the platform can't say.
 Future<String?> appVersion() async {
+  if (isDesktop) return kVersion;
   try {
     return await Tvs._channel.invokeMethod<String>('appVersion');
   } on PlatformException {
@@ -74,6 +80,7 @@ Future<String?> installApk(String path) =>
     Tvs._channel.invokeMethod<String>('installApk', {'path': path});
 
 Future<bool> openUrl(String url) async {
+  if (isDesktop) return openUrlOnDesktop(url);
   try {
     return await Tvs._channel.invokeMethod<bool>('openUrl', url) ?? false;
   } on PlatformException {
@@ -86,6 +93,7 @@ Future<bool> openUrl(String url) async {
 /// Whether the phone's volume rocker drives the TV ([Tvs.onVolumeKey]) rather
 /// than the phone.
 Future<void> hardwareVolume(bool on) async {
+  if (isDesktop) return;
   try {
     await Tvs._channel.invokeMethod<void>('volumeKeys', on);
   } on PlatformException {
@@ -95,10 +103,23 @@ Future<void> hardwareVolume(bool on) async {
   }
 }
 
+/// Finds TVs where the host channel's NSD can't: the desktop app.
+abstract interface class Discovery {
+  void start(
+    void Function(String name, String host, int port) found,
+    void Function(String name) lost,
+  );
+  void stop();
+}
+
 class Tvs extends ChangeNotifier {
-  Tvs() {
+  Tvs({Discovery? discovery})
+    : _discovery = discovery ?? (isDesktop ? MdnsDiscovery() : null) {
     _channel.setMethodCallHandler(_fromHost);
   }
+
+  /// Null on Android, where MainActivity's NSD answers on the channel.
+  final Discovery? _discovery;
 
   static const _key = 'tvs';
   static const _channel = MethodChannel('tv.ilona.companion/host');
@@ -200,11 +221,14 @@ class Tvs extends ChangeNotifier {
     final on = _wanted && _held == 0;
     if (on == _running) return;
     _running = on;
+    final d = _discovery;
     if (on) {
-      _channel.invokeMethod<void>('discoverStart');
+      d == null
+          ? _channel.invokeMethod<void>('discoverStart')
+          : d.start(_found, _lost);
       return;
     }
-    _channel.invokeMethod<void>('discoverStop');
+    d == null ? _channel.invokeMethod<void>('discoverStop') : d.stop();
     _seen.clear();
     _hostByService.clear();
     for (final t in _paired.values) {
@@ -217,30 +241,32 @@ class Tvs extends ChangeNotifier {
   Future<void> _fromHost(MethodCall call) async {
     final a = call.arguments as Map;
     if (call.method == 'volumeKey') return onVolumeKey?.call(a['up'] == true);
-    if (!_running) return;
     final name = a['name'] as String;
     if (call.method == 'found') {
-      final tv = Tv(
-        host: a['host'] as String,
-        port: a['port'] as int,
-        name: name,
-        found: true,
-      );
-      _seen[tv.host] = tv;
-      _hostByService[name] = tv.host;
-      final p = _paired[tv.host];
-      if (p != null) {
-        p.port = tv.port;
-        p.found = true;
-      }
+      _found(name, a['host'] as String, a['port'] as int);
     } else if (call.method == 'lost') {
-      final host = _hostByService.remove(name);
-      if (host == null) return;
-      _seen.remove(host);
-      _paired[host]?.found = false;
-    } else {
-      return;
+      _lost(name);
     }
+  }
+
+  void _found(String name, String host, int port) {
+    if (!_running) return;
+    _seen[host] = Tv(host: host, port: port, name: name, found: true);
+    _hostByService[name] = host;
+    final p = _paired[host];
+    if (p != null) {
+      p.port = port;
+      p.found = true;
+    }
+    notifyListeners();
+  }
+
+  void _lost(String name) {
+    if (!_running) return;
+    final host = _hostByService.remove(name);
+    if (host == null) return;
+    _seen.remove(host);
+    _paired[host]?.found = false;
     notifyListeners();
   }
 }

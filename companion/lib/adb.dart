@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'desktop/adb.dart';
+import 'desktop/host.dart';
+
 const kAdbPort = 5555;
 
 enum AdbResult { ok, unauthorized, unreachable }
@@ -57,10 +60,35 @@ bool useAdb(
   };
 }
 
-/// ADB to the TV over the network, through Adb.kt (dadb): the installer, and
-/// the remote's keys while another app is in front.
+/// What runs ADB: Adb.kt over a channel on Android, the adb binary on desktop.
+abstract interface class AdbBackend {
+  /// Whether adb can run now; on desktop, not until platform-tools is here.
+  bool get ready;
+
+  /// Fetches Google's platform-tools, once the person agreed to its terms.
+  Future<void> download({void Function(int got, int total)? progress});
+  Future<AdbResult> connect(String host, int port);
+
+  /// Android 11+'s Wireless debugging pairing; null when paired, else why.
+  Future<String?> pair(String host, int port, String code);
+  Future<ShellResult> shell(String cmd);
+  Future<bool> key(int code);
+
+  /// Null when installed, else why not.
+  Future<String?> install(String path);
+  Future<void> close();
+}
+
+/// ADB to the TV over the network: the installer, and the remote's keys
+/// while another app is in front.
 class Adb {
-  static const _channel = MethodChannel('tv.ilona.companion/adb');
+  Adb([AdbBackend? backend])
+    : _b = backend ?? (isDesktop ? _desktop : const _ChannelAdb());
+
+  // One for the app, as Adb.kt is one on Android.
+  static final _desktop = DesktopAdb();
+
+  final AdbBackend _b;
   static const _known = 'adbHosts';
 
   /// A TV that allowed this phone before: connecting again shows no prompt.
@@ -77,19 +105,60 @@ class Adb {
     await prefs.setStringList(_known, [...hosts, host]);
   }
 
-  /// Waits for the TV's "Allow debugging?" prompt; Adb.kt gives up after 60 s.
+  bool get ready => _b.ready;
+
+  Future<void> download({void Function(int got, int total)? progress}) =>
+      _b.download(progress: progress);
+
+  /// Waits for the TV's "Allow debugging?" prompt, up to 60 s.
+  Future<AdbResult> connect(String host, int port) async {
+    final r = await _b.connect(host, port);
+    if (r == AdbResult.ok) await _remember(host);
+    return r;
+  }
+
+  Future<String?> pair(String host, int port, String code) =>
+      _b.pair(host, port, code);
+
+  Future<ShellResult> shell(String cmd) => _b.shell(cmd);
+
+  /// False when the connection is gone, or after 3 s, so a stuck connection
+  /// never holds up the keys behind it.
+  Future<bool> key(RemoteKey k) => _b.key(adbKeycodes[k]!);
+
+  Future<String?> install(String path) => _b.install(path);
+
+  Future<void> close() => _b.close();
+}
+
+/// Through Adb.kt (dadb).
+class _ChannelAdb implements AdbBackend {
+  const _ChannelAdb();
+
+  static const _channel = MethodChannel('tv.ilona.companion/adb');
+
+  @override
+  bool get ready => true;
+
+  @override
+  Future<void> download({void Function(int got, int total)? progress}) async {}
+
+  @override
+  Future<String?> pair(String host, int port, String code) async =>
+      'unsupported';
+
+  /// Adb.kt gives up after 60 s.
+  @override
   Future<AdbResult> connect(String host, int port) async {
     try {
       final r = await _channel
           .invokeMethod<String>('connect', {'host': host, 'port': port})
           // Past Adb.kt's own 60 s, so a native side that never answers still ends.
           .timeout(const Duration(seconds: 65));
-      final result = AdbResult.values.firstWhere(
+      return AdbResult.values.firstWhere(
         (v) => v.name == r,
         orElse: () => AdbResult.unreachable,
       );
-      if (result == AdbResult.ok) await _remember(host);
-      return result;
     } on TimeoutException {
       return AdbResult.unauthorized;
     } on PlatformException {
@@ -97,6 +166,7 @@ class Adb {
     }
   }
 
+  @override
   Future<ShellResult> shell(String cmd) async {
     try {
       final r = await _channel.invokeMapMethod<String, Object?>('shell', {
@@ -108,12 +178,12 @@ class Adb {
     }
   }
 
-  /// Through one shell kept open on the connection; false when it is gone, or
-  /// after 3 s, so a stuck connection never holds up the keys behind it.
-  Future<bool> key(RemoteKey k) async {
+  /// Through one shell kept open on the connection.
+  @override
+  Future<bool> key(int code) async {
     try {
       await _channel
-          .invokeMethod<void>('key', {'code': adbKeycodes[k]})
+          .invokeMethod<void>('key', {'code': code})
           .timeout(const Duration(seconds: 3));
       return true;
     } on PlatformException {
@@ -123,7 +193,7 @@ class Adb {
     }
   }
 
-  /// Null when installed, else why not.
+  @override
   Future<String?> install(String path) async {
     try {
       final r = await _channel.invokeMethod<Object?>('install', {'path': path});
@@ -133,5 +203,6 @@ class Adb {
     }
   }
 
+  @override
   Future<void> close() => _channel.invokeMethod<void>('close');
 }
