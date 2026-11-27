@@ -3,10 +3,11 @@ import 'dart:io';
 import 'dart:math';
 
 final _notWifi = RegExp(
-  r'^(lo|tun|tap|ppp|rmnet|ccmni|clat|v4-|docker|veth|br-|virbr|dummy|wg|ipsec)',
+  r'^(lo|tun|tap|ppp|rmnet|ccmni|clat|v4-|docker|veth|br-|virbr|dummy|wg|ipsec|utun|bridge|awdl|llw|vEthernet|VMware|VirtualBox)',
 );
 
-/// The phone's own Wi-Fi address from (interface name, IPv4) pairs.
+/// This device's own Wi-Fi address from (interface name, IPv4) pairs: a
+/// phone's wlan, a Mac's en0, a Windows PC's Wi-Fi.
 String? pickIpv4(Iterable<(String, String)> addresses) {
   final ok = [
     for (final (name, ip) in addresses)
@@ -16,7 +17,9 @@ String? pickIpv4(Iterable<(String, String)> addresses) {
         (name, ip),
   ];
   for (final (name, ip) in ok) {
-    if (name.startsWith('wlan')) return ip;
+    if (name.startsWith('wlan') || name == 'en0' || name == 'Wi-Fi') {
+      return ip;
+    }
   }
   return ok.isEmpty ? null : ok.first.$2;
 }

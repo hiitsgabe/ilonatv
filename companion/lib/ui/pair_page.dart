@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../desktop/host.dart';
 import '../i18n.dart';
 import '../tv_client.dart';
 import '../tvs.dart';
@@ -70,7 +71,7 @@ class _PairPageState extends State<PairPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.scan) {
+    if (widget.scan && !isDesktop) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scan());
     }
   }
@@ -161,15 +162,17 @@ class _PairPageState extends State<PairPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            FilledButton.icon(
-              onPressed: _busy ? null : _scan,
-              icon: const Icon(Icons.qr_code_scanner),
-              label: Text(t('scanQr')),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
+            if (!isDesktop) ...[
+              FilledButton.icon(
+                onPressed: _busy ? null : _scan,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: Text(t('scanQr')),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
               ),
-            ),
-            const SizedBox(height: 28),
+              const SizedBox(height: 28),
+            ],
             Text(
               t('typeCode'),
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),

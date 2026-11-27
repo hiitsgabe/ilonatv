@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../adb.dart';
+import '../desktop/host.dart';
 import '../i18n.dart';
 
 import 'package:ilonatv_protocol/releases.dart';
@@ -179,7 +180,7 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: all.isEmpty
                         ? _Empty(
-                            onScan: () => _pair(scan: true),
+                            onScan: isDesktop ? null : () => _pair(scan: true),
                             onCode: _pair,
                             install: install,
                           )
@@ -292,7 +293,8 @@ class _Empty extends StatelessWidget {
     required this.install,
   });
 
-  final VoidCallback onScan;
+  /// Null on desktop, which has no camera to scan with.
+  final VoidCallback? onScan;
   final VoidCallback onCode;
   final Widget install;
 
@@ -324,12 +326,14 @@ class _Empty extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        FilledButton.icon(
-          onPressed: onScan,
-          icon: const Icon(Icons.qr_code_scanner),
-          label: Text(t('scanQr')),
-        ),
-        const SizedBox(height: 10),
+        if (onScan != null) ...[
+          FilledButton.icon(
+            onPressed: onScan,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: Text(t('scanQr')),
+          ),
+          const SizedBox(height: 10),
+        ],
         FilledButton.tonalIcon(
           onPressed: onCode,
           icon: const Icon(Icons.pin_outlined),

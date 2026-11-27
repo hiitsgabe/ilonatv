@@ -2,6 +2,7 @@ import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 
+import 'desktop/host.dart';
 import 'i18n.dart';
 
 import 'package:ilonatv_protocol/releases.dart';
@@ -40,6 +41,18 @@ class CompanionApp extends StatelessWidget {
         title: t('appName'),
         debugShowCheckedModeBanner: false,
         theme: companionTheme(seed),
+        // A window can be any width; the app keeps a phone's, centred.
+        builder: isDesktop
+            ? (context, child) => ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: child,
+                  ),
+                ),
+              )
+            : null,
         home: HomePage(
           tvs: tvs,
           clientFor: (tv) => TvClient(tv.host, port: tv.port, token: tv.token),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../adb.dart';
+import '../desktop/host.dart';
 import '../i18n.dart';
 
 import 'package:ilonatv_protocol/releases.dart';
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../tv_client.dart';
 import '../tvs.dart';
+import 'adb_tools.dart';
 import 'browse.dart';
 import 'device_sheet.dart';
 import 'keyboard_sheet.dart';
@@ -139,7 +141,11 @@ class _RemotePageState extends State<RemotePage> {
     final i = _info;
     if (_adbTried || i == null || i.inFront || i.keysOutside == 'all') return;
     _adbTried = true;
-    if (await _adb.knows(widget.tv.host)) await _adbConnect();
+    if (await _adb.knows(widget.tv.host) && _adb.ready) await _adbConnect();
+  }
+
+  Future<void> _adbAsk() async {
+    if (await ensureAdbTools(context, _adb)) await _adbConnect();
   }
 
   // The phone app went away: no connection held open behind it.
@@ -239,7 +245,7 @@ class _RemotePageState extends State<RemotePage> {
   /// keys never pile up behind a slow TV and run on after the finger lifts.
   Future<void> _press(RemoteKey k, {bool repeat = false}) async {
     if (_queue.length >= 3 || (repeat && _queue.isNotEmpty)) return;
-    if (_haptics) {
+    if (_haptics && !isDesktop) {
       k == RemoteKey.ok || k == RemoteKey.playPause
           ? HapticFeedback.lightImpact()
           : HapticFeedback.selectionClick();
@@ -271,6 +277,25 @@ class _RemotePageState extends State<RemotePage> {
       await _handle(r);
     }
     _sending = false;
+  }
+
+  // The computer's keyboard as the remote's pad.
+  KeyEventResult _keyEvent(FocusNode _, KeyEvent e) {
+    if (e is KeyUpEvent || _tab != 0) return KeyEventResult.ignored;
+    final k = switch (e.logicalKey) {
+      LogicalKeyboardKey.arrowUp => RemoteKey.up,
+      LogicalKeyboardKey.arrowDown => RemoteKey.down,
+      LogicalKeyboardKey.arrowLeft => RemoteKey.left,
+      LogicalKeyboardKey.arrowRight => RemoteKey.right,
+      LogicalKeyboardKey.enter ||
+      LogicalKeyboardKey.numpadEnter => RemoteKey.ok,
+      LogicalKeyboardKey.escape ||
+      LogicalKeyboardKey.backspace => RemoteKey.back,
+      _ => null,
+    };
+    if (k == null) return KeyEventResult.ignored;
+    _press(k, repeat: e is KeyRepeatEvent);
+    return KeyEventResult.handled;
   }
 
   void _retryNow() {
@@ -409,7 +434,7 @@ class _RemotePageState extends State<RemotePage> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
-            : TextButton(onPressed: _adbConnect, child: Text(t('adbConnect'))),
+            : TextButton(onPressed: _adbAsk, child: Text(t('adbConnect'))),
       );
     }
     if (_notInFront != null) {
@@ -540,12 +565,14 @@ class _RemotePageState extends State<RemotePage> {
                 checked: _swipe,
                 child: Text(t('swipeMode')),
               ),
-              const PopupMenuDivider(),
-              CheckedPopupMenuItem(
-                value: 'haptics',
-                checked: _haptics,
-                child: Text(t('vibration')),
-              ),
+              if (!isDesktop) ...[
+                const PopupMenuDivider(),
+                CheckedPopupMenuItem(
+                  value: 'haptics',
+                  checked: _haptics,
+                  child: Text(t('vibration')),
+                ),
+              ],
             ],
           ),
         ],
@@ -563,12 +590,16 @@ class _RemotePageState extends State<RemotePage> {
               child: IndexedStack(
                 index: _tab,
                 children: [
-                  _Controls(
-                    dim: _unreachable,
-                    swipe: _swipe,
-                    media: _media,
-                    onKey: _press,
-                    onKeyboard: _keyboard,
+                  Focus(
+                    autofocus: isDesktop,
+                    onKeyEvent: isDesktop ? _keyEvent : null,
+                    child: _Controls(
+                      dim: _unreachable,
+                      swipe: _swipe,
+                      media: _media,
+                      onKey: _press,
+                      onKeyboard: _keyboard,
+                    ),
                   ),
                   if (_explored)
                     ExploreTab(

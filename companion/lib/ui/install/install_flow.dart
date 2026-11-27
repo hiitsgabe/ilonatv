@@ -2,15 +2,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ilonatv_protocol/ilonatv_protocol.dart';
 
 import '../../adb.dart';
+import '../../desktop/host.dart';
 import '../../i18n.dart';
 
 import 'package:ilonatv_protocol/releases.dart';
 
 import '../../tv_client.dart';
 import '../../tvs.dart';
+import '../adb_tools.dart';
 import '../pair_page.dart';
 import '../remote_page.dart';
 import '../theme.dart';
@@ -47,6 +50,8 @@ class InstallFlow extends StatefulWidget {
 
 class _InstallFlowState extends State<InstallFlow> {
   final _ip = TextEditingController();
+  final _pairAt = TextEditingController();
+  final _code = TextEditingController();
   int _step = 0;
   _Kind? _kind;
   String _host = '';
@@ -70,6 +75,9 @@ class _InstallFlowState extends State<InstallFlow> {
 
   Adb get _adb => widget.adb;
 
+  // Wireless debugging, Google TV's only way, pairs with a code: adb pair, so desktop only.
+  bool get _wireless => isDesktop && _kind == _Kind.googleTv;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +90,8 @@ class _InstallFlowState extends State<InstallFlow> {
     _gen++;
     _scan?.cancel();
     _ip.dispose();
+    _pairAt.dispose();
+    _code.dispose();
     _adb.close();
     super.dispose();
   }
@@ -130,7 +140,7 @@ class _InstallFlowState extends State<InstallFlow> {
       _error = null;
       _canRetry = false;
     });
-    if (_step == 2) _startScan();
+    if (_step == 2 && !_wireless) _startScan();
   }
 
   void _choose(_Kind k) => setState(() {
@@ -140,7 +150,7 @@ class _InstallFlowState extends State<InstallFlow> {
 
   void _toFind() {
     setState(() => _step = 2);
-    _startScan();
+    if (!_wireless) _startScan();
   }
 
   void _startScan() {
@@ -179,7 +189,34 @@ class _InstallFlowState extends State<InstallFlow> {
     _connect();
   }
 
+  Future<void> _wirelessPair() async {
+    final pairAt = parseHostInput(_pairAt.text);
+    final at = parseHostInput(_ip.text);
+    if (pairAt?.port == null || at?.port == null) {
+      return _fail(t('badAddress'), retry: false);
+    }
+    if (_code.text.length != 6) return _fail(t('badCode'), retry: false);
+    if (!await ensureAdbTools(context, _adb) || !mounted) return;
+    final g = ++_gen;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final why = await _adb.pair(pairAt!.host, pairAt.port!, _code.text);
+    if (_stale(g)) return;
+    if (why != null) {
+      return _fail(
+        t('instPairWirelessFailed').replaceAll('{why}', why),
+        retry: false,
+      );
+    }
+    _host = at!.host;
+    _port = at.port!;
+    _connect();
+  }
+
   Future<void> _connect() async {
+    if (!await ensureAdbTools(context, _adb) || !mounted) return;
     final g = ++_gen;
     _show(3);
     // A denied or ignored prompt leaves an attempt that a new connect would reuse; close drops it.
@@ -531,7 +568,7 @@ class _InstallFlowState extends State<InstallFlow> {
           null,
         );
       case 1:
-        if (_kind == _Kind.googleTv) {
+        if (_kind == _Kind.googleTv && !_wireless) {
           return (
             [
               _Note(t('instUseComputer'), big: true),
@@ -547,15 +584,44 @@ class _InstallFlowState extends State<InstallFlow> {
             _Primary(t('instOpenReadme'), () => openUrl(readmeUrl)),
           );
         }
-        final keys = _kind == _Kind.fireTv
-            ? ['instFire1', 'instFire2', 'instFire3']
-            : ['instAndroid1', 'instAndroid2', 'instAndroid3'];
+        final keys = switch (_kind) {
+          _Kind.fireTv => ['instFire1', 'instFire2', 'instFire3'],
+          _Kind.googleTv => ['instGoogle1', 'instGoogle2', 'instGoogle3'],
+          _ => ['instAndroid1', 'instAndroid2', 'instAndroid3'],
+        };
         return (
           [
             for (final (i, k) in keys.indexed)
               InstallStepCard(number: i + 1, text: t(k)),
           ],
           _Primary(t('next'), _toFind),
+        );
+      case 2 when _wireless:
+        return (
+          [
+            _Note(t('instPairHint')),
+            TextField(
+              controller: _pairAt,
+              keyboardType: TextInputType.url,
+              decoration: _field(t('instPairAddress')),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _code,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: _field(t('instPairCode')),
+            ),
+            TextField(
+              controller: _ip,
+              keyboardType: TextInputType.url,
+              decoration: _field(t('instWirelessAddress')),
+              onSubmitted: (_) => _wirelessPair(),
+            ),
+            if (_busy) ...[const SizedBox(height: 12), _spinner],
+          ],
+          _busy ? null : _Primary(t('instPairConnect'), _wirelessPair),
         );
       case 2:
         return (

@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ilonatv_protocol/releases.dart';
 
+import '../desktop/host.dart';
 import '../i18n.dart';
 import '../tvs.dart';
 
@@ -16,11 +18,17 @@ class _InstallFailed implements Exception {
 
 /// The companion's version, then "Check for updates", which becomes
 /// "Update to vX.Y.Z" when the latest release is newer: its APK downloads
-/// into the cache, its SHA-256 is checked and the system installs it.
+/// into the cache, its SHA-256 is checked and the system installs it. On
+/// desktop the update is the release page, opened in the browser.
 class AboutSheet extends StatefulWidget {
-  const AboutSheet({super.key, this.releases = const ReleaseSource()});
+  const AboutSheet({
+    super.key,
+    this.releases = const ReleaseSource(),
+    this.open = openUrl,
+  });
 
   final ReleaseSource releases;
+  final Future<bool> Function(String url) open;
 
   @override
   State<AboutSheet> createState() => _AboutSheetState();
@@ -92,7 +100,11 @@ class _AboutSheetState extends State<AboutSheet> {
 
   Future<void> _check() => _run(() async {
     setState(() => _status = t('checking'));
-    final a = await widget.releases.named('ilonatv-companion.apk');
+    final a = await widget.releases.named(switch (defaultTargetPlatform) {
+      _ when !isDesktop => 'ilonatv-companion.apk',
+      TargetPlatform.macOS => 'ilonatv-companion-macos.zip',
+      _ => 'ilonatv-companion-windows.zip',
+    });
     final v = _version;
     setState(() {
       _newer = a != null && v != null && isOlder(v, a.version) ? a : null;
@@ -101,6 +113,10 @@ class _AboutSheetState extends State<AboutSheet> {
   });
 
   Future<void> _update(ReleaseAsset a) => _run(() async {
+    if (isDesktop) {
+      await widget.open(releasePage);
+      return;
+    }
     if (!await canInstall()) {
       await allowInstalls();
       if (mounted) setState(() => _note = t('allowInstalls'));

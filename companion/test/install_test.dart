@@ -648,6 +648,23 @@ void main() {
       );
       expect(pickIpv4([('eth0', '192.168.0.9')]), '192.168.0.9');
       expect(pickIpv4([('lo', '127.0.0.1'), ('tun0', '10.8.0.2')]), isNull);
+      // A Mac and a Windows PC: VPNs, VMs and WSL before the Wi-Fi.
+      expect(
+        pickIpv4([
+          ('utun3', '10.8.0.2'),
+          ('bridge100', '192.168.64.1'),
+          ('en0', '192.168.1.40'),
+        ]),
+        '192.168.1.40',
+      );
+      expect(
+        pickIpv4([
+          ('vEthernet (WSL)', '172.20.0.1'),
+          ('VMware Network Adapter VMnet8', '192.168.80.1'),
+          ('Wi-Fi', '192.168.1.41'),
+        ]),
+        '192.168.1.41',
+      );
     });
 
     test('the /24 has 253 other hosts', () {
