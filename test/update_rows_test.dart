@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,11 +11,14 @@ import 'package:ilonatv_protocol/releases.dart';
 
 /// GitHub as the test wants it: [latest] answers, [fetch] fails with [fails].
 class FakeReleases extends ReleaseSource {
-  FakeReleases(this.version, {this.fails, this.fetchFails});
+  FakeReleases(this.version, {this.fails, this.fetchFails, this.hold});
 
   final String? version;
   final Object? fails;
   final Object? fetchFails;
+
+  /// The download waits on it halfway.
+  final Future<void>? hold;
   final asked = <String>[];
 
   @override
@@ -38,6 +42,7 @@ class FakeReleases extends ReleaseSource {
     void Function(int received, int total)? progress,
   }) async {
     progress?.call(50, 100);
+    await hold;
     if (fetchFails case final e?) throw e;
     progress?.call(100, 100);
     return to;
@@ -48,11 +53,13 @@ void main() {
   final calls = <MethodCall>[];
   var canInstall = true;
   String? installError = 'aborted';
+  Future<String?>? installAnswer;
 
   setUp(() {
     calls.clear();
     canInstall = true;
     installError = 'aborted';
+    installAnswer = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('tv.ilona/host'), (
           call,
@@ -62,7 +69,7 @@ void main() {
             'abis' => 'armeabi-v7a,armeabi',
             'cacheDir' => '/cache',
             'canInstall' => canInstall,
-            'installApk' => installError,
+            'installApk' => await (installAnswer ?? Future.value(installError)),
             'openSystemSettings' => true,
             _ => null,
           };
@@ -107,7 +114,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.select);
     await tester.pumpAndSettle();
     final install = calls.singleWhere((c) => c.method == 'installApk');
-    expect(install.arguments, {'path': '/cache/ilonatv-armeabi-v7a.apk'});
+    expect(install.arguments, {'path': '/cache/update.apk'});
     // Declined at the system's confirm: said so, and it can be pressed again.
     expect(
       find.text(t('updateInstallFailed').replaceAll('{why}', 'aborted')),
@@ -158,4 +165,61 @@ void main() {
       expect(find.text(t('checkUpdates')), findsOneWidget);
     });
   }
+
+  testWidgets('progress reads like 50%', (tester) async {
+    final hold = Completer<void>();
+    await show(tester, FakeReleases('v99.0.0', hold: hold.future));
+    await press(tester, t('checkUpdates'));
+    await tester.tap(
+      find.text(t('updateTo').replaceAll('{version}', 'v99.0.0')),
+    );
+    await tester.pump();
+    expect(find.text('50%'), findsOneWidget);
+    hold.complete();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('leaving mid-download stops it and installs nothing', (
+    tester,
+  ) async {
+    final hold = Completer<void>();
+    final r = FakeReleases('v99.0.0', hold: hold.future);
+    await show(tester, r);
+    await press(tester, t('checkUpdates'));
+    await tester.tap(
+      find.text(t('updateTo').replaceAll('{version}', 'v99.0.0')),
+    );
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox());
+    hold.complete();
+    await tester.pumpAndSettle();
+    expect(methods(), isNot(contains('installApk')));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('back from the system installer with no answer, the row is '
+      'free again', (tester) async {
+    final answer = Completer<String?>();
+    installAnswer = answer.future;
+    await show(tester, FakeReleases('v99.0.0'));
+    await press(tester, t('checkUpdates'));
+    await tester.tap(
+      find.text(t('updateTo').replaceAll('{version}', 'v99.0.0')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(t('installing')), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.text(t('installing')), findsNothing);
+    final button = tester.widget<TextButton>(
+      find.ancestor(
+        of: find.text(t('updateTo').replaceAll('{version}', 'v99.0.0')),
+        matching: find.byType(TextButton),
+      ),
+    );
+    expect(button.onPressed, isNotNull);
+    answer.complete(null);
+    await tester.pumpAndSettle();
+  });
 }

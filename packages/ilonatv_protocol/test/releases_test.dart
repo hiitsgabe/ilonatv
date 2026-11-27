@@ -67,7 +67,17 @@ void main() {
   });
 
   Future<ReleaseAsset?> latest(String abi) =>
-      latestTvApk(abi, url: base.resolve('/latest'));
+      latestTvApk(abi, url: base.resolve('/latest'), downloads: '$base/dl/');
+
+  test(
+    'an asset from anywhere but the repository\'s downloads is none',
+    () async {
+      await expectLater(
+        latestTvApk('arm64-v8a', url: base.resolve('/latest')),
+        throwsA(isA<NoAsset>()),
+      );
+    },
+  );
 
   test('latest picks the ABI asset with its digest', () async {
     final a = (await latest('arm64-v8a'))!;
@@ -221,6 +231,7 @@ void main() {
     final a = (await latestApk(
       'ilonatv-companion.apk',
       url: base.resolve('/latest'),
+      downloads: '$base/dl/',
     ))!;
     expect(a.url, base.resolve('/dl/ilonatv-companion.apk'));
     expect(a.version, 'v0.6.1');
@@ -250,7 +261,7 @@ void main() {
         install,
         progress: (got, _) => seen.add(got),
       );
-      expect(installed, ['${dir.path}/ilonatv-arm64-v8a.apk']);
+      expect(installed, ['${dir.path}/update.apk']);
       expect(File(installed.single).readAsBytesSync(), apk);
       expect(seen.last, apk.length);
     });
@@ -268,6 +279,36 @@ void main() {
         throwsA(isA<BadChecksum>()),
       );
       expect(installed, isEmpty);
+      expect(dir.listSync(), isEmpty);
+    });
+
+    test('a progress that throws (the page left) stops it, no file', () async {
+      final a = (await latest('arm64-v8a'))!;
+      await expectLater(
+        selfUpdate(
+          const ReleaseSource(),
+          a,
+          dir.path,
+          install,
+          progress: (_, _) => throw StateError('left'),
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(installed, isEmpty);
+      expect(dir.listSync(), isEmpty);
+    });
+
+    test('an install that fails deletes the download', () async {
+      final a = (await latest('arm64-v8a'))!;
+      await expectLater(
+        selfUpdate(
+          const ReleaseSource(),
+          a,
+          dir.path,
+          (_) async => throw StateError('declined'),
+        ),
+        throwsA(isA<StateError>()),
+      );
       expect(dir.listSync(), isEmpty);
     });
   });

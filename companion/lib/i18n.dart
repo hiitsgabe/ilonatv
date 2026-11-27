@@ -190,7 +190,7 @@ const _strings = {
     'updateOffline':
         'Não foi possível acessar o GitHub. Verifique a rede e tente de novo.',
     'updateRateLimited': 'O GitHub está limitando pedidos desta rede. Tente de novo em uma hora.',
-    'updateNoApk': 'A versão mais recente não tem o APK do companion.',
+    'updateNoApk': 'A versão mais recente não tem o APK do Ilona TV Companion.',
     'updateBadChecksum': 'O download não confere com o checksum da versão, então nada foi instalado. Tente de novo.',
     'updateInstallFailed': 'A atualização não foi instalada ({why}).',
     'tvUpdate': 'O Ilona TV {version} está disponível para esta TV',

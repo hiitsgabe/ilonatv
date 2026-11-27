@@ -24,10 +24,12 @@ class SelfInstall : BroadcastReceiver() {
             pending?.success("superseded")
             pending = result
             thread {
+                val installer = activity.packageManager.packageInstaller
+                var id = -1
                 val error = runCatching {
-                    val installer = activity.packageManager.packageInstaller
                     val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
-                    val id = installer.createSession(params)
+                    params.setAppPackageName(activity.packageName)
+                    id = installer.createSession(params)
                     installer.openSession(id).use { session ->
                         val apk = File(path)
                         session.openWrite("update.apk", 0, apk.length()).use { out ->
@@ -43,7 +45,10 @@ class SelfInstall : BroadcastReceiver() {
                         session.commit(status.intentSender)
                     }
                 }.exceptionOrNull()
-                if (error != null) activity.runOnUiThread { answer(error.message ?: error.toString()) }
+                if (error != null) {
+                    if (id != -1) runCatching { installer.abandonSession(id) }
+                    activity.runOnUiThread { answer(error.message ?: error.toString()) }
+                }
             }
         }
 

@@ -115,7 +115,7 @@ void main() {
     await tap(t, t0('checkUpdates'));
     await tap(t, t0('updateTo').replaceAll('{version}', 'v0.7.0'));
     final install = calls.singleWhere((c) => c.method == 'installApk');
-    expect(install.arguments, {'path': '/cache/ilonatv-companion.apk'});
+    expect(install.arguments, {'path': '/cache/update.apk'});
     expect(
       find.text(t0('updateInstallFailed').replaceAll('{why}', 'aborted')),
       findsOneWidget,

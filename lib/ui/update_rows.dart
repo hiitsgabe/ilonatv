@@ -8,6 +8,11 @@ import '../host.dart';
 import '../i18n.dart';
 import 'settings_kit.dart';
 
+/// The page went away mid-download.
+class _Cancelled implements Exception {
+  const _Cancelled();
+}
+
 class _InstallFailed implements Exception {
   const _InstallFailed(this.why);
   final String why;
@@ -30,6 +35,31 @@ class _UpdateRowsState extends State<UpdateRows> {
   String? _value;
   String? _note;
   var _busy = false;
+
+  // The system's confirm came and went: an answer may never come (an update
+  // that went through ends this process), so the row is free again.
+  late final AppLifecycleListener _life;
+
+  @override
+  void initState() {
+    super.initState();
+    _life = AppLifecycleListener(
+      onResume: () {
+        if (_busy && _value == t('installing')) {
+          setState(() {
+            _busy = false;
+            _value = null;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _life.dispose();
+    super.dispose();
+  }
 
   Future<void> _run(Future<void> Function() work) async {
     setState(() {
@@ -88,15 +118,17 @@ class _UpdateRowsState extends State<UpdateRows> {
       a,
       await Host.cacheDir(),
       (path) async {
+        if (!mounted) return;
         setState(() => _value = t('installing'));
         final why = await Host.installApk(path);
         if (why != null) throw _InstallFailed(why);
       },
       progress: (got, total) {
         final pct = total > 0 ? 100 * got ~/ total : 0;
-        if (pct == shown || !mounted) return;
+        if (!mounted) throw const _Cancelled();
+        if (pct == shown) return;
         shown = pct;
-        setState(() => _value = '$pct %');
+        setState(() => _value = '$pct%');
       },
     );
   });
