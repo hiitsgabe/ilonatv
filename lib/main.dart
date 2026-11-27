@@ -138,8 +138,9 @@ Future<void> main() async {
   sources.start();
   // Another app on the port, or no network, leaves Ilona TV without its
   // Companion, not without its home.
+  final api = IlonaTvApi(s, sources);
   unawaited(
-    CompanionServer(pairing, IlonaTvApi(s, sources))
+    CompanionServer(pairing, api, outside: api.outside)
         .start()
         .then((_) => Host.advertise(kCompanionPort, 'Ilona TV'))
         .catchError((Object e) => debugPrint('companion server: $e')),

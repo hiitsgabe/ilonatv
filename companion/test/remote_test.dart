@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ilonatv_companion/adb.dart';
 import 'package:ilonatv_companion/i18n.dart';
 import 'package:ilonatv_companion/tv_client.dart';
 import 'package:ilonatv_companion/tvs.dart';
@@ -59,6 +60,41 @@ class Fake extends TvClient {
   }
 }
 
+class FakeAdb extends Adb {
+  bool known = false;
+  final connects = <AdbResult>[];
+  final hosts = <String>[];
+  final keys = <RemoteKey>[];
+  bool keyOk = true;
+  int closes = 0;
+
+  @override
+  Future<bool> knows(String host) async => known;
+
+  @override
+  Future<AdbResult> connect(String host, int port) async {
+    hosts.add('$host:$port');
+    return connects.isEmpty ? AdbResult.ok : connects.removeAt(0);
+  }
+
+  @override
+  Future<bool> key(RemoteKey k) async {
+    keys.add(k);
+    return keyOk;
+  }
+
+  @override
+  Future<void> close() async => closes++;
+}
+
+TvInfo outside(String? keysOutside) => TvInfo(
+  protocol: 1,
+  version: '1',
+  inFront: false,
+  launcherMode: true,
+  keysOutside: keysOutside,
+);
+
 const _lisbon = [
   Place(
     name: 'Lisbon',
@@ -80,6 +116,7 @@ TvInfo info(String? step) => TvInfo(
 
 void main() {
   late Fake client;
+  late FakeAdb adb;
   late Tvs tvs;
   final tv = Tv(
     host: '1.2.3.4',
@@ -91,6 +128,7 @@ void main() {
   Future<void> open(WidgetTester t) async {
     SharedPreferences.setMockInitialValues({});
     client = Fake();
+    adb = FakeAdb();
     tvs = Tvs();
     await t.pumpWidget(
       MaterialApp(
@@ -99,7 +137,8 @@ void main() {
             body: TextButton(
               onPressed: () => Navigator.of(c).push(
                 MaterialPageRoute(
-                  builder: (_) => RemotePage(tv: tv, client: client, tvs: tvs),
+                  builder: (_) =>
+                      RemotePage(tv: tv, client: client, tvs: tvs, adb: adb),
                 ),
               ),
               child: const Text('go'),
@@ -120,6 +159,188 @@ void main() {
     await t.tapAt(c);
     await t.tapAt(c + Offset(0, -r * 0.8));
     expect(client.keys, [RemoteKey.right, RemoteKey.ok, RemoteKey.up]);
+  });
+
+  testWidgets('volume and play/pause go to the TV', (t) async {
+    await open(t);
+    await t.tap(find.byKey(const Key('key-volumeDown')));
+    await t.tap(find.byKey(const Key('key-playPause')));
+    await t.tap(find.byKey(const Key('key-volumeUp')));
+    await t.pumpAndSettle();
+    expect(client.keys, [
+      RemoteKey.volumeDown,
+      RemoteKey.playPause,
+      RemoteKey.volumeUp,
+    ]);
+    expect(adb.keys, isEmpty);
+  });
+
+  testWidgets('a TV that reaches every key outside gets them all', (t) async {
+    await open(t);
+    client.events$.add(outside('all'));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-back')));
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(client.keys, [RemoteKey.back, RemoteKey.ok]);
+    expect(adb.hosts, isEmpty);
+  });
+
+  testWidgets('another app in front on an older Android: a known TV connects '
+      'over ADB, the D-pad goes there and Back to the TV', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside('backHome'));
+    await t.pumpAndSettle();
+    expect(adb.hosts, ['1.2.3.4:5555']);
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.tap(find.byKey(const Key('key-back')));
+    await t.pumpAndSettle();
+    expect(adb.keys, [RemoteKey.ok]);
+    expect(client.keys, [RemoteKey.back]);
+    expect(find.text(t0('adbNote')), findsNothing);
+    await t.tap(find.byType(BackButton));
+    await t.pumpAndSettle();
+    expect(adb.closes, 1);
+  });
+
+  testWidgets('without ADB the note says how to turn it on and offers to '
+      'connect', (t) async {
+    await open(t);
+    client.events$.add(outside('backHome'));
+    await t.pumpAndSettle();
+    expect(adb.hosts, isEmpty, reason: 'never connects to an unknown TV alone');
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(client.keys, isEmpty);
+    expect(find.text(t0('adbNote')), findsOneWidget);
+    expect(find.text(t0('adbHow')), findsOneWidget);
+    adb.connects.add(AdbResult.unauthorized);
+    await t.tap(find.text(t0('adbConnect')));
+    await t.pumpAndSettle();
+    expect(adb.hosts, ['1.2.3.4:5555']);
+    expect(find.text(t0('adbDenied')), findsOneWidget);
+    await t.tap(find.text(t0('adbConnect')));
+    await t.pumpAndSettle();
+    expect(find.text(t0('adbNote')), findsNothing);
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(adb.keys, [RemoteKey.ok]);
+  });
+
+  testWidgets('on an older Android with ADB up, volume and play/pause go '
+      'over ADB, in front or not', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside('backHome'));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-volumeUp')));
+    await t.tap(find.byKey(const Key('key-mute')));
+    await t.pumpAndSettle();
+    client.events$.add(
+      const TvInfo(
+        protocol: 1,
+        version: '1',
+        inFront: true,
+        launcherMode: true,
+        keysOutside: 'backHome',
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-playPause')));
+    await t.tapAt(
+      t.getCenter(find.byKey(const Key('pad'))) - const Offset(0, 100),
+    );
+    await t.pumpAndSettle();
+    expect(adb.keys, [RemoteKey.volumeUp, RemoteKey.mute, RemoteKey.playPause]);
+    expect(client.keys, [RemoteKey.up]);
+  });
+
+  testWidgets('a 409 the phone sends over ADB shows no Open Ilona TV', (
+    t,
+  ) async {
+    await open(t);
+    client.events$.add(
+      const TvInfo(
+        protocol: 1,
+        version: '1',
+        inFront: true,
+        launcherMode: true,
+        keysOutside: 'backHome',
+      ),
+    );
+    await t.pumpAndSettle();
+    client.keyResult = const NotInFront(launcherMode: true);
+    await t.tapAt(
+      t.getCenter(find.byKey(const Key('pad'))) - const Offset(0, 100),
+    );
+    await t.pumpAndSettle();
+    expect(find.text(t0('notInFront')), findsNothing);
+    expect(find.text(t0('adbNote')), findsOneWidget);
+  });
+
+  testWidgets('an older TV with Ilona TV in front gets no ADB note', (t) async {
+    await open(t);
+    client.events$.add(info(null));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-volumeUp')));
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(client.keys, [RemoteKey.volumeUp, RemoteKey.ok]);
+    expect(find.text(t0('adbNote')), findsNothing);
+  });
+
+  testWidgets('ADB closes while the phone app is away and reconnects on '
+      'return', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside('backHome'));
+    await t.pumpAndSettle();
+    expect(adb.hosts, hasLength(1));
+    for (final s in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+    }
+    await t.pumpAndSettle();
+    expect(adb.closes, 1);
+    for (final s in [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+    }
+    await t.pumpAndSettle();
+    expect(adb.hosts, hasLength(2));
+    await t.tapAt(t.getCenter(find.byKey(const Key('pad'))));
+    await t.pumpAndSettle();
+    expect(adb.keys, [RemoteKey.ok]);
+  });
+
+  testWidgets('the note goes when Ilona TV is back in front', (t) async {
+    await open(t);
+    client.events$.add(outside('none'));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('key-home')));
+    await t.pumpAndSettle();
+    expect(find.text(t0('adbNote')), findsOneWidget);
+    client.events$.add(info(null));
+    await t.pumpAndSettle();
+    expect(find.text(t0('adbNote')), findsNothing);
+  });
+
+  testWidgets('a dropped ADB shell brings the note back', (t) async {
+    await open(t);
+    adb.known = true;
+    client.events$.add(outside('none'));
+    await t.pumpAndSettle();
+    adb.keyOk = false;
+    await t.tap(find.byKey(const Key('key-back')));
+    await t.pumpAndSettle();
+    expect(find.text(t0('adbNote')), findsOneWidget);
   });
 
   testWidgets('swipe moves', (t) async {

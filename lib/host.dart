@@ -132,6 +132,20 @@ class Host {
     return _bool('injectKey', {'key': key.name});
   }
 
+  /// Another app in front: [key] as the accessibility service's global action;
+  /// false without the service, or for a key this Android has no action for.
+  static Future<bool> globalKey(RemoteKey key) =>
+      _bool('globalKey', {'key': key.name});
+
+  /// Volume through the audio service, play/pause to the active media session.
+  static Future<bool> audioKey(RemoteKey key) =>
+      _bool('audioKey', {'key': key.name});
+
+  static Future<({int api, bool service})> keyAccess() async {
+    final m = await _channel.invokeMapMethod<String, Object?>('keyAccess');
+    return (api: m?['api'] as int? ?? 0, service: m?['service'] == true);
+  }
+
   static Future<void> advertise(int port, String name) =>
       _channel.invokeMethod<void>('advertise', {'port': port, 'name': name});
 

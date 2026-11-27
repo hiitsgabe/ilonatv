@@ -28,12 +28,14 @@ class CompanionServer {
     this.api, {
     this.port = kCompanionPort,
     this.address,
+    this.outside,
   });
 
   final Pairing pairing;
   final CompanionApi api;
   final int port;
   final InternetAddress? address;
+  final Future<Map<String, Object>> Function()? outside;
 
   HttpServer? _server;
   Future<void>? _starting;
@@ -80,8 +82,18 @@ class CompanionServer {
     'launcherMode': pairing.settings.fireTvMode,
   };
 
-  void _onState() {
-    final e = TvEvent('state', _state).encode();
+  // A platform call: it can fail with no engine to answer, and the rest stands.
+  Future<Map<String, dynamic>> _full() async {
+    try {
+      final extra = await outside?.call();
+      return {..._state, ...?extra};
+    } catch (_) {
+      return _state;
+    }
+  }
+
+  Future<void> _onState() async {
+    final e = TvEvent('state', await _full()).encode();
     for (final ws in _sockets.keys) {
       ws.add(e);
     }
@@ -129,7 +141,7 @@ class CompanionServer {
       return _json(req.response, 200, {
         'protocol': kProtocolVersion,
         'version': kVersion,
-        ..._state,
+        ...await _full(),
       });
     }
 
@@ -186,7 +198,7 @@ class CompanionServer {
       onDone: () => _sockets.remove(ws),
       onError: (_) => _sockets.remove(ws),
     );
-    ws.add(TvEvent('state', _state).encode());
+    ws.add(TvEvent('state', await _full()).encode());
   }
 
   String? _bearer(HttpRequest req) {

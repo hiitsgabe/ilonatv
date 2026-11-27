@@ -147,6 +147,67 @@ void main() {
     },
   );
 
+  test('/api/info carries what the TV can do outside its own app', () async {
+    await server.stop();
+    server = CompanionServer(
+      pairing,
+      api,
+      port: 0,
+      address: InternetAddress.loopbackIPv4,
+      outside: () async => {'keysOutside': 'backHome', 'api': 30},
+    );
+    await server.start();
+    final token = await pairWithSecret();
+    final (_, body, _) = await send('GET', '/api/info', token: token);
+    expect(jsonDecode(body), containsPair('keysOutside', 'backHome'));
+    expect(jsonDecode(body), containsPair('api', 30));
+    expect(jsonDecode(body), containsPair('inFront', true));
+  });
+
+  test('state events carry what the TV can do outside too', () async {
+    await server.stop();
+    var service = false;
+    server = CompanionServer(
+      pairing,
+      api,
+      port: 0,
+      address: InternetAddress.loopbackIPv4,
+      outside: () async => {'keysOutside': service ? 'all' : 'none', 'api': 33},
+    );
+    await server.start();
+    final (ws, it) = await events(await pairWithSecret());
+    expect((await next(it)).data['keysOutside'], 'none');
+    service = true;
+    companionState.setInFront(false);
+    final second = await next(it);
+    expect(
+      (second.data['inFront'], second.data['keysOutside']),
+      (false, 'all'),
+    );
+    companionState.setInFront(true);
+    await next(it);
+    await ws.close();
+  });
+
+  test('a failing outside leaves /api/info without its fields', () async {
+    await server.stop();
+    server = CompanionServer(
+      pairing,
+      api,
+      port: 0,
+      address: InternetAddress.loopbackIPv4,
+      outside: () async => throw StateError('no engine'),
+    );
+    await server.start();
+    final (status, body, _) = await send(
+      'GET',
+      '/api/info',
+      token: await pairWithSecret(),
+    );
+    expect(status, 200);
+    expect(jsonDecode(body), isNot(contains('keysOutside')));
+  });
+
   test('a code pairs only while offered', () async {
     final req = jsonEncode({'code': pairing.code, 'name': 'Phone'});
     expect((await send('POST', '/api/pair', body: req)).$1, 403);

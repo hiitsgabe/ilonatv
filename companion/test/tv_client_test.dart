@@ -139,6 +139,13 @@ void main() {
     expect(r, isA<Unpaired<TvInfo>>());
   });
 
+  test('info reads keysOutside and the API level; an older TV has neither', () {
+    final i = TvInfo.fromJson({'keysOutside': 'backHome', 'api': 30});
+    expect((i.keysOutside, i.api), ('backHome', 30));
+    final old = TvInfo.fromJson({'protocol': 1});
+    expect((old.keysOutside, old.api), (null, null));
+  });
+
   test('info parses every field', () async {
     final i = ((await client.info()) as Ok<TvInfo>).value;
     expect(

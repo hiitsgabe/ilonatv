@@ -1,6 +1,7 @@
 package tv.ilona.app
 
 import android.Manifest
+import android.accessibilityservice.AccessibilityService
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.ComponentName
@@ -14,6 +15,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.drawable.Drawable
+import android.media.AudioManager
 import android.media.MediaScannerConnection
 import android.media.tv.TvInputInfo
 import android.media.tv.TvInputManager
@@ -242,6 +244,14 @@ object HostChannel {
                         result.success(true)
                     }
                 }
+                "globalKey" -> {
+                    val action = GLOBAL_ACTIONS[call.argument<String>("key")]
+                    result.success(action != null && HomeWatcher.instance?.performGlobalAction(action) == true)
+                }
+                "audioKey" -> result.success(audioKey(activity, call.argument<String>("key")))
+                "keyAccess" -> result.success(
+                    mapOf("api" to Build.VERSION.SDK_INT, "service" to (HomeWatcher.instance != null)),
+                )
                 "advertise" -> {
                     advertise(activity, call.argument<Int>("port") ?: 0, call.argument<String>("name") ?: "Ilona TV")
                     result.success(null)
@@ -538,6 +548,43 @@ object HostChannel {
         "ok" to KeyEvent.KEYCODE_DPAD_CENTER,
         "back" to KeyEvent.KEYCODE_BACK,
     )
+
+    // The D-pad's global actions are API 33's; Back and Home date from API 16.
+    private val GLOBAL_ACTIONS = buildMap {
+        put("back", AccessibilityService.GLOBAL_ACTION_BACK)
+        put("home", AccessibilityService.GLOBAL_ACTION_HOME)
+        if (Build.VERSION.SDK_INT >= 33) {
+            put("up", AccessibilityService.GLOBAL_ACTION_DPAD_UP)
+            put("down", AccessibilityService.GLOBAL_ACTION_DPAD_DOWN)
+            put("left", AccessibilityService.GLOBAL_ACTION_DPAD_LEFT)
+            put("right", AccessibilityService.GLOBAL_ACTION_DPAD_RIGHT)
+            put("ok", AccessibilityService.GLOBAL_ACTION_DPAD_CENTER)
+        }
+    }
+
+    private fun audioKey(ctx: Context, key: String?): Boolean {
+        val audio = ctx.getSystemService(AudioManager::class.java) ?: return false
+        // A volume change can be refused (Do Not Disturb throws SecurityException).
+        return runCatching {
+            when (key) {
+                "volumeUp", "volumeDown" -> audio.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    if (key == "volumeUp") AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
+                    AudioManager.FLAG_SHOW_UI,
+                )
+                "mute" -> audio.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    AudioManager.ADJUST_TOGGLE_MUTE,
+                    AudioManager.FLAG_SHOW_UI,
+                )
+                "playPause" -> for (a in intArrayOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP)) {
+                    audio.dispatchMediaKeyEvent(KeyEvent(a, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+                }
+                else -> return false
+            }
+            true
+        }.getOrDefault(false)
+    }
 
     private var registration: NsdManager.RegistrationListener? = null
 

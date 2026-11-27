@@ -42,6 +42,8 @@ class TvInfo {
     this.step,
     required this.inFront,
     required this.launcherMode,
+    this.keysOutside,
+    this.api,
   });
 
   final int protocol;
@@ -50,12 +52,19 @@ class TvInfo {
   final bool inFront;
   final bool launcherMode;
 
+  /// What the TV's remote keys reach while another app is in front: all,
+  /// backHome or none. Null from a TV older than this field.
+  final String? keysOutside;
+  final int? api;
+
   factory TvInfo.fromJson(Map j) => TvInfo(
     protocol: j['protocol'] as int? ?? 0,
     version: j['version'] as String? ?? '',
     step: j['step'] as String?,
     inFront: j['inFront'] as bool? ?? false,
     launcherMode: j['launcherMode'] as bool? ?? false,
+    keysOutside: j['keysOutside'] as String?,
+    api: j['api'] as int?,
   );
 }
 
