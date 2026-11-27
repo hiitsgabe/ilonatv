@@ -24,18 +24,27 @@ void main() {
   });
 
   test('the URL is its own argument, never part of a command line', () {
-    const url = 'https://example.test/a?b=1&c=2;rm -rf "x"';
+    const url = 'https://example.test/a b?c=2&d=3;rm -rf x';
+    const sent = 'https://example.test/a%20b?c=2&d=3;rm%20-rf%20x';
     final (mac, macArgs) = openUrlCommand(url, TargetPlatform.macOS)!;
     expect(mac, '/usr/bin/open');
-    expect(macArgs, [url]);
+    expect(macArgs, [sent]);
     final (exe, args) = openUrlCommand(url, TargetPlatform.windows)!;
     expect(exe, endsWith(r'\System32\rundll32.exe'));
-    expect(args, ['url.dll,FileProtocolHandler', url]);
+    expect(args, ['url.dll,FileProtocolHandler', sent]);
   });
 
-  test('anything but https is not opened', () {
-    for (final url in ['file:///etc/passwd', 'http://x.test', 'cmd', '']) {
-      expect(openUrlCommand(url, TargetPlatform.macOS), isNull, reason: url);
+  test('anything but https, or with a quote, is not opened', () {
+    for (final url in [
+      'file:///etc/passwd',
+      'http://x.test',
+      'cmd',
+      '',
+      'https://x.test/" & calc',
+    ]) {
+      for (final os in [TargetPlatform.macOS, TargetPlatform.windows]) {
+        expect(openUrlCommand(url, os), isNull, reason: url);
+      }
     }
   });
 

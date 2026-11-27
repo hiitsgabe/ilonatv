@@ -1,7 +1,8 @@
-import 'dart:ui' show PlatformDispatcher;
+import 'dart:ui' show AppExitResponse, PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 
+import 'adb.dart';
 import 'desktop/host.dart';
 import 'i18n.dart';
 
@@ -15,6 +16,7 @@ import 'ui/theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final tvs = Tvs();
+  if (isDesktop) closeAdbOnExit(Adb());
   await tvs.load();
   I18n.language = PlatformDispatcher.instance.locale.languageCode == 'pt'
       ? 'pt'
@@ -26,6 +28,15 @@ Future<void> main() async {
     ),
   );
 }
+
+/// A desktop app is never paused: closing the window is the last chance to
+/// drop the TV's connection and the key shell.
+AppLifecycleListener closeAdbOnExit(Adb adb) => AppLifecycleListener(
+  onExitRequested: () async {
+    await adb.close().timeout(const Duration(seconds: 3), onTimeout: () {});
+    return AppExitResponse.exit;
+  },
+);
 
 class CompanionApp extends StatelessWidget {
   const CompanionApp({super.key, required this.tvs, this.updates});

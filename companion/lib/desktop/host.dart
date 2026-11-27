@@ -17,15 +17,19 @@ Future<Process> startProcess(String exe, List<String> args) =>
 String get system32 =>
     '${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32';
 
-/// The command that opens [url] in the browser, the URL its own argument so
-/// no shell ever reads it; null for anything but https, as on Android.
+/// The command that opens [url] in the browser, the URL normalised and its
+/// own argument so no shell ever reads it; null for anything but https, as
+/// on Android.
 (String, List<String>)? openUrlCommand(String url, TargetPlatform os) {
-  if (Uri.tryParse(url)?.scheme != 'https') return null;
+  final u = Uri.tryParse(url);
+  // A quote would end rundll32's argument early: Windows quotes by its own rules.
+  if (u == null || u.scheme != 'https' || url.contains('"')) return null;
+  final sent = '$u';
   return switch (os) {
-    TargetPlatform.macOS => ('/usr/bin/open', [url]),
+    TargetPlatform.macOS => ('/usr/bin/open', [sent]),
     TargetPlatform.windows => (
       '$system32\\rundll32.exe',
-      ['url.dll,FileProtocolHandler', url],
+      ['url.dll,FileProtocolHandler', sent],
     ),
     _ => null,
   };

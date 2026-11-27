@@ -26,9 +26,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(440, 820);
+  Win32Window::Size size(440, 720);
   if (!window.Create(L"Ilona TV Companion", origin, size)) {
     return EXIT_FAILURE;
+  }
+  // Centred on the monitor it opened on, inside the taskbar's work area.
+  HWND hwnd = window.GetHandle();
+  RECT frame;
+  MONITORINFO monitor{sizeof(monitor)};
+  if (::GetWindowRect(hwnd, &frame) &&
+      ::GetMonitorInfo(::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST),
+                       &monitor)) {
+    const RECT& work = monitor.rcWork;
+    LONG width = frame.right - frame.left, height = frame.bottom - frame.top;
+    ::SetWindowPos(hwnd, nullptr,
+                   work.left + (work.right - work.left - width) / 2,
+                   work.top + (work.bottom - work.top - height) / 2, 0, 0,
+                   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
   }
   window.SetQuitOnClose(true);
 

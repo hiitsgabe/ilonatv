@@ -1,11 +1,16 @@
 import 'package:flutter/foundation.dart';
 
+import 'desktop/host.dart';
+
 class I18n {
   static String language = 'en';
 }
 
+/// On desktop a `key@desktop` text, where there is one, says computer, not phone.
 String t(String key) =>
-    _strings[I18n.language]?[key] ?? _strings['en']![key] ?? key;
+    (isDesktop ? _t('$key@desktop') : null) ?? _t(key) ?? key;
+
+String? _t(String key) => _strings[I18n.language]?[key] ?? _strings['en']![key];
 
 @visibleForTesting
 Set<String> i18nKeys(String language) => {...?_strings[language]?.keys};
@@ -195,6 +200,15 @@ const _strings = {
     'instPermsMissed':
         'Not granted: {list}. Ilona TV still works, with fewer features.',
     'instOpenRemote': 'Open the remote',
+    'tagline@desktop': 'Your computer, the remote for Ilona TV.',
+    'searchingHint@desktop': 'Keep the TV on, with Ilona TV open and on the same network as this computer.',
+    'adbHow@desktop': 'On the TV, turn on Developer options > ADB debugging (USB debugging on Google TV and Android TV), then Connect. Allow this computer if the TV asks.',
+    'adbDenied@desktop': 'The TV did not allow this computer. Connect again and choose Allow on the TV.',
+    'removedPairAgain@desktop': 'This TV removed this computer. Pair again.',
+    'forgetWhy@desktop':
+        'This computer stops controlling it until you pair again.',
+    'instOffline@desktop': "Couldn't reach GitHub to get Ilona TV. Check this computer's internet connection, then Retry.",
+    'instNoSpace@desktop': "Couldn't prepare the install on this computer. Free some space and Retry.",
     'adbToolsTitle': "Download Google's adb",
     'adbToolsBody': "Installing on a TV, and some remote keys, use adb from Google's Android SDK Platform-Tools. This app can't include it, but it can download it from Google (about 10 to 17 MB) into its own folder. By downloading it you agree to Google's terms.",
     'adbToolsTerms': "Read Google's terms",
@@ -395,6 +409,16 @@ const _strings = {
     'instDoneAndroid': 'O Ilona TV está na sua TV. Agora você pode desativar a depuração USB e pela rede: Configurações > Preferências do dispositivo > Opções do desenvolvedor ("Settings > Device Preferences > Developer options").',
     'instPermsMissed': 'Não concedidas: {list}. O Ilona TV continua funcionando, com menos recursos.',
     'instOpenRemote': 'Abrir o controle',
+    'tagline@desktop': 'Seu computador, o controle do Ilona TV.',
+    'searchingHint@desktop': 'Deixe a TV ligada, com o Ilona TV aberto e na mesma rede deste computador.',
+    'adbHow@desktop': 'Na TV, ative Opções do desenvolvedor > Depuração ADB (Depuração USB no Google TV e Android TV) e clique em Conectar. Permita este computador se a TV pedir.',
+    'adbDenied@desktop': 'A TV não permitiu este computador. Conecte de novo e escolha Permitir na TV.',
+    'removedPairAgain@desktop':
+        'Esta TV removeu este computador. Pareie de novo.',
+    'forgetWhy@desktop':
+        'Este computador deixa de controlá-la até você parear de novo.',
+    'instOffline@desktop': 'Não foi possível acessar o GitHub para baixar o Ilona TV. Confira a internet deste computador e tente de novo.',
+    'instNoSpace@desktop': 'Não foi possível preparar a instalação neste computador. Libere espaço e tente de novo.',
     'adbToolsTitle': 'Baixar o adb do Google',
     'adbToolsBody': 'A instalação na TV, e algumas teclas do controle, usam o adb do Android SDK Platform-Tools do Google. Este app não pode incluí-lo, mas pode baixá-lo do Google (de 10 a 17 MB) para a própria pasta. Ao baixar, você aceita os termos do Google.',
     'adbToolsTerms': 'Ler os termos do Google',

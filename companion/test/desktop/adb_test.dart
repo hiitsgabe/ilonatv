@@ -25,25 +25,29 @@ void main() {
   });
   tearDown(() => dir.deleteSync(recursive: true));
 
-  DesktopAdb make({Duration authWait = const Duration(seconds: 60)}) =>
-      DesktopAdb(
-        tools: PlatformTools(
-          dir: dir.path,
-          os: TargetPlatform.macOS,
-          start: procs.start,
-          env: const {},
-        ),
-        reachable: (_, _) async => reachable,
-        poll: Duration.zero,
-        authWait: authWait,
-        shellTimeout: const Duration(milliseconds: 50),
-      );
+  DesktopAdb make({
+    Duration authWait = const Duration(seconds: 60),
+    Duration shellTimeout = const Duration(milliseconds: 50),
+  }) => DesktopAdb(
+    tools: PlatformTools(
+      dir: dir.path,
+      os: TargetPlatform.macOS,
+      start: procs.start,
+      env: const {},
+    ),
+    reachable: (_, _) async => reachable,
+    poll: Duration.zero,
+    authWait: authWait,
+    shellTimeout: shellTimeout,
+  );
 
   // Every command as its arguments, the adb path dropped.
   List<List<String>> ran() => [for (final c in procs.started) c.sublist(1)];
 
-  Future<DesktopAdb> connected() async {
-    final adb = make();
+  Future<DesktopAdb> connected({
+    Duration shellTimeout = const Duration(milliseconds: 50),
+  }) async {
+    final adb = make(shellTimeout: shellTimeout);
     procs.reply = (a) => a.first == 'devices'
         ? (0, 'List of devices attached\n10.0.0.5:5555\tdevice\n\n')
         : null;
@@ -247,7 +251,11 @@ void main() {
     procs.reply = (_) =>
         (0, 'Successfully paired to 10.0.0.5:37000 [guid=x]\n');
     expect(await adb.pair('10.0.0.5', 37000, '123456'), isNull);
-    expect(ran().single, ['pair', '10.0.0.5:37000', '123456']);
+    expect(ran().where((a) => a.first != 'version').single, [
+      'pair',
+      '10.0.0.5:37000',
+      '123456',
+    ]);
     procs.reply = (_) =>
         (1, 'Failed: Wrong password or connection was dropped.\n');
     expect(await adb.pair('10.0.0.5', 37000, '123456'), startsWith('Failed'));
@@ -268,6 +276,43 @@ void main() {
     expect(shell.killed, isTrue);
     expect(ran().last, ['disconnect', '10.0.0.5:5555']);
     expect((await adb.shell('echo')).exitCode, -1);
+  });
+
+  test('close kills what is still running; it answers -1', () async {
+    final adb = await connected(shellTimeout: const Duration(minutes: 1));
+    procs.hangs = (a) => a.last == 'sleep 999';
+    final shell = adb.shell('sleep 999');
+    await Future<void>.delayed(Duration.zero);
+    procs.hangs = (_) => false;
+    await adb.close();
+    expect(procs.live.first.killed, isTrue);
+    expect((await shell).exitCode, -1);
+  });
+
+  test('pairing uses an adb new enough to pair', () async {
+    final bin = Directory.systemTemp.createTempSync('bin');
+    addTearDown(() => bin.deleteSync(recursive: true));
+    File('${bin.path}/adb').createSync();
+    final adb = DesktopAdb(
+      tools: PlatformTools(
+        dir: dir.path,
+        os: TargetPlatform.macOS,
+        start: procs.start,
+        env: {'PATH': bin.path},
+      ),
+    );
+    procs.reply = (a) => a.first == 'version'
+        ? (0, 'Android Debug Bridge version 1.0.41\nVersion 29.0.6-1\n')
+        : (0, 'Successfully paired to 10.0.0.5:37000 [guid=x]\n');
+    expect(await adb.canPair(), isTrue);
+    expect(await adb.pair('10.0.0.5', 37000, '123456'), isNull);
+    expect(procs.started.last, [
+      '${dir.path}/platform-tools/adb',
+      'pair',
+      '10.0.0.5:37000',
+      '123456',
+    ]);
+    expect(adb.ready, isTrue);
   });
 
   test('without adb, ready is false and connect runs nothing', () async {

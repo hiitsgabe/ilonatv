@@ -6,11 +6,16 @@ import '../desktop/platform_tools.dart';
 import '../i18n.dart';
 import '../tvs.dart';
 
-/// True once adb can run. On desktop adb is Google's, which may not be passed
-/// on with this app: the first time, the person agrees to Google's terms and
-/// the app downloads platform-tools.
-Future<bool> ensureAdbTools(BuildContext context, Adb adb) async {
-  if (adb.ready) return true;
+/// True once adb can run ([pair]: an adb that can pair). On desktop adb is
+/// Google's, which may not be passed on with this app: the first time, the
+/// person agrees to Google's terms and the app downloads platform-tools.
+Future<bool> ensureAdbTools(
+  BuildContext context,
+  Adb adb, {
+  bool pair = false,
+}) async {
+  if (pair ? await adb.canPair() : adb.ready) return true;
+  if (!context.mounted) return false;
   return await showDialog<bool>(
         context: context,
         barrierDismissible: false,

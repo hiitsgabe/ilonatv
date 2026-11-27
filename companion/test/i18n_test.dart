@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilonatv_companion/i18n.dart';
 import 'package:ilonatv_companion/main.dart';
@@ -15,6 +16,29 @@ void main() {
         expect(t(key), isNotEmpty, reason: '$language: $key');
       }
     }
+  });
+
+  test('on desktop no text calls the computer a phone', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    // Only seen on Android: the camera, the phone installer, the APK update.
+    const androidOnly = {
+      'scanHint',
+      'cameraDenied',
+      'instUseComputer',
+      'instNeeds5555',
+      'allowInstalls',
+    };
+    for (final (language, word) in [('en', 'phone'), ('pt', 'celular')]) {
+      I18n.language = language;
+      for (final key in i18nKeys(language)) {
+        if (key.contains('@') || androidOnly.contains(key)) continue;
+        expect(t(key).toLowerCase(), isNot(contains(word)), reason: key);
+      }
+    }
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    I18n.language = 'en';
+    expect(t('tagline'), contains('phone'));
   });
 
   testWidgets('CompanionApp shows the app name', (tester) async {

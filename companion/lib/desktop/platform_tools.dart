@@ -78,21 +78,70 @@ class PlatformTools {
   String get _sep => _windows ? r'\' : '/';
   String get _exe => _windows ? 'adb.exe' : 'adb';
 
+  String get downloaded => '$dir${_sep}platform-tools$_sep$_exe';
+
+  /// PATH's directories, only absolute ones: a relative entry would run
+  /// whatever adb sits in the current directory. Windows may quote them.
+  @visibleForTesting
+  List<String> pathDirs() => [
+    for (final raw in (env['PATH'] ?? '').split(_windows ? ';' : ':'))
+      ?_absolute(_windows ? raw.replaceAll('"', '') : raw),
+  ];
+
+  String? _absolute(String d) =>
+      (_windows
+          ? RegExp(r'^([A-Za-z]:\\|\\\\)').hasMatch(d)
+          : d.startsWith('/'))
+      ? d
+      : null;
+
   /// The adb to run: PATH first, then where Android Studio or Homebrew put
   /// it (a Finder-launched app gets no shell PATH), then the downloaded one.
   String? adbPath() {
     final home = env['HOME'], local = env['LOCALAPPDATA'];
     final candidates = [
-      for (final d in (env['PATH'] ?? '').split(_windows ? ';' : ':'))
-        if (d.isNotEmpty) '$d$_sep$_exe',
+      for (final d in pathDirs()) '$d$_sep$_exe',
       if (!_windows && home != null)
         '$home/Library/Android/sdk/platform-tools/adb',
       if (!_windows) ...['/opt/homebrew/bin/adb', '/usr/local/bin/adb'],
       if (_windows && local != null)
         '$local\\Android\\Sdk\\platform-tools\\adb.exe',
-      '$dir${_sep}platform-tools$_sep$_exe',
+      downloaded,
     ];
     return candidates.where((p) => File(p).existsSync()).firstOrNull;
+  }
+
+  /// An adb that has `pair` (platform-tools 30 or newer): the one found if it
+  /// does, else the downloaded one; null when neither.
+  Future<String?> pairAdbPath() async {
+    final found = adbPath();
+    if (found == null || found == downloaded) return found;
+    if ((await _major(found) ?? 0) >= 30) return found;
+    return File(downloaded).existsSync() ? downloaded : null;
+  }
+
+  // `adb version` prints "Version 35.0.2-12147458" on its second line.
+  Future<int?> _major(String exe) async {
+    try {
+      final p = await start(exe, ['version']);
+      final out = p.stdout.transform(utf8.decoder).join();
+      p.stderr.drain<void>();
+      await p.exitCode.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          p.kill();
+          return -1;
+        },
+      );
+      final text = await out.timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => '',
+      );
+      final m = RegExp(r'^Version (\d+)\.', multiLine: true).firstMatch(text);
+      return int.tryParse(m?.group(1) ?? '');
+    } on ProcessException {
+      return null;
+    }
   }
 
   /// Fetches the manifest, then the archive it names for this OS, checks the
@@ -136,11 +185,23 @@ class PlatformTools {
         return '$d';
       });
       if (digest != a.sha1) throw const BadChecksum();
-      final old = Directory('$dir${_sep}platform-tools');
-      if (old.existsSync()) old.deleteSync(recursive: true);
+      await _install(zip);
+    } finally {
+      http.close(force: true);
+      if (zip.existsSync()) zip.deleteSync();
+    }
+  }
+
+  /// Unpacks [zip] beside the current copy, checks it holds platform-tools
+  /// and nothing else, then swaps it in; a failure keeps the current copy.
+  Future<void> _install(File zip) async {
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final tmp = Directory('$dir$_sep.extract-$stamp');
+    try {
+      await tmp.create();
       final (exe, args) = extractCommand(
         zip.path,
-        dir,
+        tmp.path,
         os,
         env['SystemRoot'] ?? r'C:\Windows',
       );
@@ -148,13 +209,48 @@ class PlatformTools {
       p.stdout.drain<void>();
       p.stderr.drain<void>();
       final code = await p.exitCode.timeout(const Duration(minutes: 2));
-      if (code != 0 || !File('${old.path}$_sep$_exe').existsSync()) {
+      final fresh = Directory('${tmp.path}${_sep}platform-tools');
+      final top = tmp.listSync(followLinks: false);
+      if (code != 0 ||
+          top.length != 1 ||
+          top.single is! Directory ||
+          top.single.path != fresh.path ||
+          !File('${fresh.path}$_sep$_exe').existsSync() ||
+          _escapes(fresh)) {
         throw ProcessException(exe, args, 'extract failed', code);
       }
+      final current = Directory('$dir${_sep}platform-tools');
+      final old = current.existsSync()
+          ? current.renameSync('$dir$_sep.old-$stamp')
+          : null;
+      try {
+        fresh.renameSync(current.path);
+      } catch (_) {
+        old?.renameSync(current.path);
+        rethrow;
+      }
+      try {
+        old?.deleteSync(recursive: true);
+      } on FileSystemException {
+        // Windows keeps a running adb.exe's folder; it goes next time.
+      }
     } finally {
-      http.close(force: true);
-      if (zip.existsSync()) zip.deleteSync();
+      if (tmp.existsSync()) tmp.deleteSync(recursive: true);
     }
+  }
+
+  // A link whose target is outside the folder, or missing, is not Google's archive.
+  bool _escapes(Directory d) {
+    final root = d.resolveSymbolicLinksSync();
+    for (final e in d.listSync(recursive: true, followLinks: false)) {
+      if (e is! Link) continue;
+      try {
+        if (!e.resolveSymbolicLinksSync().startsWith('$root$_sep')) return true;
+      } on FileSystemException {
+        return true;
+      }
+    }
+    return false;
   }
 
   static const _stall = Duration(seconds: 30);
@@ -165,6 +261,8 @@ class PlatformTools {
     Future<T> Function(Stream<List<int>>) read,
   ) async {
     final req = await http.getUrl(url).timeout(_stall);
+    // Only what the manifest names, from where it names it: a redirect is a failure.
+    req.followRedirects = false;
     final res = await req.close().timeout(_stall);
     if (res.statusCode != 200) {
       throw HttpException('answered ${res.statusCode}', uri: url);

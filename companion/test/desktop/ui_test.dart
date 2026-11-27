@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,9 +55,15 @@ class DesktopFakeAdb extends Adb {
     tools = true;
   }
 
+  Completer<void>? pairGate;
+
+  @override
+  Future<bool> canPair() async => tools;
+
   @override
   Future<String?> pair(String host, int port, String code) async {
     log.add('pair $host:$port $code');
+    await pairGate?.future;
     return null;
   }
 
@@ -82,6 +89,21 @@ class Keys extends TvClient {
 
   @override
   Stream<TvInfo> events() => StreamController<TvInfo>().stream;
+}
+
+/// Another app in front on an older TV: the remote wants ADB for the keys.
+class Outside extends Keys {
+  @override
+  Stream<TvInfo> events() =>
+      (StreamController<TvInfo>()..add(
+            const TvInfo(
+              protocol: 1,
+              version: '1',
+              inFront: false,
+              launcherMode: true,
+            ),
+          ))
+          .stream;
 }
 
 class Newer extends ReleaseSource {
@@ -211,6 +233,45 @@ void main() {
     expect(find.text(t0('vibration')), findsNothing);
   }, variant: desktop);
 
+  testWidgets('a hidden window drops ADB, and showing it connects again', (
+    t,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'adbHosts': ['1.2.3.4'],
+    });
+    final adb = DesktopFakeAdb(tools: true);
+    await t.pumpWidget(
+      MaterialApp(
+        home: RemotePage(
+          tv: Tv(host: '1.2.3.4', port: 8642, name: 'TV', token: 'x'),
+          client: Outside(),
+          tvs: Tvs(discovery: NoDiscovery()),
+          adb: adb,
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(adb.log, ['connect 1.2.3.4:5555']);
+    for (final s in [AppLifecycleState.inactive, AppLifecycleState.hidden]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+    }
+    await t.pumpAndSettle();
+    expect(adb.log.last, 'close');
+    for (final s in [AppLifecycleState.inactive, AppLifecycleState.resumed]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+    }
+    await t.pumpAndSettle();
+    expect(adb.log, ['connect 1.2.3.4:5555', 'close', 'connect 1.2.3.4:5555']);
+  }, variant: desktop);
+
+  testWidgets('closing the app closes ADB first, then lets it exit', (t) async {
+    final adb = DesktopFakeAdb();
+    final listener = closeAdbOnExit(adb);
+    addTearDown(listener.dispose);
+    expect(await t.binding.handleRequestAppExit(), AppExitResponse.exit);
+    expect(adb.log, ['close']);
+  }, variant: desktop);
+
   group('installer', () {
     Future<DesktopFakeAdb> open(WidgetTester t, {bool tools = false}) async {
       final adb = DesktopFakeAdb(tools: tools);
@@ -273,6 +334,25 @@ void main() {
         'close',
         'connect 10.0.0.7:42131',
       ]);
+    }, variant: desktop);
+
+    testWidgets('Enter while pairing does not pair again', (t) async {
+      final adb = await open(t, tools: true);
+      adb.pairGate = Completer();
+      await tap(t, t0('instGoogleTv'));
+      await tap(t, t0('next'));
+      final fields = find.byType(TextField);
+      await t.enterText(fields.at(0), '10.0.0.7:37005');
+      await t.enterText(fields.at(1), '482913');
+      await t.enterText(fields.at(2), '10.0.0.7:42131');
+      await t.testTextInput.receiveAction(TextInputAction.done);
+      await t.pump();
+      await t.testTextInput.receiveAction(TextInputAction.done);
+      await t.pump();
+      expect(adb.log, ['pair 10.0.0.7:37005 482913']);
+      adb.pairGate!.complete();
+      await t.pumpAndSettle();
+      expect(adb.log.last, 'connect 10.0.0.7:42131');
     }, variant: desktop);
 
     testWidgets('a pairing address without its port is refused', (t) async {

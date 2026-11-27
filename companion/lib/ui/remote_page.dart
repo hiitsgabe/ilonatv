@@ -94,7 +94,13 @@ class _RemotePageState extends State<RemotePage> {
         _haptics = p.getBool(_hapticsPref) ?? true;
       });
     });
-    _life = AppLifecycleListener(onPause: _adbPause, onResume: _adbIfKnown);
+    // A desktop window is hidden (minimised), never paused.
+    _life = AppLifecycleListener(
+      onPause: _adbPause,
+      onResume: _adbIfKnown,
+      onHide: isDesktop ? _adbPause : null,
+      onShow: isDesktop ? _adbIfKnown : null,
+    );
     widget.updates?.latest.then((v) {
       if (mounted && v != null) setState(() => _latest = v);
     });

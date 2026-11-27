@@ -69,6 +69,9 @@ abstract interface class AdbBackend {
   Future<void> download({void Function(int got, int total)? progress});
   Future<AdbResult> connect(String host, int port);
 
+  /// Whether there is an adb with `pair` (platform-tools 30 or newer).
+  Future<bool> canPair();
+
   /// Android 11+'s Wireless debugging pairing; null when paired, else why.
   Future<String?> pair(String host, int port, String code);
   Future<ShellResult> shell(String cmd);
@@ -117,6 +120,8 @@ class Adb {
     return r;
   }
 
+  Future<bool> canPair() => _b.canPair();
+
   Future<String?> pair(String host, int port, String code) =>
       _b.pair(host, port, code);
 
@@ -142,6 +147,9 @@ class _ChannelAdb implements AdbBackend {
 
   @override
   Future<void> download({void Function(int got, int total)? progress}) async {}
+
+  @override
+  Future<bool> canPair() async => false;
 
   @override
   Future<String?> pair(String host, int port, String code) async =>

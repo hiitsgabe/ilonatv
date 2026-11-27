@@ -57,6 +57,7 @@ class DesktopAdb implements AdbBackend {
   String? _serial;
   Process? _keys;
   int _gen = 0;
+  final _running = <Process>{};
 
   @override
   bool get ready => tools.adbPath() != null;
@@ -65,15 +66,24 @@ class DesktopAdb implements AdbBackend {
   Future<void> download({void Function(int got, int total)? progress}) =>
       tools.download(progress: progress);
 
-  Future<ShellResult> _run(List<String> args, {Duration? timeout}) async {
-    final exe = tools.adbPath();
+  @override
+  Future<bool> canPair() async => await tools.pairAdbPath() != null;
+
+  Future<ShellResult> _run(
+    List<String> args, {
+    Duration? timeout,
+    String? adb,
+  }) async {
+    final exe = adb ?? tools.adbPath();
     if (exe == null) return const ShellResult(-1, 'no adb');
+    final g = _gen;
     final Process p;
     try {
       p = await tools.start(exe, args);
     } on ProcessException catch (e) {
       return ShellResult(-1, e.message);
     }
+    _running.add(p);
     final out = BytesBuilder(copy: false);
     final subs = [p.stdout.listen(out.add), p.stderr.listen(out.add)];
     final drained = Future.wait(subs.map((s) => s.asFuture<void>()));
@@ -92,6 +102,9 @@ class DesktopAdb implements AdbBackend {
     for (final s in subs) {
       s.cancel();
     }
+    _running.remove(p);
+    // Killed by close: like a dropped connection, not the TV's answer.
+    if (g != _gen) code = -1;
     final text = utf8.decode(out.takeBytes(), allowMalformed: true);
     if (code != 0 && _lost.hasMatch(text)) code = -1;
     return ShellResult(code, text);
@@ -130,7 +143,9 @@ class DesktopAdb implements AdbBackend {
   @override
   Future<String?> pair(String host, int port, String code) async {
     if (!RegExp(r'^\d{6}$').hasMatch(code)) return 'bad code';
-    final r = await _run(['pair', '$host:$port', code]);
+    final adb = await tools.pairAdbPath();
+    if (adb == null) return 'adb is older than platform-tools 30';
+    final r = await _run(['pair', '$host:$port', code], adb: adb);
     return pairFailure(r.output);
   }
 
@@ -198,6 +213,9 @@ class DesktopAdb implements AdbBackend {
   @override
   Future<void> close() async {
     _gen++;
+    for (final p in [..._running]) {
+      p.kill();
+    }
     _keys?.kill();
     _keys = null;
     final s = _serial;

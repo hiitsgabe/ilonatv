@@ -190,13 +190,14 @@ class _InstallFlowState extends State<InstallFlow> {
   }
 
   Future<void> _wirelessPair() async {
+    if (_busy) return;
     final pairAt = parseHostInput(_pairAt.text);
     final at = parseHostInput(_ip.text);
     if (pairAt?.port == null || at?.port == null) {
       return _fail(t('badAddress'), retry: false);
     }
     if (_code.text.length != 6) return _fail(t('badCode'), retry: false);
-    if (!await ensureAdbTools(context, _adb) || !mounted) return;
+    if (!await ensureAdbTools(context, _adb, pair: true) || !mounted) return;
     final g = ++_gen;
     setState(() {
       _busy = true;

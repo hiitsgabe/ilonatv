@@ -88,3 +88,14 @@ jobs:
         run: |
           flutter pub get
           flutter build windows --release
+
+      # The same packing as the release, so a missing runtime DLL shows up here.
+      - name: Zip
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Copy-Item -Recurse companion/build/windows/x64/runner/Release "Ilona TV Companion"
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            Copy-Item "$env:SystemRoot\System32\$dll" "Ilona TV Companion"
+          }
+          Compress-Archive -Path "Ilona TV Companion" -DestinationPath ilonatv-companion-windows.zip

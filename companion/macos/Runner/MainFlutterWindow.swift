@@ -5,7 +5,7 @@ class MainFlutterWindow: NSWindow {
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     self.contentViewController = flutterViewController
-    self.setContentSize(NSSize(width: 440, height: 820))
+    self.setContentSize(NSSize(width: 440, height: 720))
     self.contentMinSize = NSSize(width: 360, height: 560)
     self.title = "Ilona TV Companion"
     self.center()
