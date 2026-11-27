@@ -22,7 +22,7 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
-        android:icon="@drawable/icon"
+        android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/banner">
         <!-- Skia on every TV. Impeller (Vulkan, the default from Android 10) took 21-22 ms of GPU time for every
              frame of the home on a Fire TV Edition's Mali-G52 MC1, two to three offscreen passes a frame (the blurs
