@@ -223,6 +223,7 @@ object HostChannel {
                     } else {
                         Intent(call.argument<String>("action") ?: Settings.ACTION_SETTINGS)
                     }
+                    call.argument<String>("data")?.let { intent.data = Uri.parse(it) }
                     val opened = start(activity, intent)
                     // Only once it opened: a failed start leaves Ilona TV up and nothing would clear the flag.
                     if (opened && call.argument<Boolean>("pause") == true) HomeWatcher.pausedForSettings = true
@@ -283,6 +284,11 @@ object HostChannel {
                     call.argument<String>("package")?.let { HomeWatcher.forceStop(activity, it) } ?: false,
                 )
                 "filesDir" -> result.success(activity.filesDir.absolutePath)
+                // Settings > About's update.
+                "cacheDir" -> result.success(activity.cacheDir.absolutePath)
+                "abis" -> result.success(Build.SUPPORTED_ABIS.joinToString(","))
+                "canInstall" -> result.success(activity.packageManager.canRequestPackageInstalls())
+                "installApk" -> SelfInstall.install(activity, call.argument<String>("path")!!, result)
                 // Asked only here, when the tile editor's picker opens.
                 "images" -> {
                     pendingImages?.success(null)

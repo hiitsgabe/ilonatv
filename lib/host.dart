@@ -216,17 +216,38 @@ class Host {
 
   /// A settings screen: Fire OS's own page [component]
   /// (`package/.Activity`), else the screen of [action] (the system's
-  /// settings by default). [pause] stops Launcher mode from taking the Amazon
-  /// home's settings tab for a Home until Home is pressed.
+  /// settings by default) for [data], like `package:tv.ilona.app`. [pause]
+  /// stops Launcher mode from taking the Amazon home's settings tab for a
+  /// Home until Home is pressed.
   static Future<bool> openSystemSettings({
     String? component,
     String? action,
+    String? data,
     bool pause = false,
   }) => _bool('openSystemSettings', {
     'component': component,
     'action': action,
+    'data': ?data,
     'pause': pause,
   });
+
+  /// The app's cache directory (`Context.cacheDir`), where an update downloads.
+  static Future<String> cacheDir() async =>
+      (await _channel.invokeMethod<String>('cacheDir'))!;
+
+  /// The device's ABIs, comma-separated, most preferred first
+  /// (Build.SUPPORTED_ABIS).
+  static Future<String> abis() async =>
+      await _channel.invokeMethod<String>('abis') ?? '';
+
+  /// Whether the person allowed Ilona TV to install apps.
+  static Future<bool> canInstall() => _bool('canInstall');
+
+  /// Installs the APK at [path] over Ilona TV after the system's confirm; an
+  /// update that went through ends this process, so the answer is only ever
+  /// why it did not (declined, a bad APK), or null.
+  static Future<String?> installApk(String path) =>
+      _channel.invokeMethod<String>('installApk', {'path': path});
 
   static Future<int> processMemoryKb() async =>
       await _channel.invokeMethod<int>('processMemoryKb') ?? 0;

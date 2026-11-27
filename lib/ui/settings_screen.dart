@@ -15,6 +15,7 @@ import 'settings_kit.dart';
 import 'settings_panes.dart';
 import 'setup_wizard.dart';
 import 'sports_pane.dart';
+import 'update_rows.dart';
 
 // Each is an i18n key and names its screen; in groups, a gap between them.
 const _groups = [
@@ -177,10 +178,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _aboutPane() {
     String mb(int bytes) => '${(bytes / (1 << 20)).toStringAsFixed(1)} MB';
     return settingsGroups([
-      SettingsGroup(
-        children: [
-          SettingsRow(title: t('version'), value: kVersion),
-          if (_memoryKb case final kb?) ...[
+      const UpdateRows(),
+      if (_memoryKb case final kb?)
+        SettingsGroup(
+          children: [
             SettingsRow(title: t('memory'), value: mb(kb * 1024)),
             SettingsRow(
               title: t('imageCache'),
@@ -189,8 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   '${imageCache.liveImageCount} ${t('images')}',
             ),
           ],
-        ],
-      ),
+        ),
       SettingsGroup(
         children: [
           SettingsRow(
